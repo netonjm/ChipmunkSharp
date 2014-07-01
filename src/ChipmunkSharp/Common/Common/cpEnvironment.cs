@@ -389,7 +389,8 @@ namespace ChipmunkSharp
 
         public static void cpAssertSoft(bool p1, string p2)
         {
-            LogWrite(string.Format("cpAssertSoft:{0} Value:{1}", p2, p1));
+			if (!p1)
+            	LogWrite(string.Format("cpAssertSoft:{0} Value:{1}", p2, p1));
         }
 
         public static void LogWrite(string message)

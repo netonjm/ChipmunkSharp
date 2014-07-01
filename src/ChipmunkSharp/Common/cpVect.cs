@@ -82,11 +82,13 @@ namespace ChipmunkSharp
 
         public override bool Equals(object obj)
         {
-            return (Equals((cpVect)obj));
+			if (ReferenceEquals(this, obj)) return true;
+			return Equals(obj as cpVect);
         }
 
         public bool Equals(cpVect p)
         {
+			if (p == null) return false;
             return x == p.x && y == p.y;
         }
 
@@ -593,12 +595,12 @@ namespace ChipmunkSharp
 
         public static bool operator ==(cpVect p1, cpVect p2)
         {
-            return (p1.Equals(p2));
+            return Equals(p1, p2);
         }
 
         public static bool operator !=(cpVect p1, cpVect p2)
         {
-            return (!p1.Equals(p2));
+            return !Equals(p1, p2);
         }
 
         public static cpVect operator -(cpVect p1, cpVect p2)
