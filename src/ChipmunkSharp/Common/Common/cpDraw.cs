@@ -35,16 +35,16 @@ namespace ChipmunkSharp
         e_centerOfMassBit = 0x10
     }
 
-    public abstract class ChipmunkDraw
+    public abstract class cpDraw
     {
         private ChipmunkDrawFlags m_drawFlags = 0x0;
         private int _PTMRatio = 1;
 
-        public ChipmunkDraw()
+        public cpDraw()
         {
         }
 
-        public ChipmunkDraw(int ptm)
+        public cpDraw(int ptm)
         {
             _PTMRatio = ptm;
         }

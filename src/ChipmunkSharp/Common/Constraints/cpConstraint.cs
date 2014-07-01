@@ -299,7 +299,7 @@ namespace ChipmunkSharp.Constraints
             throw new NotImplementedException();
         }
 
-        public virtual void Draw(ChipmunkDraw m_debugDraw)
+        public virtual void Draw(cpDraw m_debugDraw)
         {
 
         }

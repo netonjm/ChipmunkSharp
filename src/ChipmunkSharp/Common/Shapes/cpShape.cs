@@ -75,7 +75,7 @@ namespace ChipmunkSharp
             return cpBB.cpBBNewForCircle(c, circle.r);
         }
 
-        public override void Draw(ChipmunkDraw m_debugDraw)
+        public override void Draw(cpDraw m_debugDraw)
         {
 
             m_debugDraw.DrawSolidCircle(new cpVect(c.x, c.y), r, cpVect.ZERO, cpColor.Red);
@@ -571,7 +571,7 @@ namespace ChipmunkSharp
             u = value;
         }
 
-        public virtual void Draw(ChipmunkDraw m_debugDraw)
+        public virtual void Draw(cpDraw m_debugDraw)
         {
 
         }

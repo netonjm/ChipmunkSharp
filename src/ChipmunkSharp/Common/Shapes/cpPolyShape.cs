@@ -101,7 +101,7 @@ namespace ChipmunkSharp
         }
 
 
-        public override void Draw(ChipmunkDraw m_debugDraw)
+        public override void Draw(cpDraw m_debugDraw)
         {
 
             // var verts = this.tVerts;

@@ -54,7 +54,7 @@ namespace ChipmunkSharp
     public partial class cpSpace
     {
 
-        private ChipmunkDraw m_debugDraw;
+        private cpDraw m_debugDraw;
 
 
         public static cpCollisionHandler cpDefaultCollisionHandler = new cpCollisionHandler(0, 0, alwaysCollide, alwaysCollide, nothing, nothing, null);
@@ -838,7 +838,7 @@ namespace ChipmunkSharp
 
         #region DEBUG DRAW
 
-        public void SetDebugDraw(ChipmunkDraw debug)
+        public void SetDebugDraw(cpDraw debug)
         {
             m_debugDraw = debug;
         }
