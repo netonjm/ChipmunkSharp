@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>ChipmunkSharp.Windows</id>
+    <version>1.0.0.0</version>
+    <title>ChipmunkSharp for Windows</title>
+    <authors>Kenneth Pouncey and Jose Medrano</authors>
+    <owners>Develop Studios</owners>
+    <licenseUrl>https://raw.githubusercontent.com/netonjm/ChipmunkSharp/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/netonjm/ChipmunkSharp</projectUrl>
+    <iconUrl>http://chipmunk-physics.net/</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>ChipmunkSharp for Windows. Physics a game engine</description>
+    <copyright>netonjm</copyright>
+    <tags>chipmunk visualization enginedirectx desktop windows</tags>
+
+  </metadata>
+
+  <files>
+   
+     <!--Windows DX-->
+    <file src="..\..\..\..\src\ChipmunkSharp\win32\bin\Release\ChipmunkSharp.dll" target="lib\net40" />
+   
+
+  </files>
+
+</package>
