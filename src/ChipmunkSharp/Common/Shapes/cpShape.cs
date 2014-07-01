@@ -78,7 +78,7 @@ namespace ChipmunkSharp
         public override void Draw(ChipmunkDraw m_debugDraw)
         {
 
-            m_debugDraw.DrawSolidCircle(new cpVect(c.x, c.y), r, cpVect.ZERO, cpColor.Red);
+            m_debugDraw.DrawSolidCircle(new cpVect(tc.x, tc.y), r, cpVect.ZERO, cpColor.Red);
 
 
         }
