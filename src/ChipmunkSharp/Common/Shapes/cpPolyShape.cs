@@ -88,7 +88,8 @@ namespace ChipmunkSharp
             for (int i = 0; i < poly.numVerts; i++)
             {
                 cpVect v = cpVect.cpvadd(p, cpVect.cpvrotate(src[i], rot));
-
+				var vx = p.x + src[i].x*rot.x - src[i].y*rot.y;
+				var vy = p.y + src[i].x*rot.y + src[i].y*rot.x;
                 dst[i] = v;
                 l = cpEnvironment.cpfmin(l, v.x);
                 r = cpEnvironment.cpfmax(r, v.x);
@@ -255,8 +256,9 @@ namespace ChipmunkSharp
             //poly.numVerts = numVerts;
             poly.verts = verts; // (cpVect)cpcalloc(2 * numVerts, sizeof(cpVect));
             poly.planes = new List<cpSplittingPlane>();  // (cpSplittingPlane)cpcalloc(2 * numVerts, sizeof(cpSplittingPlane));
-            poly.tVerts = poly.verts; // +numVerts;
-            poly.tPlanes = poly.planes; //+ numVerts;
+            //poly.tVerts = poly.verts; // +numVerts;
+			poly.tVerts = new List<cpVect>();
+			poly.tPlanes = new List<cpSplittingPlane>(); //+ numVerts;
 
             for (int i = 0; i < numVerts; i++)
             {
@@ -265,15 +267,20 @@ namespace ChipmunkSharp
                 cpVect n = cpVect.cpvnormalize(cpVect.cpvperp(cpVect.cpvsub(b, a)));
 
                 poly.verts[i] = a;
+				poly.planes.Add(new cpSplittingPlane(n, cpVect.cpvdot(n,a)));
+				poly.tPlanes.Add(new cpSplittingPlane(cpVect.ZERO, 0));
                 //poly.planes[i].n = n;
                 //poly.planes[i].d = cpVect.cpvdot(n, a);
+				poly.tVerts.Add(cpVect.ZERO);
             }
 
             // TODO: Why did I add this? It duplicates work from above.
-            for (int i = 0; i < numVerts; i++)
-            {
-                poly.planes.Add(cpSplittingPlane.cpSplittingPlaneNew(poly.verts[(i - 1 + numVerts) % numVerts], poly.verts[i]));
-            }
+//            for (int i = 0; i < numVerts; i++)
+//            {
+//				var a = poly.verts[(i - 1 + numVerts) % numVerts];
+//				var b = poly.verts[i];
+//				poly.planes.Add(cpSplittingPlane.cpSplittingPlaneNew(a,b));
+//            }
         }
 
 
