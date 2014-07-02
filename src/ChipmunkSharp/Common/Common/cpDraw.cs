@@ -95,6 +95,8 @@ namespace ChipmunkSharp
         /// Draw a line segment.
         public abstract void DrawSegment(cpVect p1, cpVect p2, cpColor color);
 
+		/// Draw a line segment with a strokeWidth.
+		public abstract void DrawSegment(cpVect p1, cpVect p2, float lineWidth, cpColor color);
 
         public abstract void DrawString(int x, int y, string format, params object[] objects);
 

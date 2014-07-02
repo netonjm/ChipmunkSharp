@@ -22,6 +22,7 @@
 using ChipmunkSharp.Constraints;
 using ChipmunkSharp.Shapes;
 using System.Collections.Generic;
+using System;
 
 namespace ChipmunkSharp
 {
@@ -289,8 +290,9 @@ namespace ChipmunkSharp
 
         public override void Draw(cpDraw m_debugDraw)
         {
-            // m_debugDraw.DrawSegment(  //DrawSolidCircle(new cpVect(tc.x, tc.y), r, cpVect.ZERO, cpColor.Red);
-            m_debugDraw.DrawSegment(ta, tb, cpColor.Blue);
+            
+			var lineWidth = Math.Max(1, this.r);  // take a look if we need to apply scale for radius
+            m_debugDraw.DrawSegment(ta, tb, lineWidth, cpColor.Blue);
 
         }
 
@@ -557,7 +559,8 @@ namespace ChipmunkSharp
         /// when recreating a space. This will make the simulation be deterministic.
         //#define CP_DeclareShapeGetter(struct, type, name) type struct##Get##name(const cpShape *shape)
 
-       
+
+
         public void SetGroup(int id)
         {
             group = id;
