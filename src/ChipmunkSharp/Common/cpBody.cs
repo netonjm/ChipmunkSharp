@@ -384,41 +384,44 @@ namespace ChipmunkSharp
         {
 #if DEBUG
 
-			// Most of these do not make any sense except for the infinity checks.
+            // Most of these do not make any sense except for the infinity checks.
             cpEnvironment.cpAssertSoft(body.m == body.m && body.m_inv == body.m_inv, "Body's mass is invalid.");
             cpEnvironment.cpAssertSoft(body.i == body.i && body.i_inv == body.i_inv, "Body's moment is invalid.");
-			cpEnvironment.cpAssertSoft((body.p != null) && (body.p.x == body.p.x && body.p.y == body.p.y) && (!double.IsInfinity(Math.Abs(body.p.x)) && !double.IsInfinity(Math.Abs(body.p.y))),
-				"Body's position is invalid.");
-			cpEnvironment.cpAssertSoft((body.v != null) && (body.v.x == body.v.x && body.v.y == body.v.y) && (!double.IsInfinity(Math.Abs(body.v.x)) && !double.IsInfinity(Math.Abs(body.v.y))),
-				"Body's velocity is invalid.");
-			cpEnvironment.cpAssertSoft((body.f != null) && (body.f.x == body.f.x && body.f.y == body.f.y) && (!double.IsInfinity(Math.Abs(body.f.x)) && !double.IsInfinity(Math.Abs(body.f.y))),
-				"Body's force is invalid.");
-			cpEnvironment.cpAssertSoft(body.a == body.a && !double.IsInfinity(Math.Abs(body.a)), "Body's angle is invalid.");
-			cpEnvironment.cpAssertSoft(body.w == body.w && !double.IsInfinity(Math.Abs(body.w)), "Body's anglular velocity is invalid.");
-			cpEnvironment.cpAssertSoft(body.t == body.t && !double.IsInfinity(Math.Abs(body.t)), "Body's torque is invalid.");
-			cpEnvironment.cpAssertSoft((body.rot != null) && (body.rot.x == body.rot.x && body.rot.y == body.rot.y) && (!double.IsInfinity(Math.Abs(body.rot.x)) && !double.IsInfinity(Math.Abs(body.rot.y))),
-				"Body's rotation vector is invalid.");
+            cpEnvironment.cpAssertSoft((body.p != null) && (body.p.x == body.p.x && body.p.y == body.p.y) && (!double.IsInfinity(Math.Abs(body.p.x)) && !double.IsInfinity(Math.Abs(body.p.y))),
+                "Body's position is invalid.");
+            cpEnvironment.cpAssertSoft((body.v != null) && (body.v.x == body.v.x && body.v.y == body.v.y) && (!double.IsInfinity(Math.Abs(body.v.x)) && !double.IsInfinity(Math.Abs(body.v.y))),
+                "Body's velocity is invalid.");
+            cpEnvironment.cpAssertSoft((body.f != null) && (body.f.x == body.f.x && body.f.y == body.f.y) && (!double.IsInfinity(Math.Abs(body.f.x)) && !double.IsInfinity(Math.Abs(body.f.y))),
+                "Body's force is invalid.");
+            cpEnvironment.cpAssertSoft(body.a == body.a && !double.IsInfinity(Math.Abs(body.a)), "Body's angle is invalid.");
+            cpEnvironment.cpAssertSoft(body.w == body.w && !double.IsInfinity(Math.Abs(body.w)), "Body's anglular velocity is invalid.");
+            cpEnvironment.cpAssertSoft(body.t == body.t && !double.IsInfinity(Math.Abs(body.t)), "Body's torque is invalid.");
+            cpEnvironment.cpAssertSoft((body.rot != null) && (body.rot.x == body.rot.x && body.rot.y == body.rot.y) && (!double.IsInfinity(Math.Abs(body.rot.x)) && !double.IsInfinity(Math.Abs(body.rot.y))),
+                "Body's rotation vector is invalid.");
             cpEnvironment.cpAssertSoft(body.v_limit == body.v_limit, "Body's velocity limit is invalid.");
             cpEnvironment.cpAssertSoft(body.w_limit == body.w_limit, "Body's angular velocity limit is invalid.");
 #endif
         }
 
-		private void AssertSane()
+        private void AssertSane()
         {
             //  throw new NotImplementedException();
-			// for now just call SanityCheck
-			SanityCheck(this);
+            // for now just call SanityCheck
+            SanityCheck(this);
         }
 
 
 
-        public void ComponentActivate()
+        public static void ComponentActivate(cpBody root)
         {
-            if (!IsSleeping()) return;
-            cpEnvironment.cpAssertHard(!IsRogue(), "Internal Error: ComponentActivate() called on a rogue body.");
+            if (root == null || !root.IsSleeping()) return;
+            cpEnvironment.cpAssertHard(!root.IsRogue(), "Internal Error: ComponentActivate() called on a rogue body.");
 
             // cpSpace space = space;
-            cpBody body = this;
+            //cpBody body = this;
+            cpSpace space = root.space;
+            cpBody body = root;
+
             while (body != null)
             {
                 cpBody next = body.node.next;
@@ -432,7 +435,7 @@ namespace ChipmunkSharp
 
                 body = next;
             }
-            space.sleepingComponents.Remove(this);
+            space.sleepingComponents.Remove(root);
             //cpArrayDeleteObj(, );
         }
 
@@ -446,8 +449,7 @@ namespace ChipmunkSharp
             {
                 node.idleTime = 0.0f;
 
-                if (node.root != null)
-                    node.root.ComponentActivate();
+                ComponentActivate(node.root);
 
                 EachArbiter((body, arb, data) =>
                 {

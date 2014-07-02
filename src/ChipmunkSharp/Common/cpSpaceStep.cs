@@ -176,7 +176,7 @@ namespace ChipmunkSharp
             cpArbiter arb = new cpArbiter(a, b);
 
             //cpArbiter arb =  (cpArbiter)cpHashSetInsert(space.cachedArbiters, arbHashID, shape_pair, space, (cpHashSetTransFunc)cpSpaceArbiterSetTrans);
-            cachedArbiters.Add(cpEnvironment.CP_HASH_PAIR(a.hashid, b.hashid), arb);
+            cachedArbiters.Insert(cpEnvironment.CP_HASH_PAIR(a.hashid, b.hashid), arb);
             //cachedArbiter
 
             //cpArbiterUpdate(arb, );
@@ -289,7 +289,7 @@ namespace ChipmunkSharp
             // Find colliding pairs.
             //cpSpacePushFreshContactBuffer(space);
 
-            foreach (var item in activeShapes)
+            foreach (var item in activeShapes.elements)
                 ShapeUpdateFunc((cpShape)item.Value, null);
 
             //  cpSpatialIndexEach(activeShapes, (cpSpatialIndexIteratorFunc)cpShapeUpdateFunc, NULL);
@@ -310,7 +310,7 @@ namespace ChipmunkSharp
             Lock();
 
 
-            foreach (var item in cachedArbiters)
+            foreach (var item in cachedArbiters.elements)
                 ArbiterSetFilter((cpArbiter)item.Value);
 
 

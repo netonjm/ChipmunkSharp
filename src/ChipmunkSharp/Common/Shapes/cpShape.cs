@@ -557,8 +557,7 @@ namespace ChipmunkSharp
         /// when recreating a space. This will make the simulation be deterministic.
         //#define CP_DeclareShapeGetter(struct, type, name) type struct##Get##name(const cpShape *shape)
 
-
-
+       
         public void SetGroup(int id)
         {
             group = id;

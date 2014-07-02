@@ -49,7 +49,7 @@ namespace ChipmunkSharp
                 body.EachShape((bod, s, o) =>
                 {
                     staticShapes.Remove(s.hashid);
-                    activeShapes.Add(s.hashid, s);
+                    activeShapes.Insert(s.hashid, s);
 
                 }, null);
 
@@ -78,7 +78,7 @@ namespace ChipmunkSharp
                         cpShape a = arb.a, b = arb.b;
                         List<cpShape> shape_pair = new List<cpShape>() { a, b };
 
-                        cachedArbiters.Add(cpEnvironment.CP_HASH_PAIR(a.hashid, b.hashid), arb);
+                        cachedArbiters.Insert(cpEnvironment.CP_HASH_PAIR(a.hashid, b.hashid), arb);
 
                         //cpHashSetInsert(space->cachedArbiters, arbHashID, shape_pair, arb, NULL);
 
@@ -119,7 +119,7 @@ namespace ChipmunkSharp
             {
 
                 activeShapes.Remove(s.hashid);
-                staticShapes.Add(s.hashid, s);
+                staticShapes.Insert(s.hashid, s);
                 //cpSpatialIndexRemove(, shape, );
                 //cpSpatialIndexInsert(space->staticShapes, shape, shape->hashid);
 

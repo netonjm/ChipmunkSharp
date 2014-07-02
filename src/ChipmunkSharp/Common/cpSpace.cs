@@ -483,7 +483,7 @@ namespace ChipmunkSharp
 
             shape.Update(body.Position, body.Rotation);
 
-            this.activeShapes.Add(shape.hashid, shape);
+            this.activeShapes.Insert(shape.hashid, shape);
 
             //cpSpatialIndexInsert(space.activeShapes, shape, shape.hashid);
             shape.space = this;
@@ -506,7 +506,7 @@ namespace ChipmunkSharp
             shape.Update(body.Position, body.Rotation);
             //cpShapeUpdate(shape,);
 
-            this.staticShapes.Add(shape.hashid, shape);
+            this.staticShapes.Insert(shape.hashid, shape);
             //cpSpatialIndexInsert(space.staticShapes, );
             shape.space = this;
 
@@ -679,9 +679,7 @@ namespace ChipmunkSharp
             {
 
                 activeShapes.Remove(s.hashid);
-                staticShapes.Add(s.hashid, s);
-                //cpSpatialIndexRemove(, shape, shape.hashid);
-                //cpSpatialIndexInsert(space.staticShapes, shape, shape.hashid);
+                staticShapes.Insert(s.hashid, s);
 
             }, null);
 
@@ -712,7 +710,7 @@ namespace ChipmunkSharp
                 this.staticShapes.Remove(s.hashid);
                 //cpSpatialIndexRemove(space.staticShapes, shape, shape.hashid);
                 //cpSpatialIndexInsert(space.activeShapes, shape, shape.hashid);
-                this.activeShapes.Add(s.hashid, s);
+                this.activeShapes.Insert(s.hashid, s);
 
             }, null);
 
@@ -747,7 +745,7 @@ namespace ChipmunkSharp
             // cpSpatialIndexEach(space.staticShapes, updateBBCache, null);
 
             cpShape shp;
-            foreach (var item in staticShapes)
+            foreach (var item in staticShapes.elements)
             {
                 shp = (cpShape)item.Value;
                 updateBBCache(shp, null);
@@ -758,33 +756,31 @@ namespace ChipmunkSharp
 
         }
         /// Update the collision detection data for a specific shape in the space.
-        public void cpSpaceReindexShape(cpSpace space, cpShape shape)
+        public void ReindexShape(cpShape shape)
         {
-            cpEnvironment.cpAssertHard(!space.locked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
+            cpEnvironment.cpAssertHard(!locked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
 
             cpBody body = shape.body;
             shape.Update(body.Position, body.Rotation);
             //cpShapeUpdate(shape, );
 
-            space.activeShapes.ReindexObject(shape.hashid, shape);
-            space.staticShapes.ReindexObject(shape.hashid, shape);
+            activeShapes.ReindexObject(shape.hashid, shape);
+            staticShapes.ReindexObject(shape.hashid, shape);
             // attempt to rehash the shape in both hashes
+
             //cpSpatialIndexReindexObject(space.activeShapes, shape, shape.hashid);
             //cpSpatialIndexReindexObject(space.staticShapes, shape, shape.hashid);
         }
+
         /// Update the collision detection data for all shapes attached to a body.
         public void cpSpaceReindexShapesForBody(cpSpace space, cpBody body)
         {
-            //TODO:REINDEX
-            //CP_BODY_FOREACH_SHAPE(body, shape) cpSpaceReindexShape(space, shape);
+            for (cpShape var = body.shapeList; var != null; var = var.next)
+                space.ReindexShape(var);
         }
 
 
-        public static void copyShapes(cpShape shape, cpBBTree index)
-        {
-            index.Add(shape.hashid, shape);
-            //cpSpatialIndexInsert(index, shape, shape.hashid);
-        }
+
 
         /// Switch the space to use a spatial has as it's spatial index.
         //public void cpSpaceUseSpatialHash(cpSpace space, float dim, int count)
@@ -869,14 +865,14 @@ namespace ChipmunkSharp
             {
                 Type actualType;
                 cpShape shape;
-                foreach (var item in activeShapes)
+                foreach (var item in activeShapes.elements)
                 {
                     shape = (cpShape)item.Value;
                     shape.Draw(m_debugDraw);
                     //Console.WriteLine("dsadasdsa");
                 }
 
-                foreach (var item in staticShapes)
+                foreach (var item in staticShapes.elements)
                 {
                     shape = (cpShape)item.Value;
                     shape.Draw(m_debugDraw);

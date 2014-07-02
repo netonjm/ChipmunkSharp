@@ -213,9 +213,15 @@ namespace ChipmunkSharp
 
     public class Leaf : Node
     {
-        internal void Update(cpBBTree cpBBTree)
-        {
 
+        internal bool Update(cpBBTree cpBBTree)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void AddPairs(cpBBTree cpBBTree)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -279,8 +285,10 @@ namespace ChipmunkSharp
         @{
     */
 
-    public class cpBBTree : Dictionary<int, object>
+    public class cpBBTree
     {
+
+        public Dictionary<int, object> elements;
 
         public void SetVelocityFunc(cpBBTreeVelocityFunc func)
         {
@@ -290,7 +298,7 @@ namespace ChipmunkSharp
 
         public cpBBTreeVelocityFunc velocityFunc;
 
-        public Dictionary<string, Leaf> leaves { get; set; }
+        public Dictionary<int, Leaf> leaves { get; set; }
         public Node root { get; set; }
 
         public Node pooledNodes { get; set; }
@@ -312,10 +320,15 @@ namespace ChipmunkSharp
 
         //MARK: Misc Functions
 
+
+
+
         public cpBBTree(cpBBTree staticIndex)
         {
 
-            leaves = new Dictionary<string, Leaf>();
+            elements = new Dictionary<int, object>();
+
+            leaves = new Dictionary<int, Leaf>();
             this.staticIndex = staticIndex;
             if (staticIndex != null)
             {
@@ -329,9 +342,9 @@ namespace ChipmunkSharp
         }
 
         /// Get the number of objects in the spatial index.
-        public static int cpSpatialIndexCount(cpBBTree index)
+        public int Count()
         {
-            return index.Count;
+            return leaves.Count;
         }
 
         //public static void cpSpatialIndexCollideStatic(cpSpatialIndex dynamicIndex, cpSpatialIndex staticIndex, cpSpatialIndexQueryFunc func, object data)
@@ -363,6 +376,8 @@ namespace ChipmunkSharp
 
             return index;
         }
+
+
 
 
         //public void IndexEach(cpSpatialIndexIteratorFunc updateBBCache, object p)
@@ -764,7 +779,7 @@ namespace ChipmunkSharp
 
         public bool Contains(object obj)
         {
-            foreach (var item in this)
+            foreach (var item in elements)
             {
                 if (item.Value == obj)
                     return true;
@@ -774,7 +789,7 @@ namespace ChipmunkSharp
 
         public bool ContainsHash(int hashid)
         {
-            foreach (var item in this)
+            foreach (var item in elements)
             {
                 if (item.Key == hashid)
                     return true;
@@ -805,19 +820,11 @@ namespace ChipmunkSharp
 
         public void CollideStatic(cpBBTree staticIndex, cpSpatialIndexQueryFunc func, object data)
         {
-            if (staticIndex != null && cpSpatialIndexCount(staticIndex) > 0)
+            if (staticIndex != null && staticIndex.Count() > 0)
             {
-
                 dynamicToStaticContext context = new dynamicToStaticContext(dynamicIndex.bbfunc, staticIndex, func, data);
-
-                dynamicToStaticIter(dynamicIndex, context);
-
-                //foreach (var item in this)
-                //{
-                //  staticIndex.Query(item.Value,  )
-                //}
-                //TODO: FINISH
-                // cpSpatialIndexEach(dynamicIndex, (cpSpatialIndexIteratorFunc)dynamicToStaticIter, context);
+                foreach (var item in elements)
+                    dynamicToStaticIter(item, context);
             }
         }
 
@@ -933,6 +940,16 @@ namespace ChipmunkSharp
             return node;
         }
 
+
+        public void AddShapes(cpShape shape)
+        {
+            //index.Add(shape.hashid, shape);
+            Insert(shape.hashid, shape);
+            //cpSpatialIndexInsert(index, shape, shape.hashid);
+        }
+
+
+
         public bool LeafUpdate(Node leaf)
         {
             //Node root = tree.root;
@@ -980,21 +997,47 @@ namespace ChipmunkSharp
             }
         }
 
-
         public void SetDefaultValue(cpCollisionHandler value)
         {
             defaultValue = value;
         }
 
-        internal void Reindex()
+        public void Reindex()
         {
-            throw new NotImplementedException();
+            ReindexQuery(VoidQueryFunc, null); //cpBBTreeReindexQuery(tree, VoidQueryFunc, null);
         }
 
-        internal void ReindexObject(int p, cpShape shape)
+        public void ReindexObject(int key, object obj)
         {
-            throw new NotImplementedException();
+            Leaf leaf;
+            if (leaves.TryGetValue(key, out leaf))
+            {
+                if (leaf.Update(this))
+                    leaf.AddPairs(this);
+
+                IncrementStamp();
+            }
         }
+
+        public void Remove(int key)
+        {
+            //remove elements adds more functionality than simple array
+            elements.Remove(key);
+        }
+
+        public void Insert(int key, object value)
+        {
+            //Add elements adds more functionality than simple array
+            elements.Add(key, value);
+        }
+
+        public bool TryGetValue(int key, out object value)
+        {
+            return elements.TryGetValue(key, out value);
+        }
+
+
+
     };
 
 
