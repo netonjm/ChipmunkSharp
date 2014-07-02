@@ -105,16 +105,27 @@ namespace ChipmunkSharp
         {
 
             // var verts = this.tVerts;
-            var len = tVerts.Count;
-            var lastPoint = new cpVect(tVerts[len - 2].x, tVerts[len - 1].y);
-            //ctx.moveTo(lastPoint.x, lastPoint.y);
+            //var len = tVerts.Count;
+            //var lastPoint = new cpVect(tVerts[len - 2].x, tVerts[len - 1].y);
+            ////ctx.moveTo(lastPoint.x, lastPoint.y);
 
-            for (var i = 0; i < len; i += 2)
-            {
-                var p = new cpVect(verts[i].x, verts[i + 1].y);
-                m_debugDraw.DrawSegment(lastPoint, p, cpColor.Red);
-                lastPoint = p;
-            }
+            //for (var i = 0; i < len; i += 2)
+            //{
+            //    var p = new cpVect(verts[i].x, verts[i + 1].y);
+            //    m_debugDraw.DrawSegment(lastPoint, p, cpColor.Red);
+            //    lastPoint = p;
+            //}
+
+            m_debugDraw.DrawPolygon(tVerts, numVerts, cpColor.Red);
+
+           
+        //// convert chipmunk points to coco points
+        //Point *pointArray = new Point[poly->numVerts];
+        //for (int i=0; i < poly->numVerts; i++) {
+        //    pointArray[i] = Point(poly->tVerts[i].x, poly->tVerts[i].y);
+        //}
+         
+        //DrawPrimitives::drawPoly(pointArray, poly->numVerts, true);
 
         }
 

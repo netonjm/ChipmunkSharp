@@ -876,6 +876,12 @@ namespace ChipmunkSharp
                     //Console.WriteLine("dsadasdsa");
                 }
 
+                foreach (var item in staticShapes)
+                {
+                    shape = (cpShape)item.Value;
+                    shape.Draw(m_debugDraw);
+                    //Console.WriteLine("dsadasdsa");
+                }
                 //for (b2Body b = m_bodyList; b != null; b = b.Next)
                 //{
                 //    for (b2Fixture f = b.FixtureList; f != null; f = f.Next)

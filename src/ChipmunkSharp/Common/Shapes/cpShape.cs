@@ -77,9 +77,7 @@ namespace ChipmunkSharp
 
         public override void Draw(cpDraw m_debugDraw)
         {
-
             m_debugDraw.DrawSolidCircle(new cpVect(tc.x, tc.y), r, cpVect.ZERO, cpColor.Red);
-
 
         }
 
@@ -287,6 +285,13 @@ namespace ChipmunkSharp
         public void cpSegmentShapeSetRadius(float radius)
         {
             this.r = radius;
+        }
+
+        public override void Draw(cpDraw m_debugDraw)
+        {
+            // m_debugDraw.DrawSegment(  //DrawSolidCircle(new cpVect(tc.x, tc.y), r, cpVect.ZERO, cpColor.Red);
+            m_debugDraw.DrawSegment(ta, tb, cpColor.Blue);
+
         }
 
 
