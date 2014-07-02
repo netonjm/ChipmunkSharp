@@ -551,5 +551,16 @@ namespace ChipmunkSharp
         //}
 
         #endregion
+
+        public static int numLeaves { get; set; }
+
+        internal static void AssertSoft(bool p1, string p2)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static int numNodes { get; set; }
+
+        public static int numPairs { get; set; }
     }
 }

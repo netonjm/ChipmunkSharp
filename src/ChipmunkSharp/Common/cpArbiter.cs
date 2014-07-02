@@ -674,9 +674,9 @@ namespace ChipmunkSharp
         public static cpCollisionHandler cpSpaceLookupHandler(cpSpace space, int a, int b)
         {
             //cpCollisionType types[] = {a, b};
-            object col = null;
+            Leaf col = null;
             if (space.collisionHandlers.TryGetValue(cpEnvironment.CP_HASH_PAIR(a, b), out col))
-                return (cpCollisionHandler)col;
+                return (cpCollisionHandler)col.obj;
             //TODO: ??¿
             return new cpCollisionHandler();
 

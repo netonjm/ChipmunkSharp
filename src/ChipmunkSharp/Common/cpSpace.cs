@@ -57,7 +57,7 @@ namespace ChipmunkSharp
         private cpDraw m_debugDraw;
 
 
-        public static cpCollisionHandler cpDefaultCollisionHandler = new cpCollisionHandler(0, 0, alwaysCollide, alwaysCollide, nothing, nothing, null);
+        public static cpCollisionHandler cpDefaultCollisionHandler = new cpCollisionHandler(0, 0, AlwaysCollide, AlwaysCollide, Nothing, Nothing, null);
 
         // public float damping;
 
@@ -135,13 +135,19 @@ namespace ChipmunkSharp
 
         public bool skipPostStep;
 
-        public List<cpPostStepCallback> postStepCallbacks;
+        public List<cpPostStepCallback> PostStepCallbacks;
 
-        public cpCollisionHandler defaultHandler { get; set; }
+        public cpCollisionHandler DefaultHandler { get; set; }
+
+        public cpSpace()
+        {
+            //Space initialization
+            Init();
+        }
 
         //MARK: Contact Set Helpers
         // Equal function for arbiterSet.
-        public static bool arbiterSetEql(List<cpShape> shapes, cpArbiter arb)
+        public static bool ArbiterSetEql(List<cpShape> shapes, cpArbiter arb)
         {
             cpShape a = shapes[0];
             cpShape b = shapes[1];
@@ -150,21 +156,21 @@ namespace ChipmunkSharp
         }
 
 
-        public static bool handlerSetEql(cpCollisionHandler check, cpCollisionHandler pair)
+        public static bool HandlerSetEql(cpCollisionHandler check, cpCollisionHandler pair)
         {
             return ((check.a == pair.a && check.b == pair.b) || (check.b == pair.a && check.a == pair.b));
         }
 
 
         // Transformation function for collisionHandlers.
-        public static cpCollisionHandler handlerSetTrans(cpCollisionHandler handler, object unused)
+        public static cpCollisionHandler HandlerSetTrans(cpCollisionHandler handler, object unused)
         {
             // (cpCollisionHandler)cpcalloc(1, sizeof(cpCollisionHandler));
             return handler.Clone();
         }
 
 
-        static bool cachedArbitersFilter(cpArbiter arb, arbiterFilterContext context)
+        public static bool CachedArbitersFilter(cpArbiter arb, arbiterFilterContext context)
         {
             cpShape shape = context.shape;
             cpBody body = context.body;
@@ -191,42 +197,31 @@ namespace ChipmunkSharp
             return true;
         }
 
-        void cpSpaceFilterArbiters(cpSpace space, cpBody body, cpShape filter)
+        public void FilterArbiters(cpBody body, cpShape filter)
         {
+            cpArbiter arb;
 
-            lock (space)
+            Lock();
             {
-                space.locked = true;
+                arbiterFilterContext context = new arbiterFilterContext(this, body, filter);
+                foreach (var item in cachedArbiters.elements)
+                {
+                    arb = (item.Value.obj as cpArbiter);
+                    CachedArbitersFilter(arb, context);
+                }
 
-                arbiterFilterContext context = new arbiterFilterContext(space, body, filter);
-
-                //TODO: cpSpaceFilterArbiters
-                // cpHashSetFilter(space.cachedArbiters, cachedArbitersFilter, context);
-                space.locked = false;
-            }
-
+            } Unlock(true);
 
         }
-
-
 
         //MARK: Misc Helper Funcs
 
         // Default collision functions.
-        static bool alwaysCollide(cpArbiter arb, cpSpace space, object data) { return true; }
-        static void nothing(cpArbiter arb, cpSpace space, object data) { }
+        static bool AlwaysCollide(cpArbiter arb, cpSpace space, object data) { return true; }
+        static void Nothing(cpArbiter arb, cpSpace space, object data) { }
 
         // function to get the estimated velocity of a shape for the cpBBTree.
-        static cpVect shapeVelocityFunc(cpShape shape) { return shape.body.v; }
-
-        static void freeWrap(object ptr, object unused)
-        { //cpfree(ptr);
-        }
-
-
-
-
-        /// Allocate a cpSpace.
+        static cpVect ShapeVelocityFunc(cpShape shape) { return shape.body.v; }
 
         /// Initialize a cpSpace.
         public cpSpace Init()
@@ -281,32 +276,24 @@ namespace ChipmunkSharp
 
             constraints = new List<cpConstraint>(); // cpArrayNew(0);
 
-            defaultHandler = cpDefaultCollisionHandler;
+            DefaultHandler = cpDefaultCollisionHandler;
             collisionHandlers = new cpBBTree(null); // cpHashSetNew(0, (cpHashSetEqlFunc)handlerSetEql);
 
             collisionHandlers.SetDefaultValue(cpDefaultCollisionHandler);
 
             //cpHashSetSetDefaultValue(space.collisionHandlers, cpDefaultCollisionHandler);
 
-            postStepCallbacks = new List<cpPostStepCallback>();
+            PostStepCallbacks = new List<cpPostStepCallback>();
             skipPostStep = false;
             staticBody = new cpBody();
 
             return this;
         }
-        /// Allocate and initialize a cpSpace.
-        public cpSpace cpSpaceNew()
-        {
-            var space = new cpSpace();
-            return space.Init();
-            //return cpSpaceInit();
-
-        }
 
         /// Destroy a cpSpace.
-        public void cpSpaceDestroy(cpSpace space)
+        public void Destroy()
         {
-            //TODO:
+            //TODO: 
             //cpSpaceEachBody(space, (cpSpaceBodyIteratorFunc)cpBodyActivate, null);
 
             //cpSpatialIndexFree(space.staticShapes);
@@ -339,14 +326,11 @@ namespace ChipmunkSharp
             //if (space.collisionHandlers) cpHashSetEach(space.collisionHandlers, freeWrap, null);
             //cpHashSetFree(space.collisionHandlers);
         }
+
         /// Destroy and free a cpSpace.
-        public void cpSpaceFree(cpSpace space)
+        public void Free()
         {
-            if (space != null)
-            {
-                cpSpaceDestroy(space);
-                // cpfree(space);
-            }
+            Destroy();
         }
 
         //#define CP_DefineSpaceStructGetter(type, member, name) \
@@ -372,9 +356,9 @@ namespace ChipmunkSharp
         //CP_DefineSpaceStructGetter(cpBody, staticBody, StaticBody)
         //CP_DefineSpaceStructGetter(float, CP_PRIVATE(curr_dt), CurrentTimeStep)
 
-        public void cpAssertSpaceUnlocked(cpSpace space)
+        public void AssertSpaceUnlocked()
         {
-            cpEnvironment.cpAssertHard(space.locked, "This operation cannot be done safely during a call to cpSpaceStep() or during a query. Put these calls into a post-step callback.");
+            cpEnvironment.cpAssertHard(locked, "This operation cannot be done safely during a call to cpSpaceStep() or during a query. Put these calls into a post-step callback.");
         }
 
         /// returns true from inside a callback and objects cannot be added/removed.
@@ -387,7 +371,7 @@ namespace ChipmunkSharp
         /// The default collision handler is invoked for each colliding pair of shapes
         /// that isn't explicitly handled by a specific collision handler.
         /// You can pass null for any function you don't want to implement.
-        public void cpSpaceSetDefaultCollisionHandler(
+        public void SetDefaultCollisionHandler(
                cpSpace space,
                cpCollisionBeginFunc begin,
                cpCollisionPreSolveFunc preSolve,
@@ -396,25 +380,26 @@ namespace ChipmunkSharp
                object data
            )
         {
-            cpAssertSpaceUnlocked(space);
+
+            space.AssertSpaceUnlocked();
 
             cpCollisionHandler handler = new cpCollisionHandler(
                 0, 0,
-                begin != null ? begin : alwaysCollide,
-                preSolve != null ? preSolve : alwaysCollide,
-                postSolve != null ? postSolve : nothing,
-                separate != null ? separate : nothing,
+                begin != null ? begin : AlwaysCollide,
+                preSolve != null ? preSolve : AlwaysCollide,
+                postSolve != null ? postSolve : Nothing,
+                separate != null ? separate : Nothing,
                 data
             );
 
-            space.defaultHandler = handler;
-            collisionHandlers.SetDefaultValue(space.defaultHandler);
+            space.DefaultHandler = handler;
+            collisionHandlers.SetDefaultValue(space.DefaultHandler);
             //cpHashSetSetDefaultValue(space.collisionHandlers,space.defaultHandler);
         }
 
         /// Set a collision handler to be used whenever the two shapes with the given collision types collide.
         /// You can pass null for any function you don't want to implement.
-        public void cpSpaceAddCollisionHandler(
+        public void AddCollisionHandler(
               cpSpace space,
               int a, int b,
               cpCollisionBeginFunc begin,
@@ -424,17 +409,18 @@ namespace ChipmunkSharp
               object data
           )
         {
-            cpAssertSpaceUnlocked(space);
+
+            space.AssertSpaceUnlocked();
 
             // Remove any old function so the new one will get added.
             RemoveCollisionHandler(a, b);
 
             cpCollisionHandler handler = new cpCollisionHandler(
         a, b,
-        begin != null ? begin : alwaysCollide,
-        preSolve != null ? preSolve : alwaysCollide,
-        postSolve != null ? postSolve : nothing,
-        separate != null ? separate : nothing,
+        begin != null ? begin : AlwaysCollide,
+        preSolve != null ? preSolve : AlwaysCollide,
+        postSolve != null ? postSolve : Nothing,
+        separate != null ? separate : Nothing,
         data
     );
 
@@ -446,7 +432,7 @@ namespace ChipmunkSharp
         public void RemoveCollisionHandler(int a, int b)
         {
 
-            cpAssertSpaceUnlocked(this);
+            AssertSpaceUnlocked();
 
             // space.collisionHandlers.
 
@@ -472,7 +458,7 @@ namespace ChipmunkSharp
 
             cpEnvironment.cpAssertHard(shape.space != this, "You have already added this shape to this space. You must not add it a second time.");
             cpEnvironment.cpAssertHard(shape.space != null, "You have already added this shape to another space. You cannot add it to a second.");
-            cpAssertSpaceUnlocked(this);
+            AssertSpaceUnlocked();
 
 
             body.Activate();
@@ -498,7 +484,7 @@ namespace ChipmunkSharp
             // cpEnvironment.cpAssertHard(shape.space != this, "You have already added this shape to this space. You must not add it a second time.");
             // cpEnvironment.cpAssertHard(shape.space != null, "You have already added this shape to another space. You cannot add it to a second.");
             // cpEnvironment.cpAssertHard(shape.body.IsRogue(), "You are adding a static shape to a dynamic body. Did you mean to attach it to a static or rogue body? See the documentation for more information.");
-            cpAssertSpaceUnlocked(this);
+            AssertSpaceUnlocked();
 
             cpBody body = shape.body;
             body.AddShape(shape);
@@ -519,7 +505,7 @@ namespace ChipmunkSharp
             cpEnvironment.cpAssertHard(!body.IsStatic(), "Do not add static bodies to a space. Static bodies do not move and should not be simulated.");
             cpEnvironment.cpAssertHard(body.space != this, "You have already added this body to this space. You must not add it a second time.");
             cpEnvironment.cpAssertHard(body.space != null, "You have already added this body to another space. You cannot add it to a second.");
-            cpAssertSpaceUnlocked(this);
+            AssertSpaceUnlocked();
 
             bodies.Add(body);
             //cpArrayPush(space.bodies, body);
@@ -535,7 +521,7 @@ namespace ChipmunkSharp
             cpEnvironment.cpAssertHard(constraint.space != this, "You have already added this constraint to this space. You must not add it a second time.");
             cpEnvironment.cpAssertHard(constraint.space != null, "You have already added this constraint to another space. You cannot add it to a second.");
             cpEnvironment.cpAssertHard(constraint.a != null && constraint.b != null, "Constraint is attached to a null body.");
-            cpAssertSpaceUnlocked(this);
+            AssertSpaceUnlocked();
 
             constraint.a.Activate();
             constraint.b.Activate();
@@ -565,14 +551,14 @@ namespace ChipmunkSharp
             else
             {
                 cpEnvironment.cpAssertHard(ContainsShape(shape), "Cannot remove a shape that was not added to the space. (Removed twice maybe?)");
-                cpAssertSpaceUnlocked(this);
+                AssertSpaceUnlocked();
 
                 //cpBodyActivate(body);body
 
                 body.Activate();
                 body.RemoveShape(shape);
 
-                cpSpaceFilterArbiters(this, body, shape);
+                FilterArbiters(body, shape);
 
                 this.activeShapes.Remove(shape.hashid);
 
@@ -585,46 +571,39 @@ namespace ChipmunkSharp
         {
 
             cpEnvironment.cpAssertHard(ContainsShape(shape), "Cannot remove a static or sleeping shape that was not added to the space. (Removed twice maybe?)");
-            cpAssertSpaceUnlocked(this);
+            AssertSpaceUnlocked();
 
             cpBody body = shape.body;
             if (body.IsStatic())
                 body.ActivateStatic(shape);// cpBodyActivateStatic(body, shape);
 
             body.RemoveShape(shape);
-            //cpBodyRemoveShape(body, shape);
 
-            cpSpaceFilterArbiters(this, body, shape);
-
-            //cpSpatialIndexRemove(space.staticShapes, shape, );
+            FilterArbiters(body, shape);
 
             staticShapes.Remove(shape.hashid);
-
 
             shape.space = null;
 
         }
+
         /// Remove a rigid body from the simulation.
         public void RemoveBody(cpBody body)
         {
-
-
             cpEnvironment.cpAssertHard(ContainsBody(body), "Cannot remove a body that was not added to the space. (Removed twice maybe?)");
-            cpAssertSpaceUnlocked(this);
+            AssertSpaceUnlocked();
 
             body.Activate();
-            //	cpSpaceFilterArbiters(space, body, null);
             this.bodies.Remove(body);
-
             body.space = null;
-
         }
+
         /// Remove a constraint from the simulation.
         public void RemoveConstraint(cpConstraint constraint)
         {
 
             cpEnvironment.cpAssertHard(ContainsConstraint(constraint), "Cannot remove a constraint that was not added to the space. (Removed twice maybe?)");
-            cpAssertSpaceUnlocked(this);
+            AssertSpaceUnlocked();
 
             constraint.a.Activate();
             constraint.b.Activate();
@@ -665,7 +644,7 @@ namespace ChipmunkSharp
 
             cpEnvironment.cpAssertHard(!body.IsStatic(), "Body is already static.");
             cpEnvironment.cpAssertHard(body.IsRogue(), "Remove the body from the space before calling this function.");
-            cpAssertSpaceUnlocked(this);
+            AssertSpaceUnlocked();
 
             body.SetMass(cpEnvironment.INFINITY_FLOAT); // cpBodySetMass(body, INFINITY);
             body.SetMoment(cpEnvironment.INFINITY_FLOAT);  //cpBodySetMoment(body, INFINITY);
@@ -695,7 +674,7 @@ namespace ChipmunkSharp
         {
 
             cpEnvironment.cpAssertHard(body.IsStatic(), "Body is already dynamic.");
-            cpAssertSpaceUnlocked(this);
+            AssertSpaceUnlocked();
 
             body.ActivateStatic(null);
             body.SetMass(mass);
@@ -720,7 +699,7 @@ namespace ChipmunkSharp
 
         public cpPostStepCallback? GetPostStepCallback(int key)
         {
-            foreach (var callback in this.postStepCallbacks)
+            foreach (var callback in this.PostStepCallbacks)
                 if (callback.key == key) return callback;
 
             return null;
@@ -729,13 +708,11 @@ namespace ChipmunkSharp
 
         //MARK: Spatial Index Management
 
-        public static void updateBBCache(cpShape shape, object unused)
+        public static void UpdateBBCache(cpShape shape, object unused)
         {
             cpBody body = shape.body;
             shape.Update(body.Position, body.Rotation);
         }
-
-
 
         /// Update the collision detection info for the static shapes in the space.
         public void ReindexStatic()
@@ -747,8 +724,8 @@ namespace ChipmunkSharp
             cpShape shp;
             foreach (var item in staticShapes.elements)
             {
-                shp = (cpShape)item.Value;
-                updateBBCache(shp, null);
+                shp = (cpShape)item.Value.obj;
+                UpdateBBCache(shp, null);
             }
             //space.staticShapes.IndexEach(updateBBCache,null);
 
@@ -773,14 +750,11 @@ namespace ChipmunkSharp
         }
 
         /// Update the collision detection data for all shapes attached to a body.
-        public void cpSpaceReindexShapesForBody(cpSpace space, cpBody body)
+        public void ReindexShapesForBody(cpSpace space, cpBody body)
         {
             for (cpShape var = body.shapeList; var != null; var = var.next)
                 space.ReindexShape(var);
         }
-
-
-
 
         /// Switch the space to use a spatial has as it's spatial index.
         //public void cpSpaceUseSpatialHash(cpSpace space, float dim, int count)
@@ -815,15 +789,11 @@ namespace ChipmunkSharp
 
         public cpCollisionHandler LookupHandler(int a, int b)
         {
-            object test;
+            Leaf test;
             if (collisionHandlers.TryGetValue(cpEnvironment.CP_HASH_PAIR(a, b), out test))
-                return (cpCollisionHandler)test;
+                return (cpCollisionHandler)test.obj;
             else
                 return new cpCollisionHandler();
-
-            //TODO: NOT SURE
-            //        cpCollisionType types[] = {a, b};
-            //return (cpCollisionHandler *)cpHashSetFind(space->collisionHandlers,, types);
         }
 
         public void SetGravity(cpVect gravity)
@@ -856,6 +826,7 @@ namespace ChipmunkSharp
             }
 
             m_debugDraw.DrawString(0, 110, "Contact points: " + contacts);
+            m_debugDraw.DrawString(0, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}" , cpEnvironment.numLeaves, cpEnvironment.numNodes, cpEnvironment.numPairs));
             //this.ctx.fillText("Contact points: " + contacts + " (Max: " + this.maxContacts + ")", 10, 140, maxWidth);
 
 
@@ -867,14 +838,14 @@ namespace ChipmunkSharp
                 cpShape shape;
                 foreach (var item in activeShapes.elements)
                 {
-                    shape = (cpShape)item.Value;
+                    shape = (cpShape)item.Value.obj;
                     shape.Draw(m_debugDraw);
                     //Console.WriteLine("dsadasdsa");
                 }
 
                 foreach (var item in staticShapes.elements)
                 {
-                    shape = (cpShape)item.Value;
+                    shape = (cpShape)item.Value.obj;
                     shape.Draw(m_debugDraw);
                     //Console.WriteLine("dsadasdsa");
                 }

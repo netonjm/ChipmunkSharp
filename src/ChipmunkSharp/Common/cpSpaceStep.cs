@@ -60,7 +60,7 @@ namespace ChipmunkSharp
                 callback.key = key;
                 callback.data = data;
 
-                postStepCallbacks.Add(callback);
+                PostStepCallbacks.Add(callback);
                 //cpArrayPush(, callback);
                 return true;
             }
@@ -106,7 +106,7 @@ namespace ChipmunkSharp
 
                     deleteCache.Clear();
 
-                    foreach (var callback in postStepCallbacks)
+                    foreach (var callback in PostStepCallbacks)
                     {
                         if (callback.func != null)
                         {
@@ -116,7 +116,7 @@ namespace ChipmunkSharp
                     }
 
                     foreach (var item in deleteCache)
-                        postStepCallbacks.Remove((cpPostStepCallback)item);
+                        PostStepCallbacks.Remove((cpPostStepCallback)item);
 
                     skipPostStep = false;
 
@@ -290,14 +290,19 @@ namespace ChipmunkSharp
             //cpSpacePushFreshContactBuffer(space);
 
             foreach (var item in activeShapes.elements)
-                ShapeUpdateFunc((cpShape)item.Value, null);
+                ShapeUpdateFunc((cpShape)item.Value.obj, null);
 
             //  cpSpatialIndexEach(activeShapes, (cpSpatialIndexIteratorFunc)cpShapeUpdateFunc, NULL);
             //cpSpatialIndexReindexQuery(space.activeShapes, (cpSpatialIndexQueryFunc)cpSpaceCollideShapes, space);
 
             activeShapes.ReindexQuery((obj1, obj2, id, data) =>
             {
-                return CollideShapes(obj1 as cpShape, obj2 as cpShape, id);
+
+                if (obj1 as Leaf != null)
+                    return CollideShapes((obj1 as Leaf).obj as cpShape, obj2 as cpShape, id);
+                else
+                    return CollideShapes(obj1 as cpShape, obj2 as cpShape, id);
+
 
             }, this);
 
@@ -309,10 +314,8 @@ namespace ChipmunkSharp
 
             Lock();
 
-
             foreach (var item in cachedArbiters.elements)
-                ArbiterSetFilter((cpArbiter)item.Value);
-
+                ArbiterSetFilter((cpArbiter)item.Value.obj);
 
             // Clear out old cached arbiters and call separate callbacks
             // cpHashSetFilter(cachedArbiters, ArbiterSetFilter, space);
