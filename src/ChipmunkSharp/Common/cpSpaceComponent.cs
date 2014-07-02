@@ -353,8 +353,8 @@ namespace ChipmunkSharp
             {
                 ShapeQuery(shape, (s, p, o) =>
                 {
-
-                }, null);
+                    activateTouchingHelper(shape, p, (cpShape)o);
+                }, shape);
             }
         }
 

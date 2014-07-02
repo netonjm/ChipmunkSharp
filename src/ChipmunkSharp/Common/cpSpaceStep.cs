@@ -294,6 +294,13 @@ namespace ChipmunkSharp
 
             //  cpSpatialIndexEach(activeShapes, (cpSpatialIndexIteratorFunc)cpShapeUpdateFunc, NULL);
             //cpSpatialIndexReindexQuery(space.activeShapes, (cpSpatialIndexQueryFunc)cpSpaceCollideShapes, space);
+
+            activeShapes.ReindexQuery((obj1, obj2, id, data) =>
+            {
+                return CollideShapes(obj1 as cpShape, obj2 as cpShape, id);
+
+            }, this);
+
             Unlock(false);
 
             // Rebuild the contact graph (and detect sleeping components if sleeping is enabled)

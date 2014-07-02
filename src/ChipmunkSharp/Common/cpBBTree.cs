@@ -315,6 +315,7 @@ namespace ChipmunkSharp
         public cpBBTree(cpBBTree staticIndex)
         {
 
+            leaves = new Dictionary<string, Leaf>();
             this.staticIndex = staticIndex;
             if (staticIndex != null)
             {
@@ -324,6 +325,7 @@ namespace ChipmunkSharp
                 }
                 staticIndex.dynamicIndex = this;
             }
+            stamp = 0;
         }
 
         /// Get the number of objects in the spatial index.
@@ -783,7 +785,7 @@ namespace ChipmunkSharp
         public void ReindexQuery(cpSpatialIndexQueryFunc func, object data)
         {
 
-            if (root != null) return;
+            if (root == null) return;
 
             // LeafUpdate() may modify tree->root. Don't cache it.
             foreach (var item in leaves)
