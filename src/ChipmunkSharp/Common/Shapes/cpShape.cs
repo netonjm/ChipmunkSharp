@@ -123,7 +123,7 @@ namespace ChipmunkSharp
     public class cpSegmentShape : cpShape
     {
 
-        public static cpShapeClass cpSegmentShapeClass = new cpShapeClass(cpShapeType.CP_CIRCLE_SHAPE,
+        public static cpShapeClass cpSegmentShapeClass = new cpShapeClass(cpShapeType.CP_SEGMENT_SHAPE,
        (shape, p, rot) => ShapeCacheData((cpSegmentShape)shape, p, rot),
       null,
       (shape, p, info) => NearestPointQuery((cpSegmentShape)shape, p, info),
@@ -434,8 +434,7 @@ namespace ChipmunkSharp
         {
             this.klass = klass;
 
-            this.hashid = cpShapeIDCounter;
-            cpShapeIDCounter++;
+            this.hashid = cpShapeIDCounter++;
 
             this.body = body;
             this.sensor = false;
@@ -444,7 +443,7 @@ namespace ChipmunkSharp
             this.u = 0.0f;
             this.surface_v = cpVect.ZERO;
 
-            this.collision_type = 0;
+            this.collision_type = 1;
             this.group = cpEnvironment.CP_NO_GROUP;
             this.layers = cpEnvironment.CP_ALL_LAYERS;
 

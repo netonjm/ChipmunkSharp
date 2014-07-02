@@ -873,7 +873,7 @@ namespace ChipmunkSharp
                 {
                     shape = (cpShape)item.Value;
                     shape.Draw(m_debugDraw);
-                    Console.WriteLine("dsadasdsa");
+                    //Console.WriteLine("dsadasdsa");
                 }
 
                 //for (b2Body b = m_bodyList; b != null; b = b.Next)

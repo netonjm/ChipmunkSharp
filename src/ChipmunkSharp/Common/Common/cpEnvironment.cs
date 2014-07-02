@@ -56,7 +56,7 @@ namespace ChipmunkSharp
         public static int shapeIDCounter = 0;
         public static int CP_USE_CGPOINTS = 1;
         public static int CP_NO_GROUP = 0;
-        public static int CP_ALL_LAYERS = 1;
+        public static int CP_ALL_LAYERS = -1;
 
         public static int numApplyImpulse = 0;
         public static int numApplyContact = 0;
