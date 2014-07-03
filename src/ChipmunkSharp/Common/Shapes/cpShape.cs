@@ -290,8 +290,8 @@ namespace ChipmunkSharp
 
         public override void Draw(cpDraw m_debugDraw)
         {
-            
-			var lineWidth = Math.Max(1, this.r);  // take a look if we need to apply scale for radius
+
+            var lineWidth = Math.Max(1, this.r);  // take a look if we need to apply scale for radius
             m_debugDraw.DrawSegment(ta, tb, lineWidth, cpColor.Blue);
 
         }
@@ -345,7 +345,7 @@ namespace ChipmunkSharp
     #endregion
 
     /// Opaque collision shape struct.
-    public class cpShape
+    public class cpShape : IDynamicObject
     {
 
         public int Collides(cpShape b, int id, List<cpContact> arr)
@@ -387,7 +387,7 @@ namespace ChipmunkSharp
         public cpBody body;
 
         /// The current bounding box of the shape.
-        public cpBB bb;
+        public cpBB bb { get; set; }
 
         /// Sensor flag.
         /// Sensor shapes call collision callbacks but don't produce collisions.

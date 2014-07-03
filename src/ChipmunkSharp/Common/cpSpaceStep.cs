@@ -151,7 +151,7 @@ namespace ChipmunkSharp
             cpCollisionHandler handler = LookupHandler(a.collision_type, b.collision_type);
 
             bool sensor = a.sensor || b.sensor;
-            if (sensor && handler.Equals(cpDefaultCollisionHandler)) return id;
+            if (sensor && handler.Equals(DefaultCollisionHandler)) return id;
 
             // Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
             // TODO remove me: a < b comparison is for debugging collisions
@@ -235,8 +235,9 @@ namespace ChipmunkSharp
             // Arbiter was used last frame, but not this one
             if (ticks >= 1 && arb.state != cpArbiterState.cpArbiterStateCached)
             {
-                arb.state = cpArbiterState.cpArbiterStateCached;
+               
                 arb.CallSeparate(this);
+                arb.state = cpArbiterState.cpArbiterStateCached;
             }
 
             if (ticks >= collisionPersistence)
@@ -244,7 +245,7 @@ namespace ChipmunkSharp
                 arb.contacts = null;
                 //arb.numContacts = 0;
 
-                pooledArbiters.Add(arb);
+                //pooledArbiters.Add(arb);
                 return false;
             }
 
@@ -282,30 +283,24 @@ namespace ChipmunkSharp
             }
 
             Lock();
-            // Integrate positions
-            foreach (var body in bodies)
-                body.position_func(body, dt);
-
-            // Find colliding pairs.
-            //cpSpacePushFreshContactBuffer(space);
-
-            foreach (var item in activeShapes.elements)
-                ShapeUpdateFunc((cpShape)item.Value.obj, null);
-
-            //  cpSpatialIndexEach(activeShapes, (cpSpatialIndexIteratorFunc)cpShapeUpdateFunc, NULL);
-            //cpSpatialIndexReindexQuery(space.activeShapes, (cpSpatialIndexQueryFunc)cpSpaceCollideShapes, space);
-
-            activeShapes.ReindexQuery((obj1, obj2, id, data) =>
             {
+                // Integrate positions
+                foreach (var body in bodies)
+                    body.position_func(body, dt);
 
-                if (obj1 as Leaf != null)
-                    return CollideShapes((obj1 as Leaf).obj as cpShape, obj2 as cpShape, id);
-                else
-                    return CollideShapes(obj1 as cpShape, obj2 as cpShape, id);
+                // Find colliding pairs.
+                foreach (var item in activeShapes.elements)
+                    ShapeUpdateFunc(item.Value.obj as cpShape, null);
 
 
-            }, this);
+                activeShapes.ReindexQuery((obj1, obj2, id, data) =>
+                {
+                    return CollideShapes(
+                        (obj1 as Leaf) != null ? (obj1 as Leaf).obj as cpShape
+                        : obj1 as cpShape, obj2 as cpShape, id);
 
+                }, this);
+            }
             Unlock(false);
 
             // Rebuild the contact graph (and detect sleeping components if sleeping is enabled)
@@ -313,78 +308,90 @@ namespace ChipmunkSharp
             ProcessComponents(dt);
 
             Lock();
-
-            foreach (var item in cachedArbiters.elements)
-                ArbiterSetFilter((cpArbiter)item.Value.obj);
-
-            // Clear out old cached arbiters and call separate callbacks
-            // cpHashSetFilter(cachedArbiters, ArbiterSetFilter, space);
-
-            // Prestep the arbiters and constraints.
-            float slop = collisionSlop;
-            float biasCoef = 1.0f - cpEnvironment.cpfpow(collisionBias, dt);
-            for (int i = 0; i < arbiters.Count; i++)
             {
-                arbiters[i].preStep(dt, slop, biasCoef);
-            }
-
-            foreach (var constraint in constraints)
-            {
-                constraint.PreSolve(this);
-                constraint.PreStep(dt);
-            }
-
-            // Integrate velocities.
-            float damping = cpEnvironment.cpfpow(this.damping, dt);
-            for (int i = 0; i < bodies.Count; i++)
-            {
-                // cpBody* body = (cpBody);
-                bodies[i].velocity_func(gravity, damping, dt);
-            }
-
-            // Apply cached impulses
-            float dt_coef = (prev_dt == 0.0f ? 0.0f : dt / prev_dt);
-
-            foreach (var arbiter in arbiters)
-                arbiter.ApplyCachedImpulse(dt_coef);
-
-            foreach (var constraint in constraints)
-            {
-                constraint.ApplyCachedImpulse(dt_coef);
-            }
 
 
-            // Run the impulse solver.
-            for (int i = 0; i < iterations; i++)
-            {
-                for (int j = 0; j < arbiters.Count; j++)
+                List<int> safeDeleteArray = new List<int>();
+
+                // Clear out old cached arbiters and call separate callbacks
+                foreach (var item in cachedArbiters.elements)
+                    if (!ArbiterSetFilter((cpArbiter)item.Value.obj))
+                        safeDeleteArray.Add(item.Key);
+
+                foreach (var item in safeDeleteArray)
+                    cachedArbiters.Remove(item);
+
+                // cpHashSetFilter(cachedArbiters, ArbiterSetFilter, space);
+
+                // Prestep the arbiters and constraints.
+                float slop = collisionSlop;
+                float biasCoef = 1.0f - cpEnvironment.cpfpow(collisionBias, dt);
+                for (int i = 0; i < arbiters.Count; i++)
                 {
-                    arbiters[j].ApplyImpulse(dt); //   cpArbiterApplyImpulse((cpArbiter));
+                    arbiters[i].preStep(dt, slop, biasCoef);
                 }
 
                 foreach (var constraint in constraints)
                 {
-                    constraint.ApplyImpulse(dt);
+                    constraint.PreSolve(this);
+                    constraint.PreStep(dt);
                 }
 
+                // Integrate velocities.
+                float damping = cpEnvironment.cpfpow(this.damping, dt);
+                for (int i = 0; i < bodies.Count; i++)
+                {
+                    // cpBody* body = (cpBody);
+                    bodies[i].velocity_func(gravity, damping, dt);
+                }
+
+                // Apply cached impulses
+                float dt_coef = (prev_dt == 0.0f ? 0.0f : dt / prev_dt);
+
+                foreach (var arbiter in arbiters)
+                    arbiter.ApplyCachedImpulse(dt_coef);
+
+                foreach (var constraint in constraints)
+                {
+                    constraint.ApplyCachedImpulse(dt_coef);
+                }
+
+
+                // Run the impulse solver.
+                for (int i = 0; i < iterations; i++)
+                {
+                    for (int j = 0; j < arbiters.Count; j++)
+                    {
+                        arbiters[j].ApplyImpulse(dt); //   cpArbiterApplyImpulse((cpArbiter));
+                    }
+
+                    foreach (var constraint in constraints)
+                    {
+                        constraint.ApplyImpulse(dt);
+                    }
+
+                }
+
+                // Run the constraint post-solve callbacks
+                //cpConstraintPostSolveFunc postSolve;
+
+                foreach (var constraint in constraints)
+                    constraint.postSolve(this);
+
+                for (int i = 0; i < arbiters.Count; i++)
+                {
+                    arbiters[i].handler.postSolve( arbiters[i], this,null);
+                }
+
+                // run the post-solve callbacks
+                //cpCollisionHandler handler;
+                //foreach (var arb in arbiters)
+                //{
+                //    handler = arb.handler;
+
+                //    handler.postSolve(arb, this, handler.data);
+                //}
             }
-
-            // Run the constraint post-solve callbacks
-            //cpConstraintPostSolveFunc postSolve;
-
-            foreach (var constraint in constraints)
-                constraint.postSolve(this);
-
-
-            // run the post-solve callbacks
-            cpCollisionHandler handler;
-            foreach (var arb in arbiters)
-            {
-                handler = arb.handler;
-
-                handler.postSolve(arb, this, handler.data);
-            }
-
             Unlock(true);
         }
 

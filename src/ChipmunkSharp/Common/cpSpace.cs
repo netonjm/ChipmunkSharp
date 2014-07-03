@@ -56,8 +56,9 @@ namespace ChipmunkSharp
 
         private cpDraw m_debugDraw;
 
+        //public static Func<>
 
-        public static cpCollisionHandler cpDefaultCollisionHandler = new cpCollisionHandler(0, 0, AlwaysCollide, AlwaysCollide, Nothing, Nothing, null);
+        public static cpCollisionHandler DefaultCollisionHandler = new cpCollisionHandler(0, 0, AlwaysCollide, AlwaysCollide, Nothing, Nothing, null);
 
         // public float damping;
 
@@ -125,7 +126,7 @@ namespace ChipmunkSharp
         public List<cpArbiter> arbiters;
         public List<cpContact> contactBuffersHead;
         public cpBBTree cachedArbiters;
-        public List<cpArbiter> pooledArbiters;
+        // public List<cpArbiter> pooledArbiters;
         public List<cpConstraint> constraints;
 
         // public cpArray allocatedBuffers;
@@ -169,48 +170,38 @@ namespace ChipmunkSharp
             return handler.Clone();
         }
 
-
-        public static bool CachedArbitersFilter(cpArbiter arb, arbiterFilterContext context)
-        {
-            cpShape shape = context.shape;
-            cpBody body = context.body;
-
-
-            // Match on the filter shape, or if it's null the filter body
-            if (
-                (body == arb.body_a && (shape == arb.a || shape == null)) ||
-                (body == arb.body_b && (shape == arb.b || shape == null))
-            )
-            {
-                // Call separate when removing shapes.
-                if (shape != null && arb.state != cpArbiterState.cpArbiterStateCached)
-                    arb.CallSeparate(context.space);
-
-                arb.Unthread();
-
-                context.space.arbiters.Remove(arb);
-                context.space.pooledArbiters.Add(arb);
-
-                return false;
-            }
-
-            return true;
-        }
-
         public void FilterArbiters(cpBody body, cpShape filter)
         {
-            cpArbiter arb;
 
-            Lock();
+            List<int> safeDelete = new List<int>();
+
+            foreach (var hash in this.cachedArbiters.elements)
             {
-                arbiterFilterContext context = new arbiterFilterContext(this, body, filter);
-                foreach (var item in cachedArbiters.elements)
+                cpArbiter arb = hash.Value.obj as cpArbiter;
+
+                // Match on the filter shape, or if it's null the filter body
+                if (
+                    (body == arb.body_a && (filter == arb.a || filter == null)) ||
+                    (body == arb.body_b && (filter == arb.b || filter == null))
+                )
                 {
-                    arb = (item.Value.obj as cpArbiter);
-                    CachedArbitersFilter(arb, context);
+                    // Call separate when removing shapes.
+                    if (filter != null && arb.state != cpArbiterState.cpArbiterStateCached)
+                        arb.CallSeparate(this);
+
+                    arb.Unthread();
+
+                    this.arbiters.Remove(arb);
+                    safeDelete.Add(hash.Key);
+
                 }
 
-            } Unlock(true);
+            }
+
+            foreach (var item in safeDelete)
+            {
+                cachedArbiters.Remove(item);
+            }
 
         }
 
@@ -252,14 +243,6 @@ namespace ChipmunkSharp
             staticShapes = new cpBBTree(null); // cpBBTree.cpBBTreeNew((cpSpatialIndexBBFunc)cpShapeGetBB, null);
             activeShapes = new cpBBTree(staticShapes);// cpBBTree.cpBBTreeNew((cpSpatialIndexBBFunc)cpShapeGetBB, space.staticShapes);
 
-            //space.activeShapes.set
-            //cpBBTree.cpBBTreeSetVelocityFunc(, shapeVelocityFunc);
-            //space.activeShapes.Set
-
-            // space.activeShapes = new cpSpatialIndex();
-
-            //allocatedBuffers = cpArrayNew(0);
-
             bodies = new List<cpBody>();
             sleepingComponents = new List<cpBody>(); // cpArrayNew(0);
             rousedBodies = new List<cpBody>();// cpArrayNew(0);
@@ -269,19 +252,17 @@ namespace ChipmunkSharp
             enableContactGraph = false;
 
             arbiters = new List<cpArbiter>(); // cpArrayNew(0);
-            pooledArbiters = new List<cpArbiter>();// cpArrayNew(0);
+            //pooledArbiters = new List<cpArbiter>();// cpArrayNew(0);
 
             contactBuffersHead = new List<cpContact>();
             cachedArbiters = new cpBBTree(null);  // cpHashSetNew(0, (cpHashSetEqlFunc)arbiterSetEql);
 
             constraints = new List<cpConstraint>(); // cpArrayNew(0);
 
-            DefaultHandler = cpDefaultCollisionHandler;
+            DefaultHandler = DefaultCollisionHandler;
             collisionHandlers = new cpBBTree(null); // cpHashSetNew(0, (cpHashSetEqlFunc)handlerSetEql);
 
-            collisionHandlers.SetDefaultValue(cpDefaultCollisionHandler);
-
-            //cpHashSetSetDefaultValue(space.collisionHandlers, cpDefaultCollisionHandler);
+            collisionHandlers.SetDefaultValue(DefaultCollisionHandler);
 
             PostStepCallbacks = new List<cpPostStepCallback>();
             skipPostStep = false;
@@ -471,7 +452,6 @@ namespace ChipmunkSharp
 
             this.activeShapes.Insert(shape.hashid, shape);
 
-            //cpSpatialIndexInsert(space.activeShapes, shape, shape.hashid);
             shape.space = this;
 
             return shape;
@@ -552,8 +532,6 @@ namespace ChipmunkSharp
             {
                 cpEnvironment.cpAssertHard(ContainsShape(shape), "Cannot remove a shape that was not added to the space. (Removed twice maybe?)");
                 AssertSpaceUnlocked();
-
-                //cpBodyActivate(body);body
 
                 body.Activate();
                 body.RemoveShape(shape);
@@ -756,22 +734,6 @@ namespace ChipmunkSharp
                 space.ReindexShape(var);
         }
 
-        /// Switch the space to use a spatial has as it's spatial index.
-        //public void cpSpaceUseSpatialHash(cpSpace space, float dim, int count)
-        //{
-        //    cpSpatialIndex staticShapes = new cpSpatialIndex(); // cpSpaceHashNew(dim, count, (cpSpatialIndexBBFunc)cpShapeGetBB, null);
-        //    cpSpatialIndex activeShapes = new cpSpatialIndex(); // cpSpaceHashNew(dim, count, (cpSpatialIndexBBFunc)cpShapeGetBB, staticShapes);
-
-        //    cpSpatialIndexEach(space.staticShapes, (cpSpatialIndexIteratorFunc)copyShapes, staticShapes);
-        //    cpSpatialIndexEach(space.activeShapes, (cpSpatialIndexIteratorFunc)copyShapes, activeShapes);
-
-        //    cpSpatialIndexFree(space.staticShapes);
-        //    cpSpatialIndexFree(space.activeShapes);
-
-        //    space.staticShapes = staticShapes;
-        //    space.activeShapes = activeShapes;
-        //}
-
         public void UncacheArbiter(cpArbiter arb)
         {
             cpShape a = arb.a, b = arb.b;
@@ -826,7 +788,7 @@ namespace ChipmunkSharp
             }
 
             m_debugDraw.DrawString(0, 110, "Contact points: " + contacts);
-            m_debugDraw.DrawString(0, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}" , cpEnvironment.numLeaves, cpEnvironment.numNodes, cpEnvironment.numPairs));
+            m_debugDraw.DrawString(0, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}", cpEnvironment.numLeaves, cpEnvironment.numNodes, cpEnvironment.numPairs));
             //this.ctx.fillText("Contact points: " + contacts + " (Max: " + this.maxContacts + ")", 10, 140, maxWidth);
 
 

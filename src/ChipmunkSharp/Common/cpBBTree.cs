@@ -26,6 +26,12 @@ using System.Linq;
 namespace ChipmunkSharp
 {
 
+
+    public interface IDynamicObject
+    {
+        cpBB bb { get; set; }
+    }
+
     //MARK: Spatial Index
 
     /// Spatial index bounding box callback function type.
@@ -38,8 +44,6 @@ namespace ChipmunkSharp
     public delegate int cpSpatialIndexQueryFunc(object obj1, object obj2, int id, object data);
     /// Spatial segment query callback function type.
     public delegate float cpSpatialIndexSegmentQueryFunc(object obj1, object obj2, object data);
-
-
 
     //MARK: Spatial Index Implementation
 
@@ -460,9 +464,6 @@ namespace ChipmunkSharp
     public class cpBBTree
     {
 
-
-
-
         //public Dictionary<int, object> elements;
 
         public void SetVelocityFunc(cpBBTreeVelocityFunc func)
@@ -483,7 +484,7 @@ namespace ChipmunkSharp
 
         public cpSpatialIndexBBFunc bbfunc { get; set; }
 
-        public cpBB bb { get; set; }
+        //public cpBB bb { get; set; }
 
         // public cpBBTree spatialIndex { get; set; }
         public cpBBTree staticIndex { get; set; }
@@ -493,9 +494,6 @@ namespace ChipmunkSharp
 
 
         //MARK: Misc Functions
-
-
-
 
         public cpBBTree(cpBBTree staticIndex)
         {
@@ -667,11 +665,15 @@ namespace ChipmunkSharp
 
             //TODO: GETBB
 
-            //cpBB bb = tree.bb;
+            cpBB bb = (obj as IDynamicObject).bb;
+
+            if (bb == null)
+                throw new NotImplementedException();
 
             // cpBBTreeVelocityFunc velocityFunc = velocityFunc;
             if (velocityFunc != null)
             {
+
                 float coef = 0.1f;
                 float x = (bb.r - bb.l) * coef;
                 float y = (bb.t - bb.b) * coef;
@@ -683,23 +685,28 @@ namespace ChipmunkSharp
             {
 
                 //TODO: Add interface
+                return bb;
 
-                if (obj.GetType() == typeof(cpSegmentShape))
-                    return (obj as cpSegmentShape).bb;
 
-                if (obj.GetType() == typeof(cpPolyShape))
-                    return (obj as cpPolyShape).bb;
 
-                if (obj.GetType() == typeof(cpCircleShape))
-                    return (obj as cpCircleShape).bb;
-
-                //if (obj.GetType() == typeof())
-                //    return (obj as cpPolyShape).bb;
-
-                throw new NotImplementedException();
             }
+
+
+
         }
 
+
+        //if (obj.GetType() == typeof(cpSegmentShape))
+        //    return (obj as cpSegmentShape).bb;
+
+        //if (obj.GetType() == typeof(cpPolyShape))
+        //    return (obj as cpPolyShape).bb;
+
+        //if (obj.GetType() == typeof(cpCircleShape))
+        //    return (obj as cpCircleShape).bb;
+
+        //if (obj.GetType() == typeof())
+        //    return (obj as cpPolyShape).bb;
 
         //public cpBBTree GetTree()
         //{
@@ -1072,12 +1079,12 @@ namespace ChipmunkSharp
         {
             if (staticIndex != null && staticIndex.Count() > 0)
             {
-              //  var query = 
+                //  var query = 
 
                 dynamicToStaticContext context = new dynamicToStaticContext(staticIndex.bbfunc, staticIndex, func, null);
                 foreach (var item in elements)
                 {
-                    staticIndex.Query(item.Value, item.Value.bb, func ,context);
+                    staticIndex.Query(item.Value, item.Value.bb, func, context);
                 }
             }
         }

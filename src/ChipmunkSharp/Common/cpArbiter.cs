@@ -406,11 +406,6 @@ namespace ChipmunkSharp
 
         }
 
-
-        /// Replace the contact point set for an arbiter.
-        /// This can be a very powerful feature, but use it with caution!
-        //public void cpArbiterSetContactPointSet(cpArbiter arb, cpContactPointSet set);
-
         /// Returns true if this is the first step a pair of objects started colliding.
         public bool IsFirstContact()
         {
@@ -555,7 +550,7 @@ namespace ChipmunkSharp
         public void ApplyImpulse(float dt)
         {
 
-            //cpEnvironment.numApplyImpulse++;
+            cpEnvironment.numApplyImpulse++;
             //if (!this.contacts) { throw new Error('contacts is undefined'); }
             var a = this.body_a;
             var b = this.body_b;
