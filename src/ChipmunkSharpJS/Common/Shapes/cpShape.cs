@@ -29,7 +29,7 @@ namespace ChipmunkSharp
 
     public interface ICollisionShape
     {
-        Func<object, object, List<cpContact>>[] collisionTable { get; }
+        Func<object, object, List<ContactPoint>>[] collisionTable { get; }
         int collisionCode { get; }
     }
 
@@ -121,11 +121,11 @@ namespace ChipmunkSharp
         }
 
 
-        public Func<object, object, List<cpContact>>[] collisionTable
+        public Func<object, object, List<ContactPoint>>[] collisionTable
         {
             get
             {
-                return new Func<object, object, List<cpContact>>[] {
+                return new Func<object, object, List<ContactPoint>>[] {
                     (o1,o2) => cpCollision.Circle2Circle(o1 as cpCircleShape ,o2 as cpCircleShape),
                     (o1,o2) => cpCollision.Circle2Segment(o1 as cpCircleShape ,o2 as cpSegmentShape),
                     (o1,o2) => cpCollision.Circle2Poly(o1 as cpCircleShape ,o2 as cpPolyShape)
@@ -281,7 +281,7 @@ namespace ChipmunkSharp
 
         public void SetNeighbors(cpVect prev, cpVect next)
         {
-            cpEnvironment.AssertHard(klass.Equals(cpSegmentShapeClass), "Shape is not a segment shape.");
+            cpEnvironment.assertHard(klass.Equals(cpSegmentShapeClass), "Shape is not a segment shape.");
             cpSegmentShape seg = (cpSegmentShape)shape;
 
             seg.a_tangent = cpVect.cpvsub(prev, seg.a);
@@ -319,11 +319,11 @@ namespace ChipmunkSharp
 
         }
 
-        public Func<object, object, List<cpContact>>[] collisionTable
+        public Func<object, object, List<ContactPoint>>[] collisionTable
         {
             get
             {
-                return new Func<object, object, List<cpContact>>[] {
+                return new Func<object, object, List<ContactPoint>>[] {
                     null,
                     (segA, segB) => {  return null; },
                     (o1,o2) => cpCollision.Seg2Poly(o1 as cpSegmentShape ,o2 as cpPolyShape)
@@ -386,13 +386,15 @@ namespace ChipmunkSharp
     public class cpShape : IObjectBox
     {
 
+
+
         public static int IDCounter = 0;
 
         #region PROPS
 
         //public virtual int GetCollisionCode() { throw new NotImplementedException(); }
 
-        public virtual cpContact GetCollisionTable(object a, object b) { throw new NotImplementedException(); }
+        public virtual ContactPoint GetCollisionTable(object a, object b) { throw new NotImplementedException(); }
 
 
         public cpShapeClass klass;
@@ -436,7 +438,7 @@ namespace ChipmunkSharp
 
         #endregion
 
-        public int Collides(cpShape b, int id, List<cpContact> arr)
+        public int Collides(cpShape b, int id, List<ContactPoint> arr)
         {
             return cpCollision.cpCollideShapes(this, b, id, arr);
         }
@@ -464,11 +466,9 @@ namespace ChipmunkSharp
             }
         }
 
-
-
-        public bool Active()
+        public bool active()
         {
-            return prev != null || (body != null && body.shapeList == this);
+            return this.body != null && this.body.shapeList.IndexOf(this) != -1;
         }
 
         public static void cpResetShapeIdCounter()
@@ -522,21 +522,19 @@ namespace ChipmunkSharp
         }
 
 
-
-
         /// Update, cache and return the bounding box of a shape based on the body it's attached to.
         public cpBB CacheBB()
         {
-            return Update(body.Position, body.Rotation);
+            return update(body.Position, body.Rotation);
         }
 
         /// Update, cache and return the bounding box of a shape with an explicit transformation.
-        public cpBB Update(cpVect pos, cpVect rot)
+        public cpBB update(cpVect pos, cpVect rot)
         {
-            return Update(this, pos, rot);
+            return update(this, pos, rot);
         }
 
-        public static cpBB Update(cpShape shape, cpVect pos, cpVect rot)
+        public static cpBB update(cpShape shape, cpVect pos, cpVect rot)
         {
             return (shape.bb = shape.klass.cacheData(shape, pos, rot));
         }
@@ -593,7 +591,7 @@ namespace ChipmunkSharp
 
         public void SetBody(cpBody body)
         {
-            cpEnvironment.AssertHard(!Active(), "You cannot change the body on an active shape. You must remove the shape from the space before changing the body.");
+            cpEnvironment.assertHard(!active(), "You cannot change the body on an active shape. You must remove the shape from the space before changing the body.");
             this.body = body;
         }
 
@@ -627,6 +625,11 @@ namespace ChipmunkSharp
         }
 
 
+
+        internal void push(cpShape shape)
+        {
+            throw new NotImplementedException();
+        }
     };
 
 }

@@ -153,14 +153,14 @@ namespace ChipmunkSharp
         public static float SegmentQuery(cpBB bb, cpVect a, cpVect b)
         {
             float idx = 1.0f / (b.x - a.x);
-            float tx1 = (bb.l == a.x ? -cpEnvironment.INFINITY_FLOAT : (bb.l - a.x) * idx);
-            float tx2 = (bb.r == a.x ? cpEnvironment.INFINITY_FLOAT : (bb.r - a.x) * idx);
+            float tx1 = (bb.l == a.x ? -cpEnvironment.Infinity : (bb.l - a.x) * idx);
+            float tx2 = (bb.r == a.x ? cpEnvironment.Infinity : (bb.r - a.x) * idx);
             float txmin = cpEnvironment.cpfmin(tx1, tx2);
             float txmax = cpEnvironment.cpfmax(tx1, tx2);
 
             float idy = 1.0f / (b.y - a.y);
-            float ty1 = (bb.b == a.y ? -cpEnvironment.INFINITY_FLOAT : (bb.b - a.y) * idy);
-            float ty2 = (bb.t == a.y ? cpEnvironment.INFINITY_FLOAT : (bb.t - a.y) * idy);
+            float ty1 = (bb.b == a.y ? -cpEnvironment.Infinity : (bb.b - a.y) * idy);
+            float ty2 = (bb.t == a.y ? cpEnvironment.Infinity : (bb.t - a.y) * idy);
             float tymin = cpEnvironment.cpfmin(ty1, ty2);
             float tymax = cpEnvironment.cpfmax(ty1, ty2);
 
@@ -172,7 +172,7 @@ namespace ChipmunkSharp
                 if (0.0 <= max && min <= 1.0) return cpEnvironment.cpfmax(min, 0.0f);
             }
 
-            return cpEnvironment.INFINITY_FLOAT;
+            return cpEnvironment.Infinity;
         }
 
         public float SegmentQuery(cpVect a, cpVect b)
@@ -184,7 +184,7 @@ namespace ChipmunkSharp
         /// Return true if the bounding box intersects the line segment with ends @c a and @c b.
         public static bool IntersectsSegment(cpBB bb, cpVect a, cpVect b)
         {
-            return (SegmentQuery(bb, a, b) != cpEnvironment.INFINITY_FLOAT);
+            return (SegmentQuery(bb, a, b) != cpEnvironment.Infinity);
         }
         public bool IntersectsSegment(cpVect a, cpVect b)
         {

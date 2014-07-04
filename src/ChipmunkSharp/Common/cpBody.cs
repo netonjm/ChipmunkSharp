@@ -564,7 +564,7 @@ namespace ChipmunkSharp
         /// Returns true if the body is sleeping.
         public bool IsSleeping()
         {
-            return (node.root == null);// ((cpBody)0));
+            return (node.root != null);// ((cpBody)0));
         }
 
         /// Returns true if the body is static.

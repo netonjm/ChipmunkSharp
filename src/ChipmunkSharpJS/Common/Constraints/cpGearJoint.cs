@@ -99,7 +99,7 @@ namespace ChipmunkSharp.Constraints
         {
             this.ratio = value;
             this.ratio_inv = 1 / value;
-            this.ActivateBodies();
+            this.activateBodies();
         }
 
 

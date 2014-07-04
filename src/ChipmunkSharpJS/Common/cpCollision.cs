@@ -28,6 +28,11 @@ using System.Collections.Generic;
 namespace ChipmunkSharp
 {
 
+
+
+
+
+
     //MARK: Support Points and Edges:
     #region Support Points and Edges
 
@@ -248,7 +253,7 @@ namespace ChipmunkSharp
     #endregion
 
 
-    public delegate int CollisionFunc(cpShape a, cpShape b, int id, List<cpContact> arr);
+    public delegate int CollisionFunc(cpShape a, cpShape b, int id, List<ContactPoint> arr);
 
     public class cpCollision
     {
@@ -340,7 +345,7 @@ namespace ChipmunkSharp
         public static ClosestPoints EPARecurse(SupportContext ctx, List<MinkowskiPoint> hull, int iteration)
         {
             int mini = 0;
-            float minDist = cpEnvironment.INFINITY_FLOAT;
+            float minDist = cpEnvironment.Infinity;
 
             int count = hull.Count;
 
@@ -357,7 +362,7 @@ namespace ChipmunkSharp
 
             MinkowskiPoint v0 = hull[mini];
             MinkowskiPoint v1 = hull[(mini + 1) % hull.Count];
-            cpEnvironment.AssertSoft(!cpVect.cpveql(v0.ab, v1.ab), string.Format("Internal Error: EPA vertexes are the same ({0} and {1})", mini, (mini + 1) % count));
+            cpEnvironment.assertSoft(!cpVect.cpveql(v0.ab, v1.ab), string.Format("Internal Error: EPA vertexes are the same ({0} and {1})", mini, (mini + 1) % count));
 
             MinkowskiPoint p = MinkowskiPoint.Support(ctx, cpVect.cpvperp(cpVect.cpvsub(v1.ab, v0.ab)));
 
@@ -398,7 +403,7 @@ namespace ChipmunkSharp
             }
             else
             {
-                cpEnvironment.AssertWarn(iteration < WARN_EPA_ITERATIONS, string.Format("High EPA iterations: {0}", iteration));
+                cpEnvironment.assertWarn(iteration < WARN_EPA_ITERATIONS, string.Format("High EPA iterations: {0}", iteration));
                 return ClosestPoints.ClosestPointsNew(v0, v1);
             }
         }
@@ -421,7 +426,7 @@ namespace ChipmunkSharp
 
             if (iteration > MAX_GJK_ITERATIONS)
             {
-                cpEnvironment.AssertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK iterations: {0}", iteration));
+                cpEnvironment.assertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK iterations: {0}", iteration));
                 return ClosestPoints.ClosestPointsNew(v0, v1);
             }
 
@@ -450,7 +455,7 @@ namespace ChipmunkSharp
                    cpVect.cpvcross(cpVect.cpvsub(v0.ab, p.ab), cpVect.cpvadd(v0.ab, p.ab)) < 0.0f
                 )
                 {
-                    cpEnvironment.AssertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK->EPA iterations: {0}", iteration));
+                    cpEnvironment.assertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK->EPA iterations: {0}", iteration));
                     // The triangle v0, p, v1 contains the origin. Use EPA to find the MSA.
                     return EPA(ctx, v0, p, v1);
                 }
@@ -459,7 +464,7 @@ namespace ChipmunkSharp
                     // The new point must be farther along the normal than the existing points.
                     if (cpVect.cpvdot(p.ab, n) <= cpEnvironment.cpfmax(cpVect.cpvdot(v0.ab, n), cpVect.cpvdot(v1.ab, n)))
                     {
-                        cpEnvironment.AssertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK iterations: {0}", iteration));
+                        cpEnvironment.assertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK iterations: {0}", iteration));
                         return ClosestPoints.ClosestPointsNew(v0, v1);
                     }
                     else
@@ -550,7 +555,7 @@ namespace ChipmunkSharp
         #region Contact Clipping
 
 
-        public static void Contact1(float dist, cpVect a, cpVect b, float refr, float incr, cpVect n, int hash, List<cpContact> arr)
+        public static void Contact1(float dist, cpVect a, cpVect b, float refr, float incr, cpVect n, int hash, List<ContactPoint> arr)
         {
             float rsum = refr + incr;
             float alpha = (rsum > 0.0f ? refr / rsum : 0.5f);
@@ -565,7 +570,7 @@ namespace ChipmunkSharp
 
         }
 
-        public static int Contact2(cpVect refp, cpVect inca, cpVect incb, float refr, float incr, cpVect refn, cpVect n, int hash, List<cpContact> arr)
+        public static int Contact2(cpVect refp, cpVect inca, cpVect incb, float refr, float incr, cpVect refn, cpVect n, int hash, List<ContactPoint> arr)
         {
             float cian = cpVect.cpvcross(inca, refn);
             float cibn = cpVect.cpvcross(incb, refn);
@@ -595,7 +600,7 @@ namespace ChipmunkSharp
             }
         }
 
-        public static int ClipContacts(Edge refe, Edge inc, ClosestPoints points, float nflip, List<cpContact> arr)
+        public static int ClipContacts(Edge refe, Edge inc, ClosestPoints points, float nflip, List<ContactPoint> arr)
         {
             cpVect inc_offs = cpVect.cpvmult(inc.n, inc.r);
             cpVect ref_offs = cpVect.cpvmult(refe.n, refe.r);
@@ -652,7 +657,7 @@ namespace ChipmunkSharp
         }
 
 
-        public static int ContactPoints(Edge e1, Edge e2, ClosestPoints points, List<cpContact> arr)
+        public static int ContactPoints(Edge e1, Edge e2, ClosestPoints points, List<ContactPoint> arr)
         {
             float mindist = e1.r + e2.r;
             if (points.d <= mindist)
@@ -690,13 +695,13 @@ namespace ChipmunkSharp
         #region  Collision Functions
 
 
-        public static List<cpContact> Circle2Circle(cpCircleShape circ1, cpCircleShape circ2)
+        public static List<ContactPoint> Circle2Circle(cpCircleShape circ1, cpCircleShape circ2)
         {
             var contact = circle2circleQuery(circ1.tc, circ2.tc, circ1.r, circ2.r);
             return contact != null ? contact : null;
         }
 
-        public static List<cpContact> circle2circleQuery(cpVect p1, cpVect p2, float r1, float r2)
+        public static List<ContactPoint> circle2circleQuery(cpVect p1, cpVect p2, float r1, float r2)
         {
             var mindist = r1 + r2;
             var delta = p2.Sub(p1);
@@ -708,8 +713,8 @@ namespace ChipmunkSharp
             float dist = cpEnvironment.cpfsqrt(distsq);
 
             // Allocate and initialize the contact.
-            return new List<cpContact>() { new cpContact(
-               cpVect.cpvadd(p1, cpVect.cpvmult(delta, 0.5f + (r1 - 0.5f * mindist) / (dist != 0 ? dist : cpEnvironment.INFINITY_FLOAT))),
+            return new List<ContactPoint>() { new ContactPoint(
+               cpVect.cpvadd(p1, cpVect.cpvmult(delta, 0.5f + (r1 - 0.5f * mindist) / (dist != 0 ? dist : cpEnvironment.Infinity))),
                 (dist != 0 ? cpVect.cpvmult(delta, 1 / dist) : new cpVect(1, 0)),
                 dist - mindist,
                 0
@@ -719,7 +724,7 @@ namespace ChipmunkSharp
         //Add contact points for circle to circle collisions.
         //Used by several collision tests.
         //TODO should accept hash parameter
-        public static int CircleToCircleQuery(cpVect p1, cpVect p2, float r1, float r2, int hash, List<cpContact> con)
+        public static int CircleToCircleQuery(cpVect p1, cpVect p2, float r1, float r2, int hash, List<ContactPoint> con)
         {
             float mindist = r1 + r2;
             cpVect delta = cpVect.cpvsub(p2, p1);
@@ -730,7 +735,7 @@ namespace ChipmunkSharp
 
                 float dist = cpEnvironment.cpfsqrt(distsq);
                 cpVect n = (dist == 0 ? cpVect.cpvmult(delta, 1.0f / dist) : new cpVect(1.0f, 0.0f));
-                con.Add( new cpContact(cpVect.cpvlerp(p1, p2, r1 / (r1 + r2)), n, dist - mindist, hash));
+                con.Add(new ContactPoint(cpVect.cpvlerp(p1, p2, r1 / (r1 + r2)), n, dist - mindist, hash));
 
 
                 return 1;
@@ -742,12 +747,12 @@ namespace ChipmunkSharp
         }
 
         // Collide circle shapes.
-        public static int CircleToCircle(cpCircleShape c1, cpCircleShape c2, int id, List<cpContact> arr)
+        public static int CircleToCircle(cpCircleShape c1, cpCircleShape c2, int id, List<ContactPoint> arr)
         {
             return CircleToCircleQuery(c1.tc, c2.tc, c1.r, c2.r, 0, arr);
         }
 
-        public static int CircleToSegment(cpCircleShape circleShape, cpSegmentShape segmentShape, int id, List<cpContact> con)
+        public static int CircleToSegment(cpCircleShape circleShape, cpSegmentShape segmentShape, int id, List<ContactPoint> con)
         {
 
             cpVect seg_a = segmentShape.ta;
@@ -775,7 +780,7 @@ namespace ChipmunkSharp
             return 0;
         }
 
-        public static int SegmentToSegment(cpSegmentShape seg1, cpSegmentShape seg2, int id, List<cpContact> arr)
+        public static int SegmentToSegment(cpSegmentShape seg1, cpSegmentShape seg2, int id, List<ContactPoint> arr)
         {
 
             SupportContext context = new SupportContext((cpShape)seg1, (cpShape)seg2, (a, b) =>
@@ -821,7 +826,7 @@ namespace ChipmunkSharp
             }
         }
 
-        public static int PolyToPoly(cpPolyShape poly1, cpPolyShape poly2, int id, List<cpContact> arr)
+        public static int PolyToPoly(cpPolyShape poly1, cpPolyShape poly2, int id, List<ContactPoint> arr)
         {
 
             SupportContext context = new SupportContext(
@@ -855,7 +860,7 @@ namespace ChipmunkSharp
             }
         }
 
-        public static int SegmentToPoly(cpSegmentShape seg, cpPolyShape poly, int id, List<cpContact> arr)
+        public static int SegmentToPoly(cpSegmentShape seg, cpPolyShape poly, int id, List<ContactPoint> arr)
         {
             SupportContext context = new SupportContext(
                    (cpShape)seg, (cpShape)poly,
@@ -902,7 +907,7 @@ namespace ChipmunkSharp
 
         // This one is less gross, but still gross.
         // TODO: Comment me!
-        static int CircleToPoly(cpCircleShape circle, cpPolyShape poly, int id, cpContact con)
+        static int CircleToPoly(cpCircleShape circle, cpPolyShape poly, int id, ContactPoint con)
         {
 
             SupportContext context = new SupportContext(circle, poly,
@@ -974,15 +979,15 @@ namespace ChipmunkSharp
             //TODO: 
         }
 
-        public static int cpCollideShapes(cpShape a, cpShape b, int id, List<cpContact> arr)
+        public static int cpCollideShapes(cpShape a, cpShape b, int id, List<ContactPoint> arr)
         {
             // Their shape types must be in order.
-            cpEnvironment.AssertSoft(a.klass.type <= b.klass.type, "Internal Error: Collision shapes passed to cpCollideShapes() are not sorted.");
+            cpEnvironment.assertSoft(a.klass.type <= b.klass.type, "Internal Error: Collision shapes passed to cpCollideShapes() are not sorted.");
 
             CollisionFunc cfunc = colfuncs[((int)a.klass.type) + ((int)b.klass.type) * ((int)cpShapeType.CP_NUM_SHAPES)];
 
             int numContacts = (cfunc != null ? cfunc(a, b, id, arr) : 0);
-            cpEnvironment.AssertSoft(numContacts <= cpArbiter.CP_MAX_CONTACTS_PER_ARBITER, "Internal error: Too many contact points returned.");
+            cpEnvironment.assertSoft(numContacts <= cpArbiter.CP_MAX_CONTACTS_PER_ARBITER, "Internal error: Too many contact points returned.");
 
             return numContacts;
         }
@@ -992,7 +997,7 @@ namespace ChipmunkSharp
         //MARK: Support Points and Edges:
         public static int PolySupportPointIndex(List<cpVect> verts, cpVect n)
         {
-            float max = -cpEnvironment.INFINITY_FLOAT;
+            float max = -cpEnvironment.Infinity;
             int index = 0;
 
             for (int i = 0; i < verts.Count; i++)
@@ -1030,9 +1035,9 @@ namespace ChipmunkSharp
             return new SupportPoint(poly.tVerts[i], i);
         }
 
-        public static List<cpContact> Circle2Segment(cpCircleShape circleShape, cpSegmentShape segmentShape)
+        public static List<ContactPoint> Circle2Segment(cpCircleShape circleShape, cpSegmentShape segmentShape)
         {
-            List<cpContact> con = new List<cpContact>();
+            List<ContactPoint> con = new List<ContactPoint>();
             cpVect seg_a = segmentShape.ta;
             cpVect seg_b = segmentShape.tb;
             cpVect center = circleShape.tc;
@@ -1058,7 +1063,7 @@ namespace ChipmunkSharp
             return null;
         }
 
-        public static List<cpContact> Circle2Poly(cpCircleShape circ, cpPolyShape poly)
+        public static List<ContactPoint> Circle2Poly(cpCircleShape circ, cpPolyShape poly)
         {
             var planes = poly.tPlanes;
 
@@ -1102,7 +1107,7 @@ namespace ChipmunkSharp
             }
             else if (dt < dta)
             {
-                return new List<cpContact>() { new cpContact(
+                return new List<ContactPoint>() { new ContactPoint(
                     cpVect.cpvsub(circ.tc, cpVect.cpvmult(n, circ.r + min / 2)),
                     cpVect.cpvneg(n),
                     min,
@@ -1116,7 +1121,7 @@ namespace ChipmunkSharp
             }
         }
 
-        public static List<cpContact> Seg2Poly(cpSegmentShape seg, cpPolyShape poly)
+        public static List<ContactPoint> Seg2Poly(cpSegmentShape seg, cpPolyShape poly)
         {
 
             return null;
@@ -1192,12 +1197,18 @@ namespace ChipmunkSharp
             //return arr;
         }
 
-        public static List<cpContact> Poly2Poly(cpPolyShape cpPolyShape1, cpPolyShape cpPolyShape2)
+        public static List<ContactPoint> Poly2Poly(cpPolyShape cpPolyShape1, cpPolyShape cpPolyShape2)
         {
             //throw new NotImplementedException();
             return null;
         }
     }
+
+
+
+
+
+
 }
 
 //#region NOT USED

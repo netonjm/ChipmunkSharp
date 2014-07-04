@@ -83,8 +83,8 @@ namespace ChipmunkSharp
             List<cpVect> src = poly.verts;
             List<cpVect> dst = poly.tVerts;
 
-            float l = (float)cpEnvironment.INFINITY_FLOAT, r = -(float)cpEnvironment.INFINITY_FLOAT;
-            float b = (float)cpEnvironment.INFINITY_FLOAT, t = -(float)cpEnvironment.INFINITY_FLOAT;
+            float l = (float)cpEnvironment.Infinity, r = -(float)cpEnvironment.Infinity;
+            float b = (float)cpEnvironment.Infinity, t = -(float)cpEnvironment.Infinity;
 
             for (int i = 0; i < poly.numVerts; i++)
             {
@@ -171,7 +171,7 @@ namespace ChipmunkSharp
             float r = poly.r;
 
             cpVect v0 = verts[count - 1];
-            float minDist = cpEnvironment.INFINITY_FLOAT;
+            float minDist = cpEnvironment.Infinity;
             cpVect closestPoint = cpVect.ZERO;
             cpVect closestNormal = cpVect.ZERO;
             bool outside = false;
@@ -255,7 +255,7 @@ namespace ChipmunkSharp
             int numVerts = verts.Count;
 
             // Fail if the user attempts to pass a concave poly, or a bad winding.
-            cpEnvironment.AssertHard(cpPolyShape.cpPolyValidate(verts, numVerts), "Polygon is concave or has a reversed winding. Consider using cpConvexHull() or CP_CONVEX_HULL().");
+            cpEnvironment.assertHard(cpPolyShape.cpPolyValidate(verts, numVerts), "Polygon is concave or has a reversed winding. Consider using cpConvexHull() or CP_CONVEX_HULL().");
             //poly.numVerts = numVerts;
             poly.verts = verts; // (cpVect)cpcalloc(2 * numVerts, sizeof(cpVect));
             poly.planes = new List<cpSplittingPlane>();  // (cpSplittingPlane)cpcalloc(2 * numVerts, sizeof(cpSplittingPlane));
@@ -383,21 +383,21 @@ namespace ChipmunkSharp
         /// Get the number of verts in a polygon shape.
         public static int cpPolyShapeGetNumVerts(cpShape shape)
         {
-            cpEnvironment.AssertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
+            cpEnvironment.assertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
             return ((cpPolyShape)shape).numVerts;
         }
         /// Get the @c ith vertex of a polygon shape.
         public static cpVect cpPolyShapeGetVert(cpShape shape, int idx)
         {
-            cpEnvironment.AssertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
-            cpEnvironment.AssertHard(0 <= idx && idx < cpPolyShapeGetNumVerts(shape), "Index out of range.");
+            cpEnvironment.assertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
+            cpEnvironment.assertHard(0 <= idx && idx < cpPolyShapeGetNumVerts(shape), "Index out of range.");
 
             return ((cpPolyShape)shape).verts[idx];
         }
         /// Get the radius of a polygon shape.
         public static float cpPolyShapeGetRadius(cpShape shape)
         {
-            cpEnvironment.AssertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
+            cpEnvironment.assertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
             return ((cpPolyShape)shape).r;
         }
 
@@ -406,14 +406,14 @@ namespace ChipmunkSharp
 
         public static void cpPolyShapeSetVerts(cpShape shape, List<cpVect> verts, cpVect offset)
         {
-            cpEnvironment.AssertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
+            cpEnvironment.assertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
             cpPolyShapeDestroy((cpPolyShape)shape);
             setUpVerts((cpPolyShape)shape, verts, offset);
         }
 
         public static void cpPolyShapeSetRadius(cpShape shape, float radius)
         {
-            cpEnvironment.AssertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
+            cpEnvironment.assertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
             ((cpPolyShape)shape).r = radius;
         }
 
@@ -422,16 +422,16 @@ namespace ChipmunkSharp
         {
 
             //cpEnvironment.cpAssertHard(klass == &polyClass, "Shape is not a poly shape.");
-            cpEnvironment.AssertHard(0 <= idx && idx < cpPolyShapeGetNumVerts(this), "Index out of range.");
+            cpEnvironment.assertHard(0 <= idx && idx < cpPolyShapeGetNumVerts(this), "Index out of range.");
 
             return verts[idx];
         }
 
-        public Func<object, object, List<cpContact>>[] collisionTable
+        public Func<object, object, List<ContactPoint>>[] collisionTable
         {
             get
             {
-                return new Func<object, object, List<cpContact>>[] {
+                return new Func<object, object, List<ContactPoint>>[] {
                     null,
                     null,
                     (o1,o2) => cpCollision.Poly2Poly(o1 as cpPolyShape ,o2 as cpPolyShape)

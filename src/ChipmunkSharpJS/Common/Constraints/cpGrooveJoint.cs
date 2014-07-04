@@ -83,8 +83,8 @@ namespace ChipmunkSharp.Constraints
         {
 
             // calculate endpoints in worldspace
-            var ta = a.Local2World(this.grv_a);
-            var tb = a.Local2World(this.grv_b);
+            var ta = a.local2World(this.grv_a);
+            var tb = a.local2World(this.grv_b);
 
             // calculate axis
             var n = this.grv_n.Rotate(a.Rotation); // vrotate(, a.rot);
@@ -163,14 +163,14 @@ namespace ChipmunkSharp.Constraints
             this.grv_a = value;
             this.grv_n = this.grv_b.Sub(value).Normalize().Perp(); //vperp(vnormalize(vsub( , value)));
 
-            this.ActivateBodies();
+            this.activateBodies();
         }
         public void SetGrooveB(cpVect value)
         {
             this.grv_b = value;
             this.grv_n = this.grv_a.Sub(value).Normalize().Perp(); //vperp(vnormalize(vsub( , value)));
 
-            this.ActivateBodies();
+            this.activateBodies();
         }
 
 

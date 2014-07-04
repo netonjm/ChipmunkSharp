@@ -48,7 +48,7 @@ namespace ChipmunkSharp.Constraints
         #endregion
 
         public cpPivotJoint(cpBody a, cpBody b, cpVect pivot)
-            : this(a, b, (a != null ? a.World2Local(pivot) : pivot), (b != null ? b.World2Local(pivot) : pivot))
+            : this(a, b, (a != null ? a.world2Local(pivot) : pivot), (b != null ? b.world2Local(pivot) : pivot))
         {
 
         }
@@ -62,8 +62,8 @@ namespace ChipmunkSharp.Constraints
             {
                 var pivot = anchr1;
 
-                anchr1 = (a != null ? a.World2Local(pivot) : pivot);
-                anchr2 = (b != null ? b.World2Local(pivot) : pivot);
+                anchr1 = (a != null ? a.world2Local(pivot) : pivot);
+                anchr2 = (b != null ? b.world2Local(pivot) : pivot);
             }
 
             this.anchr1 = anchr1;

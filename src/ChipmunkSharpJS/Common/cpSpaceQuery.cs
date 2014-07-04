@@ -28,141 +28,62 @@ namespace ChipmunkSharp
 {
 
 
-    public struct ShapeQueryContext
-    {
-        public cpSpaceShapeQueryFunc func;
-        public object data;
-        public bool anyCollision;
-        public ShapeQueryContext(cpSpaceShapeQueryFunc func, object data, bool any)
-        {
+    ///// Segment query callback function type.
+    //public delegate void cpSpaceSegmentQueryFunc(cpShape shape, float t, cpVect n, object data);
+    ///// Point query callback function type.
+    //public delegate void cpSpacePointQueryFunc(cpShape shape, object data);
+    ///// Nearest point query callback function type.
+    //public delegate void cpSpaceNearestPointQueryFunc(cpShape shape, float distance, cpVect point, object data);
+    ///// Rectangle Query callback function type.
+    //public delegate void cpSpaceBBQueryFunc(cpShape shape, object data);
+    ///// Space/body iterator callback function type.
+    //public delegate void cpSpaceBodyIteratorFunc(cpBody body, object data);
+    ///// Shape query callback function type.
+    //public delegate void cpSpaceShapeQueryFunc(cpShape shape, List<ContactPoint> points, object data);
+    ////struct cpContactBufferHeader cpContactBufferHeader;
 
-            this.func = func;
-            this.data = data;
-            this.anyCollision = any;
-        }
-
-
-    };
-
-    public struct PointQueryContext
-    {
-        public cpVect point;
-        public int layers;
-        public int group;
-        public cpSpacePointQueryFunc func;
-        public object data;
-
-        public PointQueryContext(cpVect point, int layers, int group, cpSpacePointQueryFunc func, object data)
-        {
-            this.point = point;
-            this.layers = layers;
-            this.group = group;
-            this.func = func;
-            this.data = data;
-        }
-
-    };
-
-
-    /// Segment query callback function type.
-    public delegate void cpSpaceSegmentQueryFunc(cpShape shape, float t, cpVect n, object data);
-    /// Point query callback function type.
-    public delegate void cpSpacePointQueryFunc(cpShape shape, object data);
-    /// Nearest point query callback function type.
-    public delegate void cpSpaceNearestPointQueryFunc(cpShape shape, float distance, cpVect point, object data);
-    /// Rectangle Query callback function type.
-    public delegate void cpSpaceBBQueryFunc(cpShape shape, object data);
-    /// Space/body iterator callback function type.
-    public delegate void cpSpaceBodyIteratorFunc(cpBody body, object data);
-    /// Shape query callback function type.
-    public delegate void cpSpaceShapeQueryFunc(cpShape shape, List<cpContact> points, object data);
-    //struct cpContactBufferHeader cpContactBufferHeader;
 
     public partial class cpSpace
     {
 
 
-        public static int PointQuery(PointQueryContext context, cpShape shape, int id, object data)
-        {
-            if (
-                !(shape.group != 0 && context.group == shape.group) && (context.layers != 0 & shape.layers != 0) &&
-                shape.PointQuery(context.point)  // cpShapePointQuery(shape, context.point)
-            )
-            {
-                context.func(shape, context.data);
-            }
-
-            return id;
-        }
-
         /// Query the space at a point and call @c func for each shape found.
-        //public void PointQuery(cpVect point, int layers, int group, cpSpacePointQueryFunc func, object data)
-        //{
-
-        //    PointQueryContext context = new PointQueryContext(point, layers, group, func, data);
-        //    cpBB bb = cpBB.cpBBNewForCircle(point, 0.0f);
-
-        //    lock (this)
-        //    {
-        //        locked = true;
-
-        //        //space.activeShapes
-
-        //        activeShapes.IndexQuery(context, bb, ShapeQuery, data);
-        //        staticShapes.IndexQuery(context, bb, ShapeQuery, data);
-
-
-
-        //        //cpSpatialIndexQuery(space.activeShapes, context, bb, PointQuery, data);
-        //        //cpSpatialIndexQuery(space.staticShapes, context, bb, PointQuery, data);
-        //        locked = false;
-        //    }
-
-        //}
-
-        //MARK: Query Functions
-
-
-
-        // Callback from the spatial hash.
-        public static int ShapeQuery(cpShape a, cpShape b, int id, ShapeQueryContext context)
+        public void pointQuery(cpVect point, int layers, int group, Action<cpShape> func)
         {
-            // Reject any of the simple cases
-            if (
-                (a.group > 0 && a.group == b.group) ||
-                !(a.layers > 0 & b.layers > 0) ||
-                a == b
-            ) return id;
-
-            List<cpContact> contacts = new List<cpContact>();
-            //int numContacts = 0;
-
-            // Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
-            if (a.klass.type <= b.klass.type)
+            var helper = new Action<cpShape>(shape =>
             {
-                a.Collides(b, id, contacts);
-            }
-            else
-            {
-                b.Collides(a, id, contacts);
-                for (int i = 0; i < contacts.Count; i++)
-                    contacts[i].n.Neg(); // = cpVect.cpvneg(.n);
-            }
-
-            if (contacts.Count > 0)
-            {
-                context.anyCollision = !(a.sensor || b.sensor);
-
-                if (context.func != null)
+                if (
+                    !(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) &&
+                    shape.PointQuery(point)
+                )
                 {
-                    context.func(b, contacts, context.data);
+                    func(shape);
                 }
-            }
+            });
 
-            return id;
+            var bb = new cpBB(point.x, point.y, point.x, point.y);
+            Lock();
+            {
+                this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); return null; });
+                this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); return null; });
+            } Unlock(true);
         }
 
-        public bool ShapeQuery(cpShape shape, Action<cpShape, List<cpContact>> func)
+
+        /// Query the space at a point and return the first shape found. Returns null if no shapes were found.
+        public cpShape pointQueryFirst(cpVect point, int layers, int group, Action<cpShape> func)
+        {
+            cpShape outShape = null;
+            this.pointQuery(point, layers, group, new Action<cpShape>(shape =>
+            {
+                if (!shape.sensor)
+                    outShape = shape;
+            }));
+            return outShape;
+        }
+
+        /// Query a space for any shapes overlapping the given shape and call @c func for each shape found.
+        public bool shapeQuery(cpShape shape, Action<cpShape, List<ContactPoint>> func)
         {
 
             cpBody body = shape.body;
@@ -170,7 +91,7 @@ namespace ChipmunkSharp
             //var bb = (body ? shape.update(body.p, body.rot) : shape.bb);
             if (body != null)
             {
-                shape.Update(body.Position, body.Rotation);
+                shape.update(body.Position, body.Rotation);
             }
 
             var bb = shape.bb;
@@ -178,32 +99,32 @@ namespace ChipmunkSharp
             //shapeQueryContext context = {func, data, false};
             bool anyCollision = false;
 
-            Func<object, object, object> helper = (o1, o2) =>
+            Action<cpShape> helper = (b) =>
             {
-                cpShape b = (cpShape)o1;
+
                 var a = shape;
                 // Reject any of the simple cases
                 if (
                     (a.group != 0 && a.group == b.group) ||
                     (a.layers & b.layers) == 0 ||
                     a == b
-                ) return null;
+                ) return;
 
 
-                List<cpContact> contacts = new List<cpContact>();
+                List<ContactPoint> contacts = new List<ContactPoint>();
 
                 // Shape 'a' should have the lower shape type. (required by collideShapes() )
                 if ((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode)
                 {
-                    contacts = CollideShapes(a, b);
+                    contacts = collideShapes(a, b);
                 }
                 else
                 {
-                    contacts = CollideShapes(b, a);
-                    List<cpContact> contactsModified = new List<cpContact>();
+                    contacts = collideShapes(b, a);
+                    List<ContactPoint> contactsModified = new List<ContactPoint>();
                     for (var i = 0; i < contacts.Count; i++)
                     {
-                        cpContact contacto = contacts[i];
+                        ContactPoint contacto = contacts[i];
                         contacto.n = cpVect.cpvneg(contacto.n);
                         contactsModified.Add(contacto);
                     }
@@ -216,30 +137,59 @@ namespace ChipmunkSharp
 
                     if (func != null)
                     {
-                        List<cpContact> set = new List<cpContact>();
-                        cpContact tmp;
-                        for (var i = 0; i < contacts.Count; i++)
-                        {
-                            tmp = new cpContact(contacts[i].p, contacts[i].n, contacts[i].dist, 0); // contacts[i].p, contacts[i].n, contacts[i].dist);
-                            set.Add(tmp);
-                        }
+                        //List<ContactPoint> set = new List<ContactPoint>();
+                        //ContactPoint tmp;
+                        //for (var i = 0; i < contacts.Count; i++)
+                        //{
+                        //    tmp = new ContactPoint(contacts[i].p, contacts[i].n, contacts[i].dist, 0); // contacts[i].p, contacts[i].n, contacts[i].dist);
+                        //    set.Add(tmp);
+                        //}
 
-                        func(b, set);
+                        func(b, contacts);
                     }
                 }
 
-                return null;
+
             };
 
             Lock();
             {
-                this.activeShapes.Query(bb, helper);
-                this.staticShapes.Query(bb, helper);
+                this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); return null; });
+                this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); return null; });
             }
             Unlock(true);
 
             return anyCollision;
         }
+
+
+        /// Perform a fast rectangle query on the space calling @c func for each shape found.
+        /// Only the shape's bounding boxes are checked for overlap, not their full shape.
+        public void bbQuery(cpBB bb, int layers, int group, Action<cpShape> func)
+        {
+            var helper = new Action<cpShape>(shape =>
+            {
+                if (
+                    !(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) &&
+                     cpEnvironment.bbIntersects2(bb, shape.bb.l, shape.bb.b, shape.bb.r, shape.bb.t)
+                )
+                {
+                    func(shape);
+                }
+            });
+
+
+            Lock();
+            {
+                this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); return null; });
+                this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); return null; });
+            } Unlock(true);
+        }
+
+
+
+
+
 
         ///// Query the space at a point and call @c func for each shape found.
         //public void cpSpaceNearestPointQuery(cpSpace space, cpVect point, float maxDistance, int layers, int group, cpSpaceNearestPointQueryFunc func, object data);
@@ -270,42 +220,3 @@ namespace ChipmunkSharp
 
     }
 }
-//public static Pair cpSpaceHashQuery(cpSpaceHash hash, object obj, cpBB bb, cpSpatialIndexQueryFunc func, object data)
-//{
-//    // Get the dimensions in cell coordinates.
-//    cpFloat dim = hash.celldim;
-//    int l = floor_int(bb.l / dim);  // Fix by ShiftZ
-//    int r = floor_int(bb.r / dim);
-//    int b = floor_int(bb.b / dim);
-//    int t = floor_int(bb.t / dim);
-
-//    int n = hash.numcells;
-//    cpSpaceHashBin** table = hash.table;
-
-//    // Iterate over the cells and query them.
-//    for (int i = l; i <= r; i++)
-//    {
-//        for (int j = b; j <= t; j++)
-//        {
-//            query_helper(hash, &table[hash_func(i, j, n)], obj, func, data);
-//        }
-//    }
-
-//    hash.stamp++;
-//}
-
-
-/// Query the space at a point and return the first shape found. Returns null if no shapes were found.
-//public cpShape PointQueryFirst(cpSpace space, cpVect point, int layers, int group)
-//{
-//    cpShape shape = null;
-//    space.PointQuery(point, layers, group, PointQueryFirst, shape);
-//    //cpSpacePointQuery(space,);
-
-//    return shape;
-//}
-
-//public void PointQuery(cpVect point, int layers, int group, Func<cpSpace, cpVect, int, int, cpShape> PointQueryFirst, cpShape shape)
-//{
-
-//}

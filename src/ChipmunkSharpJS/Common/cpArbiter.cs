@@ -26,69 +26,33 @@ namespace ChipmunkSharp
 {
 
 
-    /// @defgroup cpArbiter cpArbiter
-    /// The cpArbiter struct controls pairs of colliding shapes.
-    /// They are also used in conjuction with collision handler callbacks
-    /// allowing you to retrieve information on the collision and control it.
-    /// @{
-
-    /// Collision begin event function callback type.
-    /// Returning false from a begin callback causes the collision to be ignored until
-    /// the the separate callback is called when the objects stop colliding.
-    public delegate bool cpCollisionBeginFunc(cpArbiter arb, cpSpace space, object data);
-    /// Collision pre-solve event function callback type.
-    /// Returning false from a pre-step callback causes the collision to be ignored until the next step.
-    public delegate bool cpCollisionPreSolveFunc(cpArbiter arb, cpSpace space, object data);
-    /// Collision post-solve event function callback type.
-    public delegate void cpCollisionPostSolveFunc(cpArbiter arb, cpSpace space, object data);
-    /// Collision separate event function callback type.
-    public delegate void cpCollisionSeparateFunc(cpArbiter arb, cpSpace space, object data);
-
     /// @private
-    public class cpCollisionHandler : IObjectBox
+    public class CollisionHandler : IObjectBox
     {
 
 
         public int a;
         public int b;
-        public cpCollisionBeginFunc begin;
-        public cpCollisionPreSolveFunc preSolve;
-        public cpCollisionPostSolveFunc postSolve;
-        public cpCollisionSeparateFunc separate;
-        public object data;
 
 
-        public cpCollisionHandler(int a, int b, cpCollisionBeginFunc begin, cpCollisionPreSolveFunc preSolve, cpCollisionPostSolveFunc postSolve, cpCollisionSeparateFunc separate, object data)
+        public CollisionHandler()
         {
-            this.a = a;
-            this.b = b;
-            this.begin = begin;
-            this.preSolve = preSolve;
-            this.postSolve = postSolve;
-            this.separate = separate;
-            this.data = data;
-
-            // bb = new cpBB(0f, 0f, 0f, 0f);
+            this.a = 0;
+            this.b = 0;
         }
 
-        public cpCollisionHandler()
+        public CollisionHandler Clone()
         {
-            // TODO: Complete member initialization
-        }
-
-
-        public cpCollisionHandler Clone()
-        {
-            cpCollisionHandler copy = new cpCollisionHandler();
+            CollisionHandler copy = new CollisionHandler();
             copy.a = a;
             copy.b = b;
-            copy.begin = begin;
-            copy.preSolve = preSolve;
-            copy.postSolve = postSolve;
-            copy.separate = separate;
-            copy.data = data;
             return copy;
         }
+
+        public Func<cpArbiter, cpSpace, bool> begin;
+        public Func<cpArbiter, cpSpace, bool> preSolve;
+        public Func<cpArbiter, cpSpace, bool> postSolve;
+        public Action<cpArbiter, cpSpace> separate;
 
         public cpBB bb { get; set; }
 
@@ -98,52 +62,19 @@ namespace ChipmunkSharp
     public enum cpArbiterState
     {
         // Arbiter is active and its the first collision.
-        cpArbiterStateFirstColl = 1,
+        FirstColl = 1,
         // Arbiter is active and its not the first collision.
-        cpArbiterStateNormal = 2,
+        Normal = 2,
         // Collision has been explicitly ignored.
         // Either by returning false from a begin collision handler or calling cpArbiterIgnore().
-        cpArbiterStateIgnore = 3,
+        Ignore = 3,
         // Collison is no longer active. A space will cache an arbiter for up to cpSpace.collisionPersistence more steps.
-        cpArbiterStateCached = 4,
+        Cached = 4,
     } ;
-
-    public struct arbiterFilterContext
-    {
-        public cpSpace space;
-        public cpBody body;
-        public cpShape shape;
-
-        public arbiterFilterContext(cpSpace space, cpBody body, cpShape shape)
-        {
-            this.space = space;
-            this.body = body;
-            this.shape = shape;
-
-        }
-
-
-    };
-
-
-    /// @private
-    public class cpArbiterThread
-    {
-        // Links to next and previous arbiters in the contact graph.
-        public cpArbiter next, prev;
-
-        public void Clear()
-        {
-            prev = next = null;
-        }
-    };
-
 
     /// A colliding pair of shapes.
     public class cpArbiter : IObjectBox
     {
-
-
 
         public static int CP_MAX_CONTACTS_PER_ARBITER = 4;
 
@@ -176,20 +107,24 @@ namespace ChipmunkSharp
         public cpBody body_a { get; set; }
         public cpBody body_b { get; set; }
 
-        private cpArbiterThread thread_a { get; set; }
-        private cpArbiterThread thread_b { get; set; }
+        //private cpArbiterThread thread_a { get; set; }
+        //private cpArbiterThread thread_b { get; set; }
 
         //private struct cpArbiterThread thread_a;
         //private struct cpArbiterThread thread_b;
 
-        public List<cpContact> contacts { get; set; }
+        public List<ContactPoint> contacts { get; set; }
 
-        public cpCollisionHandler handler { get; set; }
-
+        public CollisionHandler handler { get; set; }
 
         public int stamp;
 
         public bool swappedColl { get; set; }
+
+        public cpArbiter thread_a_next { get; set; }
+        public cpArbiter thread_a_prev { get; set; }
+        public cpArbiter thread_b_next { get; set; }
+        public cpArbiter thread_b_prev { get; set; }
 
 
         public cpArbiterState state;
@@ -230,70 +165,77 @@ namespace ChipmunkSharp
 
         #endregion
 
-        // TODO make this generic so I can reuse it for constraints also.
 
+        // Arbiter states
+        //
+        // Arbiter is active and its the first collision.
+        //	'first coll'
+        // Arbiter is active and its not the first collision.
+        //	'normal',
+        // Collision has been explicitly ignored.
+        // Either by returning false from a begin collision handler or calling cpArbiterIgnore().
+        //	'ignore',
+        // Collison is no longer active. A space will cache an arbiter for up to cpSpace.collisionPersistence more steps.
+        //	'cached'
+
+        /// A colliding pair of shapes.
         public cpArbiter(cpShape a, cpShape b)
         {
-            Init(a, b);
-        }
-
-        private void Init(cpShape a, cpShape b)
-        {
-
-            thread_a = new cpArbiterThread();
-            thread_b = new cpArbiterThread();
-
-            this.handler = new cpCollisionHandler();
-            this.swappedColl = false;
-
-            this.e = 0.0f;
-            this.u = 0.0f;
+            /// Calculated value to use for the elasticity coefficient.
+            /// Override in a pre-solve collision handler for custom behavior.
+            this.e = 0;
+            /// Calculated value to use for the friction coefficient.
+            /// Override in a pre-solve collision handler for custom behavior.
+            this.u = 0;
+            /// Calculated value to use for applying surface velocities.
+            /// Override in a pre-solve collision handler for custom behavior.
             this.surface_vr = cpVect.ZERO;
-
-            this.contacts = new List<cpContact>();
 
             this.a = a; this.body_a = a.body;
             this.b = b; this.body_b = b.body;
 
-            this.thread_a.next = null;
-            this.thread_b.next = null;
-            this.thread_a.prev = null;
-            this.thread_b.prev = null;
+            this.thread_a_next = this.thread_a_prev = null;
+            this.thread_b_next = this.thread_b_prev = null;
+
+            this.contacts = null;
 
             this.stamp = 0;
-
-            this.state = cpArbiterState.cpArbiterStateFirstColl;
-
-            this.data = null;
+            this.handler = null;
+            this.swappedColl = false;
+            this.state = cpArbiterState.FirstColl;
         }
 
 
 
-        // Get the relative surface velocity of the two shapes in contact.
-        public cpVect GetSurfaceVelocity()
+        /// Return the colliding shapes involved for this arbiter.
+        /// The order of their cpSpace.collision_type values will match
+        /// the order set when the collision handler was registered.
+        public cpShape[] GetShapes()
         {
-            return surface_vr.Multiply(swappedColl ? -1.0f : 1.0f); //  cpVect.cpvmult(surface_vr,);
+            if (swappedColl)
+                return new cpShape[] { b, a };
+            else
+                return new cpShape[] { a, b };
         }
 
-        // Override the relative surface velocity of the two shapes in contact.
-        // By default this is calculated to be the difference of the two
-        // surface velocities clamped to the tangent plane.
-        public void SetSurfaceVelocity(cpVect vr)
+        public void GetShapes(out cpShape a, out cpShape b)
         {
-            surface_vr = vr.Multiply(swappedColl ? -1.0f : 1.0f); // cpvmult(vr,);
+            if (swappedColl)
+            {
+                a = this.b; b = this.a;
+            }
+            else
+                a = this.a; b = this.b;
         }
-
 
         /// Calculate the total impulse that was applied by this arbiter.
         /// This function should only be called from a post-solve, post-step or cpBodyEachArbiter callback.
 
-        /// Calculate the total impulse that was applied by this arbiter.
-        /// This function should only be called from a post-solve, post-step or cpBodyEachArbiter callback.
         public cpVect TotalImpulse()
         {
             var sum = new cpVect(0, 0);
 
-            for (int i = 0, count = GetCount(); i < count; i++)
+            for (int i = 0, count = contacts.Count; i < count; i++)
             {
                 var con = contacts[i];
                 // sum.Add(con.n.Multiply(con.jnAcc));
@@ -303,13 +245,15 @@ namespace ChipmunkSharp
             return this.swappedColl ? sum : sum.Neg();
         }
 
+
+
         /// Calculate the total impulse including the friction that was applied by this arbiter.
         /// This function should only be called from a post-solve, post-step or cpBodyEachArbiter callback.
         public cpVect TotalImpulseWithFriction()
         {
             var sum = cpVect.ZERO;
 
-            for (int i = 0, count = GetCount(); i < count; i++)
+            for (int i = 0, count = contacts.Count; i < count; i++)
             {
                 var con = contacts[i];
                 sum = sum.Add(new cpVect(con.jnAcc, con.jtAcc).Rotate(con.n));
@@ -332,7 +276,7 @@ namespace ChipmunkSharp
             for (int i = 0, count = contacts.Count; i < count; i++)
             {
 
-                cpContact con = contacts[i];
+                ContactPoint con = contacts[i];
                 float jnAcc = con.jnAcc;
                 float jtAcc = con.jtAcc;
 
@@ -347,94 +291,40 @@ namespace ChipmunkSharp
         /// Causes a collision pair to be ignored as if you returned false from a begin callback.
         /// If called from a pre-step callback, you will still need to return false
         /// if you want it to be ignored in the current step.
-        public void Ignore()
+        public void ignore()
         {
-            state = cpArbiterState.cpArbiterStateIgnore;
-        }
-
-        /// Return the colliding shapes involved for this arbiter.
-        /// The order of their cpSpace.collision_type values will match
-        /// the order set when the collision handler was registered.
-        public void GetShapes(out cpShape shapeA, out cpShape shapeB)
-        {
-            if (swappedColl)
-            {
-                shapeA = b;
-                shapeB = a;
-            }
-            else
-            {
-                shapeA = a;
-                shapeB = b;
-            }
+            state = cpArbiterState.Ignore;
         }
 
 
-        /// Return the colliding bodies involved for this arbiter.
-        /// The order of the cpSpace.collision_type the bodies are associated with values will match
-        /// the order set when the collision handler was registered.
-        public void GetBodies(out cpBody a, out cpBody b)
+        /// Returns true if this is the first step a pair of objects started colliding.
+        public bool isFirstContact()
         {
-            cpShape shape_a, shape_b;
-            GetShapes(out shape_a, out shape_b);
-
-            a = shape_a.body;
-            b = shape_b.body;
+            return state == cpArbiterState.FirstColl;
         }
+
 
         /// Return a contact set from an arbiter.
-        public List<cpContact> GetContactPointSet()
+        public List<ContactPoint> getContactPointSet()
         {
-            List<cpContact> set = new List<cpContact>();
+            List<ContactPoint> set = new List<ContactPoint>();
             foreach (var item in contacts)
                 set.Add(item.Clone());
             return set;
         }
 
-        /// Replace the contact point set for an arbiter.
-        /// This can be a very powerful feature, but use it with caution!
-        public void SetContactPointSet(List<cpContact> set)
-        {
-
-            cpEnvironment.AssertHard(set.Count == numContacts, "The number of contact points cannot be changed.");
-            cpContact tmp;
-            for (int i = 0; i < set.Count; i++)
-            {
-                tmp = contacts[i];
-                tmp.p = set[i].p;
-                tmp.n = set[i].n;
-                tmp.dist = set[i].dist;
-            }
-
-        }
-
-        /// Returns true if this is the first step a pair of objects started colliding.
-        public bool IsFirstContact()
-        {
-            return state == cpArbiterState.cpArbiterStateFirstColl;
-        }
-
-        /// Get the number of contact points for this arbiter.
-        public int GetCount()
-        {
-            // Return 0 contacts if we are in a separate callback.
-            return (state != cpArbiterState.cpArbiterStateCached ? numContacts : 0);
-            //return contacts.Count;
-        }
-
-
         /// Get the position of the @c ith contact point.
-        public cpVect GetPoint(int i)
+        public cpVect getPoint(int i)
         {
-            cpEnvironment.AssertHard(0 <= i && i < GetCount(), "Index error: The specified contact index is invalid for this arbiter");
+            cpEnvironment.assertHard(0 <= i && i < contacts.Count, "Index error: The specified contact index is invalid for this arbiter");
             return contacts[i].p;
             // return contacts[i].point;
         }
 
         /// Get the normal of the @c ith contact point.
-        public cpVect GetNormal(int i)
+        public cpVect getNormal(int i)
         {
-            cpEnvironment.AssertHard(0 <= i && i < GetCount(), "Index error: The specified contact index is invalid for this arbiter");
+            cpEnvironment.assertHard(0 <= i && i < contacts.Count, "Index error: The specified contact index is invalid for this arbiter");
 
             var n = this.contacts[i].n;
             return this.swappedColl ? n.Neg() : n;
@@ -442,16 +332,25 @@ namespace ChipmunkSharp
 
 
         /// Get the depth of the @c ith contact point.
-        public float GetDepth(int i)
+        public float getDepth(int i)
         {
             // return this.contacts[i].dist;
-            cpEnvironment.AssertHard(0 <= i && i < GetCount(), "Index error: The specified contact index is invalid for this arbiter");
+            cpEnvironment.assertHard(0 <= i && i < contacts.Count, "Index error: The specified contact index is invalid for this arbiter");
             return contacts[i].dist;
 
         }
 
 
-        public void update(List<cpContact> contacts, cpCollisionHandler handler, cpShape a, cpShape b)
+        public void unthread()
+        {
+            cpEnvironment.unthreadHelper(this, this.body_a, this.thread_a_prev, this.thread_a_next);
+            cpEnvironment.unthreadHelper(this, this.body_b, this.thread_b_prev, this.thread_b_next);
+            this.thread_a_prev = this.thread_a_next = null;
+            this.thread_b_prev = this.thread_b_next = null;
+        }
+
+
+        public void update(List<ContactPoint> contacts, CollisionHandler handler, cpShape a, cpShape b)
         {
             //throw new NotImplementedException();
 
@@ -461,11 +360,11 @@ namespace ChipmunkSharp
                 // Iterate over the possible pairs to look for hash value matches.
                 for (int i = 0; i < this.contacts.Count; i++)
                 {
-                    cpContact old = this.contacts[i];
+                    ContactPoint old = this.contacts[i];
 
                     for (int j = 0; j < this.contacts.Count; j++)
                     {
-                        cpContact new_contact = this.contacts[j];
+                        ContactPoint new_contact = this.contacts[j];
 
                         // This could trigger false positives, but is fairly unlikely nor serious if it does.
                         if (new_contact.hash == old.hash)
@@ -494,7 +393,7 @@ namespace ChipmunkSharp
             this.b = b; this.body_b = b.body;
 
             // mark it as new if it's been cached
-            if (this.state == cpArbiterState.cpArbiterStateCached) this.state = cpArbiterState.cpArbiterStateFirstColl;
+            if (this.state == cpArbiterState.Cached) this.state = cpArbiterState.FirstColl;
 
         }
 
@@ -524,10 +423,12 @@ namespace ChipmunkSharp
             }
         }
 
+
+
         // TODO is it worth splitting velocity/position correction?
-        public void ApplyCachedImpulse(float dt_coef)
+        public void applyCachedImpulse(float dt_coef)
         {
-            if (this.IsFirstContact()) return;
+            if (this.isFirstContact()) return;
 
             var a = this.body_a;
             var b = this.body_b;
@@ -535,22 +436,15 @@ namespace ChipmunkSharp
             for (var i = 0; i < this.contacts.Count; i++)
             {
                 var con = this.contacts[i];
-
-                //var j = vrotate(con.n, new Vect(con.jnAcc, con.jtAcc));
-
-                cpVect j = con.n.Rotate(new cpVect(con.jnAcc, con.jtAcc));  // cpvrotate(con.normal, cpv(con.jnAcc, con.jtAcc));
-
-                cpEnvironment.apply_impulses(a, b, con.r1, con.r2, j.Multiply(dt_coef));//  cpEnvironment.cpvmult(j, dt_coef));
-                //var nx = con.normal.x;
-                //var ny = con.normal.y;
-                //var jx = nx * con.jnAcc - ny * con.jtAcc;
-                //var jy = nx * con.jtAcc + ny * con.jnAcc;
-                //apply_impulses(a, b, con.r1, con.r2, vmult(j, dt_coef));
-                //cpEnvironment.apply_impulses(a, b, con.r1, con.r2, jx * dt_coef, jy * dt_coef);
+                var nx = con.n.x;
+                var ny = con.n.y;
+                var jx = nx * con.jnAcc - ny * con.jtAcc;
+                var jy = nx * con.jtAcc + ny * con.jnAcc;
+                cpEnvironment.apply_impulses(a, b, con.r1, con.r2, jx * dt_coef, jy * dt_coef);
             }
         }
 
-        public void ApplyImpulse(float dt)
+        public void applyImpulse(float dt)
         {
 
             cpEnvironment.numApplyImpulse++;
@@ -570,8 +464,8 @@ namespace ChipmunkSharp
                 var r2 = con.r2;
 
                 //var vr = relative_velocity(a, b, r1, r2);
-                var vrx = b.Vel.x - r2.y * b.w - (a.Vel.x - r1.y * a.w);
-                var vry = b.Vel.y + r2.x * b.w - (a.Vel.y + r1.x * a.w);
+                var vrx = b.v.x - r2.y * b.w - (a.v.x - r1.y * a.w);
+                var vry = b.v.y + r2.x * b.w - (a.v.y + r1.x * a.w);
 
                 //var vb1 = vadd(vmult(vperp(r1), a.w_bias), a.v_bias);
                 //var vb2 = vadd(vmult(vperp(r2), b.w_bias), b.v_bias);
@@ -612,83 +506,181 @@ namespace ChipmunkSharp
             }
         }
 
-        public void Unthread()
-        {
-            Unthread(body_a);
-            Unthread(body_b);
-        }
 
-        public cpArbiterThread ThreadForBody(cpBody body)
-        {
-            return (body_a == body ? thread_a : thread_b);
-        }
-
-
-        // TODO make this generic so I can reuse it for constraints also.
-        public void Unthread(cpBody body)
-        {
-            cpArbiterThread thread = ThreadForBody(body);
-            cpArbiter prev = thread.prev;
-            cpArbiter next = thread.next;
-
-            if (prev != null)
-            {
-                prev.ThreadForBody(body).next = next;
-            }
-            else if (body.arbiterList == this)
-            {
-                // IFF prev is NULL and body->arbiterList == arb, is arb at the head of the list.
-                // This function may be called for an arbiter that was never in a list.
-                // In that case, we need to protect it from wiping out the body->arbiterList pointer.
-                body.arbiterList = next;
-            }
-
-            if (next != null)
-                next.ThreadForBody(body).prev = prev;
-
-            thread.prev = null;
-            thread.next = null;
-        }
-
-        public cpArbiter Next(cpBody body)
-        {
-            return (body_a == body ? thread_a.next : thread_b.next);
-        }
-
-        /// Return the colliding shapes involved for this arbiter.
-        /// The order of their cpSpace.collision_type values will match
-        /// the order set when the collision handler was registered.
-        public bool cachedArbitersFilter(arbiterFilterContext context)
-        {
-
-            cpShape shape = context.shape;
-            cpBody body = context.body;
-
-            // Match on the filter shape, or if it's null the filter body
-            if (
-                (body == body_a && (shape == a || shape == null)) ||
-                (body == body_b && (shape == b || shape == null))
-            )
-            {
-                // Call separate when removing shapes.
-                if (shape != null && state != cpArbiterState.cpArbiterStateCached)
-                    CallSeparate(context.space);
-
-                Unthread();
-
-                return false;
-            }
-
-            return true;
-        }
-
-        public void CallSeparate(cpSpace space)
+        public void callSeparate(cpSpace space)
         {
             // The handler needs to be looked up again as the handler cached on the arbiter may have been deleted since the last step.
-            var handler = space.LookupHandler(this.a.collision_type, this.b.collision_type);
-            handler.separate(this, space, null);
-
+            var handler = space.lookupHandler(this.a.collision_type, this.b.collision_type);
+            handler.separate(this, space);
         }
+
+        public cpArbiter next(cpBody body)
+        {
+            return (this.body_a == body ? this.thread_a_next : this.thread_b_next);
+        }
+
+
+
+
+
+        //==========================================================================  CHECKED ================================================================================
+
+
+
+        //private void Init(cpShape a, cpShape b)
+        //{
+
+        //    /// Calculated value to use for the elasticity coefficient.
+        //    /// Override in a pre-solve collision handler for custom behavior.
+        //    this.e = 0;
+        //    /// Calculated value to use for the friction coefficient.
+        //    /// Override in a pre-solve collision handler for custom behavior.
+        //    this.u = 0;
+        //    /// Calculated value to use for applying surface velocities.
+        //    /// Override in a pre-solve collision handler for custom behavior.
+        //    this.surface_vr = cpVect.ZERO;
+
+        //    this.a = a; this.body_a = a.body;
+        //    this.b = b; this.body_b = b.body;
+
+        //    this.thread_a_next = this.thread_a_prev = null;
+        //    this.thread_b_next = this.thread_b_prev = null;
+
+        //    this.contacts = null;
+
+        //    this.stamp = 0;
+        //    this.handler = null;
+        //    this.swappedColl = false;
+        //    this.state = cpArbiterState.cpArbiterStateFirstColl;
+        //}
+
+
+
+        //// Get the relative surface velocity of the two shapes in contact.
+        //public cpVect GetSurfaceVelocity()
+        //{
+        //    return surface_vr.Multiply(swappedColl ? -1.0f : 1.0f); //  cpVect.cpvmult(surface_vr,);
+        //}
+
+        //// Override the relative surface velocity of the two shapes in contact.
+        //// By default this is calculated to be the difference of the two
+        //// surface velocities clamped to the tangent plane.
+        //public void SetSurfaceVelocity(cpVect vr)
+        //{
+        //    surface_vr = vr.Multiply(swappedColl ? -1.0f : 1.0f); // cpvmult(vr,);
+        //}
+
+
+        ///// Calculate the total impulse that was applied by this arbiter.
+        ///// This function should only be called from a post-solve, post-step or cpBodyEachArbiter callback.
+
+        ///// Calculate the total impulse that was applied by this arbiter.
+        ///// This function should only be called from a post-solve, post-step or cpBodyEachArbiter callback.
+
+
+
+        ///// Return the colliding bodies involved for this arbiter.
+        ///// The order of the cpSpace.collision_type the bodies are associated with values will match
+        ///// the order set when the collision handler was registered.
+        //public void GetBodies(out cpBody a, out cpBody b)
+        //{
+        //    cpShape shape_a, shape_b;
+        //    GetShapes(out shape_a, out shape_b);
+
+        //    a = shape_a.body;
+        //    b = shape_b.body;
+        //}
+
+
+
+        ///// Replace the contact point set for an arbiter.
+        ///// This can be a very powerful feature, but use it with caution!
+        //public void SetContactPointSet(List<cpContact> set)
+        //{
+
+        //    cpEnvironment.AssertHard(set.Count == numContacts, "The number of contact points cannot be changed.");
+        //    cpContact tmp;
+        //    for (int i = 0; i < set.Count; i++)
+        //    {
+        //        tmp = contacts[i];
+        //        tmp.p = set[i].p;
+        //        tmp.n = set[i].n;
+        //        tmp.dist = set[i].dist;
+        //    }
+
+        //}
+
+        ///// Get the number of contact points for this arbiter.
+        //public int GetCount()
+        //{
+        //    // Return 0 contacts if we are in a separate callback.
+        //    return (state != cpArbiterState.cpArbiterStateCached ? numContacts : 0);
+        //    //return contacts.Count;
+        //}
+
+
+
+
+        //public cpArbiterThread ThreadForBody(cpBody body)
+        //{
+        //    return (body_a == body ? thread_a : thread_b);
+        //}
+
+
+        //// TODO make this generic so I can reuse it for constraints also.
+        //public void Unthread(cpBody body)
+        //{
+        //    cpArbiterThread thread = ThreadForBody(body);
+        //    cpArbiter prev = thread.prev;
+        //    cpArbiter next = thread.next;
+
+        //    if (prev != null)
+        //    {
+        //        prev.ThreadForBody(body).next = next;
+        //    }
+        //    else if (body.arbiterList == this)
+        //    {
+        //        // IFF prev is NULL and body->arbiterList == arb, is arb at the head of the list.
+        //        // This function may be called for an arbiter that was never in a list.
+        //        // In that case, we need to protect it from wiping out the body->arbiterList pointer.
+        //        body.arbiterList = next;
+        //    }
+
+        //    if (next != null)
+        //        next.ThreadForBody(body).prev = prev;
+
+        //    thread.prev = null;
+        //    thread.next = null;
+        //}
+
+
+
+        ///// Return the colliding shapes involved for this arbiter.
+        ///// The order of their cpSpace.collision_type values will match
+        ///// the order set when the collision handler was registered.
+        //public bool cachedArbitersFilter(arbiterFilterContext context)
+        //{
+
+        //    cpShape shape = context.shape;
+        //    cpBody body = context.body;
+
+        //    // Match on the filter shape, or if it's null the filter body
+        //    if (
+        //        (body == body_a && (shape == a || shape == null)) ||
+        //        (body == body_b && (shape == b || shape == null))
+        //    )
+        //    {
+        //        // Call separate when removing shapes.
+        //        if (shape != null && state != cpArbiterState.cpArbiterStateCached)
+        //            CallSeparate(context.space);
+
+        //        Unthread();
+
+        //        return false;
+        //    }
+
+        //    return true;
+        //}
 
 
         public cpBB bb
@@ -702,6 +694,10 @@ namespace ChipmunkSharp
 
             }
         }
+
+        public int Key { get { return cpEnvironment.CP_HASH_PAIR(a.hashid, b.hashid); } }
+
+
     };
 
 

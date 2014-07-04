@@ -19,6 +19,7 @@
   SOFTWARE.
  */
 
+using ChipmunkSharp.Constraints;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,7 +72,7 @@ namespace ChipmunkSharp
 
         public static float MAGIC_EPSILON = 1e-5F;
 
-        public static float INFINITY_FLOAT
+        public static float Infinity
         {
             get
             {
@@ -361,37 +362,52 @@ namespace ChipmunkSharp
 
         #endregion
 
-        public static void AssertHard(bool p1, string p2)
+
+        public static void assert(string p2)
+        {
+            LogWrite(string.Format("Assert:{0}", p2));
+        }
+
+        public static void assert(bool p1, string p2)
+        {
+            if (!p1)
+                LogWrite(string.Format("Assert:{0} Value:{1}", p2, p1));
+        }
+
+        public static void assertHard(bool p1, string p2)
         {
             if (!p1)
                 LogWrite(string.Format("AssertHard:{0} Value:{1}", p2, p1));
         }
 
-        public static void AssertHard(string p)
+        public static void assertHard(string p)
         {
             LogWrite(string.Format("AssertHard:{0} Value:{1}", p, ""));
         }
 
-        public static void AssertSoft(bool p1, string p2)
+        public static void assertSoft(bool p1, string p2)
         {
             if (!p1)
                 LogWrite(string.Format("cpAssertSoft:{0} Value:{1}", p2, p1));
         }
 
+        public static void assertSpaceUnlocked(cpSpace space)
+        {
+            assertSoft(!space.isLocked, "This addition/removal cannot be done safely during a call to cpSpaceStep() or during a query. Put these calls into a post-step callback.");
+        }
 
-
-        public static void AssertWarn(bool p1, string p2)
+        public static void assertWarn(bool p1, string p2)
         {
             if (!p1)
                 LogWrite(string.Format("AssertWarn:{0} Value:{1}", p2, p1));
         }
 
-        public static void AssertWarn(string p)
+        public static void assertWarn(string p)
         {
             LogWrite(string.Format("AssertWarn:{0}", p));
         }
 
-        public static void AssertWarn(bool p)
+        public static void assertWarn(bool p)
         {
             if (!p)
                 LogWrite(string.Format("AssertWarn: ERROR DETECTED"));
@@ -402,7 +418,7 @@ namespace ChipmunkSharp
             //Console.WriteLine(message);
         }
 
-        public static float PHYSICS_INFINITY { get { return INFINITY_FLOAT; } }
+        public static float PHYSICS_INFINITY { get { return Infinity; } }
 
         #region MOMENTS
 
@@ -569,7 +585,7 @@ namespace ChipmunkSharp
             }
             else if (count == 2)
             {
-                return tree.MakeNode(nodes[offset], nodes[offset + 1]);
+                return tree.makeNode(nodes[offset], nodes[offset + 1]);
             }
 
             // Find the AABB for these nodes
@@ -702,6 +718,7 @@ namespace ChipmunkSharp
             }
             else
             {
+
                 var parent = leaf.parent;
                 if (parent == subtree)
                 {
@@ -733,5 +750,169 @@ namespace ChipmunkSharp
             body.v_bias.y += jy * body.m_inv;
             body.w_bias += body.i_inv * cpVect.cpvcross2(r.x, r.y, jx, jy);
         }
+
+        public static void unthreadHelper(cpArbiter arb, cpBody body, cpArbiter prev, cpArbiter next)
+        {
+            // thread_x_y is quite ugly, but it avoids making unnecessary js objects per arbiter.
+            if (prev != null)
+            {
+                // cpArbiterThreadForBody(prev, body)->next = next;
+                if (prev.body_a == body)
+                {
+                    prev.thread_a_next = next;
+                }
+                else
+                {
+                    prev.thread_b_next = next;
+                }
+            }
+            else
+            {
+                body.arbiterList = next;
+            }
+
+            if (next != null)
+            {
+                // cpArbiterThreadForBody(next, body)->prev = prev;
+                if (next.body_a == body)
+                {
+                    next.thread_a_prev = prev;
+                }
+                else
+                {
+                    next.thread_b_prev = prev;
+                }
+            }
+        }
+
+        public static cpConstraint filterConstraints(cpConstraint node, cpBody body, cpConstraint filter)
+        {
+            if (node == filter)
+            {
+                return node.next(body);
+            }
+            else if (node.a == body)
+            {
+                node.next_a = filterConstraints(node.next_a, body, filter);
+            }
+            else
+            {
+                node.next_b = filterConstraints(node.next_b, body, filter);
+            }
+
+            return node;
+        }
+
+        public static cpBody componentRoot(cpBody body)
+        {
+            return (body != null ? body.nodeRoot : null);
+        }
+
+        public static void componentActivate(cpBody root)
+        {
+            if (root == null || !root.isSleeping()) return;
+            cpEnvironment.assertHard(!root.isRogue(), "Internal Error: componentActivate() called on a rogue body.");
+
+            var space = root.space;
+            cpBody body = root;
+            while (body != null)
+            {
+                var next = body.nodeNext;
+
+                body.nodeIdleTime = 0;
+                body.nodeRoot = null;
+                body.nodeNext = null;
+
+                space.activateBody(body);
+
+                body = next;
+            }
+
+
+            space.sleepingComponents.Remove(root);
+            //deleteObjFromList(space.sleepingComponents, root);
+        }
+
+
+        public static void floodFillComponent(cpBody root, cpBody body)
+        {
+            // Rogue bodies cannot be put to sleep and prevent bodies they are touching from sleeping anyway.
+            // Static bodies (which are a type of rogue body) are effectively sleeping all the time.
+            if (!body.isRogue())
+            {
+                var other_root = componentRoot(body);
+                if (other_root == null)
+                {
+                    componentAdd(root, body);
+                    for (var arb = body.arbiterList; arb != null; arb = arb.next(body))
+                    {
+                        floodFillComponent(root, (body == arb.body_a ? arb.body_b : arb.body_a));
+                    }
+                    for (var constraint = body.constraintList; constraint != null; constraint = constraint.next(body))
+                    {
+                        floodFillComponent(root, (body == constraint.a ? constraint.b : constraint.a));
+                    }
+                }
+                else
+                {
+                    assertSoft(other_root == root, "Internal Error: Inconsistency detected in the contact graph.");
+                }
+            }
+        }
+
+        public static void componentAdd(cpBody root, cpBody body)
+        {
+            body.nodeRoot = root;
+
+            if (body != root)
+            {
+                body.nodeNext = root.nodeNext;
+                root.nodeNext = body;
+            }
+        }
+
+        public static bool componentActive(cpBody root, float threshold)
+        {
+            for (var body = root; body != null; body = body.nodeNext)
+            {
+                if (body.nodeIdleTime < threshold) return true;
+            }
+
+            return false;
+        }
+
+        public static CollisionHandler defaultCollisionHandler = new CollisionHandler();
+
+        public static void updateFunc(cpShape shape)
+        {
+            var body = shape.body;
+            shape.update(body.Position, body.Rotation);
+        }
+
+
+
+        //// **** All Important cpSpaceStep() Function
+
+        //var updateFunc = function(shape)
+        //{
+        //    var body = shape.body;
+        //    shape.update(body.p, body.rot);
+        //};
+
+        /// Returns true if @c a and @c b intersect.
+
+        public static bool bbIntersects(cpBB a, cpBB b)
+        {
+            return (a.l <= b.r && b.l <= a.r && a.b <= b.t && b.b <= a.t); ;
+        }
+
+        public static bool bbIntersects2(cpBB bb, float l, float b, float r, float t)
+        {
+            return (bb.l <= r && l <= bb.r && bb.b <= t && b <= bb.t);
+        }
+
+
+
+
     }
 }

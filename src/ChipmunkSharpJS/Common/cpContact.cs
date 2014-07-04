@@ -26,8 +26,30 @@ using System.Text;
 
 namespace ChipmunkSharp
 {
+    //ContactPoint
+    //public class ContactPoint
+    //{
 
-    public class cpContact
+    //    public cpVect p, n;
+    //    public float dist;
+
+    //    public ContactPoint(cpVect point, cpVect normal, float dist)
+    //    {
+    //        this.p = point;
+    //        this.n = normal;
+    //        this.dist = dist;
+    //    }
+
+
+    //    //public cpVect point { get; set; }
+
+    //    //public float normal { get; set; }
+
+    //    //public float dist { get; set; }
+    //}
+
+
+    public class ContactPoint
     {
 
         public cpVect p, n;
@@ -41,14 +63,14 @@ namespace ChipmunkSharp
 
         public int hash;
 
-        public cpContact(cpVect p, cpVect n, float dist, int hash)
+        public ContactPoint(cpVect p, cpVect n, float dist, int hash)
         {
             Init(p, n, dist, hash);
         }
 
-        public cpContact Clone()
+        public ContactPoint Clone()
         {
-            cpContact tmp = new cpContact(p, n, dist, hash);
+            ContactPoint tmp = new ContactPoint(p, n, dist, hash);
             return tmp;
         }
 

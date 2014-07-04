@@ -18,6 +18,64 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
  */
+/**
+	@defgroup cpSpatialIndex cpSpatialIndex
+	
+	Spatial indexes are data structures that are used to accelerate collision detection
+	and spatial queries. Chipmunk provides a number of spatial index algorithms to pick from
+	and they are programmed in a generic way so that you can use them for holding more than
+	just Shapes.
+	
+	It works by using pointers to the objects you add and using a callback to ask your code
+	for bounding boxes when it needs them. Several types of queries can be performed an index as well
+	as reindexing and full collision information. All communication to the spatial indexes is performed
+	through callback functions.
+	
+	Spatial indexes should be treated as opaque structs.
+	This means you shouldn't be reading any of the fields directly.
+
+	All spatial indexes define the following methods:
+		
+	// The number of objects in the spatial index.
+	count = 0;
+
+	// Iterate the objects in the spatial index. @c func will be called once for each object.
+	each(func);
+	
+	// Returns true if the spatial index contains the given object.
+	// Most spatial indexes use hashed storage, so you must provide a hash value too.
+	contains(obj, hashid);
+
+	// Add an object to a spatial index.
+	insert(obj, hashid);
+
+	// Remove an object from a spatial index.
+	remove(obj, hashid);
+	
+	// Perform a full reindex of a spatial index.
+	reindex();
+
+	// Reindex a single object in the spatial index.
+	reindexObject(obj, hashid);
+
+	// Perform a point query against the spatial index, calling @c func for each potential match.
+	// A pointer to the point will be passed as @c obj1 of @c func.
+	// func(shape);
+	pointQuery(point, func);
+
+	// Perform a segment query against the spatial index, calling @c func for each potential match.
+	// func(shape);
+	segmentQuery(vect a, vect b, t_exit, func);
+
+	// Perform a rectangle query against the spatial index, calling @c func for each potential match.
+	// func(shape);
+	query(bb, func);
+
+	// Simultaneously reindex and find all colliding objects.
+	// @c func will be called once for each potentially overlapping pair of objects found.
+	// If the spatial index was initialized with a static index, it will collide it's objects against that as well.
+	reindexQuery(func);
+*/
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -85,7 +143,7 @@ namespace ChipmunkSharp
         public void ReplaceChild(Node child, Node value, cpBBTree tree)
         {
 
-            cpEnvironment.AssertSoft(child == this.A || child == this.B, "Node is not a child of parent.");
+            cpEnvironment.assertSoft(child == this.A || child == this.B, "Node is not a child of parent.");
 
             if (this.A == child)
             {
@@ -205,7 +263,7 @@ namespace ChipmunkSharp
 
             this.obj = obj; //THIS IS THE GENERIC REAL VALUE
 
-            bb = tree.GetBB(obj);
+            bb = tree.getBB(obj);
 
             this.parent = null;
 
@@ -318,7 +376,7 @@ namespace ChipmunkSharp
             if (obj != null)
             {
 
-                bb = tree.GetBB(obj);
+                bb = tree.getBB(obj);
                 root = cpEnvironment.SubtreeRemove(root, this, tree);
                 tree.root = tree.SubtreeInsert(root, this);//tree.root = SubtreeInsert(root, this, tree);
                 this.clearPairs(tree);
@@ -407,9 +465,9 @@ namespace ChipmunkSharp
             {
                 //var query = staticIndex.Query;
 
-                Each((obj) =>
+                each((obj) =>
                 {
-                    staticIndex.Query(new cpBB(obj.bb.l, obj.bb.b, obj.bb.r, obj.bb.t), func);
+                    staticIndex.query(new cpBB(obj.bb.l, obj.bb.b, obj.bb.r, obj.bb.t), func);
                 });
             }
         }
@@ -503,9 +561,8 @@ namespace ChipmunkSharp
             }
         }
 
-        public void Insert(int hashid, IObjectBox value)
+        public Leaf insert(int hashid, IObjectBox value)
         {
-
             var leaf = new Leaf(this, value);
             this.leaves.Add(hashid, leaf);
 
@@ -513,27 +570,25 @@ namespace ChipmunkSharp
 
             leaf.stamp = getStamp();
             leaf.AddPairs(this);
-            IncrementStamp();
+            incrementStamp();
+            return leaf;
         }
 
-        public void Remove(int key)
+        public void remove(int key)
         {
-
             Leaf leaf;
             if (TryGetValue(key, out leaf))
             {
                 //remove elements adds more functionality than simple array
                 leaves.Remove(key);
-                this.root = cpEnvironment.SubtreeRemove(this.root, leaf, this);
+                if (root != null)
+                    this.root = cpEnvironment.SubtreeRemove(this.root, leaf, this);
                 leaf.clearPairs(this);
                 leaf.recycle(this);
             }
-
-
-
         }
 
-        public bool ContainsValue(object obj)
+        public bool containsValue(object obj)
         {
             foreach (var item in leaves)
             {
@@ -566,7 +621,7 @@ namespace ChipmunkSharp
             return false;
         }
 
-        public Node MakeNode(Node a, Node b)
+        public Node makeNode(Node a, Node b)
         {
             var node = this.pooledNodes;
             if (node != null)
@@ -582,7 +637,7 @@ namespace ChipmunkSharp
             }
         }
 
-        public cpBB GetBB(object obj)
+        public cpBB getBB(object obj)
         {
 
             //TODO: GETBB
@@ -617,7 +672,7 @@ namespace ChipmunkSharp
             return (dynamic != null && dynamic.stamp != 0 ? dynamic.stamp : this.stamp);
         }
 
-        public void IncrementStamp()
+        public void incrementStamp()
         {
             //  cpBBTree dynamicTree = tree.dynamicIndex;
             if (dynamicIndex != null && this.dynamicIndex.stamp != 0)
@@ -627,7 +682,7 @@ namespace ChipmunkSharp
         }
 
 
-        public void ReindexQuery(Func<object, object, object> func)
+        public void reindexQuery(Func<object, object, object> func)
         {
 
             if (root == null) return;
@@ -644,18 +699,18 @@ namespace ChipmunkSharp
             if (staticIndex != null && staticRoot == null)
                 CollideStatic(staticIndex, func); //, data);
 
-            IncrementStamp();
+            incrementStamp();
 
         }
 
-        public void Reindex()
+        public void reindex()
         {
-            ReindexQuery(voidQueryFunc); //cpBBTreeReindexQuery(tree, VoidQueryFunc, null);
+            reindexQuery(voidQueryFunc); //cpBBTreeReindexQuery(tree, VoidQueryFunc, null);
         }
 
         public object voidQueryFunc(object obj1, object obj2) { return null; }
 
-        public void ReindexObject(int key, object obj)
+        public void reindexObject(int key, object obj)
         {
             Leaf leaf;
             if (leaves.TryGetValue(key, out leaf))
@@ -664,13 +719,13 @@ namespace ChipmunkSharp
                 if (leaf.Update(this))
                     leaf.AddPairs(this);
 
-                IncrementStamp();
+                incrementStamp();
             }
         }
 
         public void PointQuery(cpVect point, Func<object, object, object> func)
         {
-            Query(new cpBB(point.x, point.y, point.x, point.y), func);
+            query(new cpBB(point.x, point.y, point.x, point.y), func);
         }
 
         public void SegmentQuery(cpVect a, cpVect b, float t_exit, Func<object, float> func)
@@ -709,14 +764,14 @@ namespace ChipmunkSharp
         public float NodeSegmentQuery(Node node, cpVect a, cpVect b)
         {
             float idx = 1 / (b.x - a.x);
-            float tx1 = (node.bb.l == a.x ? -cpEnvironment.INFINITY_FLOAT : (node.bb.l - a.x) * idx);
-            float tx2 = (node.bb.r == a.x ? cpEnvironment.INFINITY_FLOAT : (node.bb.r - a.x) * idx);
+            float tx1 = (node.bb.l == a.x ? -cpEnvironment.Infinity : (node.bb.l - a.x) * idx);
+            float tx2 = (node.bb.r == a.x ? cpEnvironment.Infinity : (node.bb.r - a.x) * idx);
             float txmin = Math.Min(tx1, tx2);
             float txmax = Math.Max(tx1, tx2);
 
             float idy = 1 / (b.y - a.y);
-            float ty1 = (node.bb.b == a.y ? -cpEnvironment.INFINITY_FLOAT : (node.bb.b - a.y) * idy);
-            float ty2 = (node.bb.t == a.y ? cpEnvironment.INFINITY_FLOAT : (node.bb.t - a.y) * idy);
+            float ty1 = (node.bb.b == a.y ? -cpEnvironment.Infinity : (node.bb.b - a.y) * idy);
+            float ty2 = (node.bb.t == a.y ? cpEnvironment.Infinity : (node.bb.t - a.y) * idy);
             float tymin = Math.Min(ty1, ty2);
             float tymax = Math.Max(ty1, ty2);
 
@@ -728,15 +783,15 @@ namespace ChipmunkSharp
                 if (0.0 <= max_ && min_ <= 1.0f) return Math.Max(min_, 0.0f);
             }
 
-            return cpEnvironment.INFINITY_FLOAT;
+            return cpEnvironment.Infinity;
         }
 
-        public void Query(cpBB bb, Func<object, object, object> func)
+        public void query(cpBB bb, Func<object, object, object> func)
         {
             if (root != null)
-                SubtreeQuery(root, bb, func);
+                subtreeQuery(root, bb, func);
         }
-        public void SubtreeQuery(Node subtree, cpBB bb, Func<object, object, object> func)
+        public void subtreeQuery(Node subtree, cpBB bb, Func<object, object, object> func)
         {
             //if(bbIntersectsBB(subtree.bb, bb)){
             if (subtree.bb.Intersects(bb))
@@ -747,13 +802,13 @@ namespace ChipmunkSharp
                 }
                 else
                 {
-                    SubtreeQuery(subtree.A, bb, func);
-                    SubtreeQuery(subtree.B, bb, func);
+                    subtreeQuery(subtree.A, bb, func);
+                    subtreeQuery(subtree.B, bb, func);
                 }
             }
         }
 
-        public void Each(Action<IObjectBox> func)
+        public void each(Action<IObjectBox> func)
         {
             foreach (var item in leaves)
                 func(item.Value.obj);
@@ -1130,7 +1185,7 @@ namespace ChipmunkSharp
             }
             else if (subtree.IsLeaf)
             {
-                return MakeNode((Node)leaf, subtree);
+                return makeNode((Node)leaf, subtree);
             }
             else
             {
@@ -1163,7 +1218,21 @@ namespace ChipmunkSharp
 
         }
 
+        public object GetValue(int arbHash)
+        {
+            Leaf dev = Get(arbHash);
+            if (dev != null)
+                return dev.obj;
+            return null;
+        }
 
+        public Leaf Get(int arbHash)
+        {
+            Leaf dev;
+            if (TryGetValue(arbHash, out dev))
+                return dev;
+            return null;
+        }
     }
 
 

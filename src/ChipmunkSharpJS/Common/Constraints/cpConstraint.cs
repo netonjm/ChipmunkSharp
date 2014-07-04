@@ -77,22 +77,22 @@ namespace ChipmunkSharp.Constraints
             this.next_b = null;
 
             /// The maximum force that this constraint is allowed to use.
-            this.maxForce = cpEnvironment.INFINITY_FLOAT;
+            this.maxForce = cpEnvironment.Infinity;
             /// The rate at which joint error is corrected.
             /// Defaults to pow(1 - 0.1, 60) meaning that it will
             /// correct 10% of the error every 1/60th of a second.
             this.errorBias = (float)Math.Pow(1 - 0.1, 60);
             /// The maximum rate at which joint error is corrected.
-            this.maxBias = cpEnvironment.INFINITY_FLOAT;
+            this.maxBias = cpEnvironment.Infinity;
         }
 
-        public void ActivateBodies()
+        public void activateBodies()
         {
             if (a != null)
-                a.Activate();
+                a.activate();
 
             if (b != null)
-                b.Activate();
+                b.activate();
         }
 
         /// These methods are overridden by the constraint itself.
@@ -126,7 +126,7 @@ namespace ChipmunkSharp.Constraints
 
         #endregion
 
-        public virtual cpConstraint Next(cpBody body)
+        public virtual cpConstraint next(cpBody body)
         {
             return (this.a == body ? this.next_a : this.next_b);
         }

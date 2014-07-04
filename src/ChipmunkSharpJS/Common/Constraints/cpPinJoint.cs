@@ -77,7 +77,7 @@ namespace ChipmunkSharp.Constraints
             var delta = b.Position.Add(this.r2).Sub(a.Position.Add(this.r1));// vsub(vadd(b.p, this.r2), vadd(a.p, this.r1));
             var dist = delta.Length; // vlength(delta);
 
-            this.n = delta.Multiply(1 / (dist > 0 ? dist : cpEnvironment.INFINITY_FLOAT));  //vmult(delta, 1 / (dist ? dist : Infinity));
+            this.n = delta.Multiply(1 / (dist > 0 ? dist : cpEnvironment.Infinity));  //vmult(delta, 1 / (dist ? dist : Infinity));
 
             // calculate mass normal
             this.nMass = 1 / cpEnvironment.k_scalar(a, b, this.r1, this.r2, this.n);

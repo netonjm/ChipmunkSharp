@@ -139,7 +139,7 @@ namespace ChipmunkSharp.Constraints
 
             var delta = b.Position.Add(r2).Sub(a.Position.Add(r1)); //  vsub(vadd(b.p, this.r2), vadd(a.p, this.r1));
             var dist = delta.Length; // vlength(delta);
-            this.n = delta.Multiply(1 / (dist > 0 ? dist : cpEnvironment.INFINITY_FLOAT));
+            this.n = delta.Multiply(1 / (dist > 0 ? dist : cpEnvironment.Infinity));
 
             var k = cpEnvironment.k_scalar(a, b, this.r1, this.r2, this.n);
 
