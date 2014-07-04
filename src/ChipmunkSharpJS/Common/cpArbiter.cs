@@ -45,7 +45,7 @@ namespace ChipmunkSharp
     public delegate void cpCollisionSeparateFunc(cpArbiter arb, cpSpace space, object data);
 
     /// @private
-    public struct cpCollisionHandler
+    public class cpCollisionHandler : IObjectBox
     {
 
 
@@ -67,6 +67,13 @@ namespace ChipmunkSharp
             this.postSolve = postSolve;
             this.separate = separate;
             this.data = data;
+
+            // bb = new cpBB(0f, 0f, 0f, 0f);
+        }
+
+        public cpCollisionHandler()
+        {
+            // TODO: Complete member initialization
         }
 
 
@@ -82,6 +89,9 @@ namespace ChipmunkSharp
             copy.data = data;
             return copy;
         }
+
+        public cpBB bb { get; set; }
+
     };
 
     /// @private
@@ -130,11 +140,12 @@ namespace ChipmunkSharp
 
 
     /// A colliding pair of shapes.
-    public class cpArbiter
+    public class cpArbiter : IObjectBox
     {
 
-        public static int CP_MAX_CONTACTS_PER_ARBITER = 4;
 
+
+        public static int CP_MAX_CONTACTS_PER_ARBITER = 4;
 
         #region PUBLIC PROPS
 
@@ -184,7 +195,6 @@ namespace ChipmunkSharp
         public cpArbiterState state;
 
         #endregion
-
 
         #region STUDY PROPS
 
@@ -375,16 +385,9 @@ namespace ChipmunkSharp
         /// Return a contact set from an arbiter.
         public List<cpContact> GetContactPointSet()
         {
-            List<cpContact> set = new List<cpContact>(contacts.Count);
-            for (int i = 0; i < set.Count; i++)
-            {
-                set.Add(new cpContact()
-                {
-                    p = this.contacts[i].p,
-                    n = this.contacts[i].n,
-                    dist = this.contacts[i].dist
-                });
-            }
+            List<cpContact> set = new List<cpContact>();
+            foreach (var item in contacts)
+                set.Add(item.Clone());
             return set;
         }
 
@@ -394,7 +397,6 @@ namespace ChipmunkSharp
         {
 
             cpEnvironment.AssertHard(set.Count == numContacts, "The number of contact points cannot be changed.");
-
             cpContact tmp;
             for (int i = 0; i < set.Count; i++)
             {
@@ -453,23 +455,28 @@ namespace ChipmunkSharp
         {
             //throw new NotImplementedException();
 
-            // Iterate over the possible pairs to look for hash value matches.
-            for (int i = 0; i < contacts.Count; i++)
+            if (this.contacts != null)
             {
-                cpContact con = contacts[i];
 
-                for (int j = 0; j < this.numContacts; j++)
+                // Iterate over the possible pairs to look for hash value matches.
+                for (int i = 0; i < this.contacts.Count; i++)
                 {
-                    cpContact old = this.contacts[j];
+                    cpContact old = this.contacts[i];
 
-                    // This could trigger false positives, but is fairly unlikely nor serious if it does.
-                    if (con.hash == old.hash)
+                    for (int j = 0; j < this.contacts.Count; j++)
                     {
-                        // Copy the persistant contact information.
-                        con.jnAcc = old.jnAcc;
-                        con.jtAcc = old.jtAcc;
+                        cpContact new_contact = this.contacts[j];
+
+                        // This could trigger false positives, but is fairly unlikely nor serious if it does.
+                        if (new_contact.hash == old.hash)
+                        {
+                            // Copy the persistant contact information.
+                            new_contact.jnAcc = old.jnAcc;
+                            new_contact.jtAcc = old.jtAcc;
+                        }
                     }
                 }
+
             }
 
             this.contacts = contacts;
@@ -480,11 +487,7 @@ namespace ChipmunkSharp
             this.e = a.e * b.e;
             this.u = a.u * b.u;
 
-            // Currently all contacts will have the same normal.
-            // This may change in the future.
-            cpVect n = (numContacts != 0 ? contacts[0].n : cpVect.ZERO);
-            cpVect surface_vr = a.surface_v.Sub(b.surface_v); // cpvsub(a.surface_v, b.surface_v);
-            this.surface_vr = surface_vr.Sub(n.Multiply(surface_vr.Dot(n))); // cpvsub(surface_vr, cpvmult(n, cpvdot(surface_vr, n)));
+            this.surface_vr = cpVect.cpvsub(a.surface_v, b.surface_v);
 
             // For collisions between two similar primitive types, the order could have been swapped.
             this.a = a; this.body_a = a.body;
@@ -557,39 +560,55 @@ namespace ChipmunkSharp
             var surface_vr = this.surface_vr;
             var friction = this.u;
 
-            for (var i = 0; i < numContacts; i++)
+            for (var i = 0; i < this.contacts.Count; i++)
             {
-                //cpEnvironment.numApplyContact++;
-                cpContact con = this.contacts[i];
-                float nMass = con.nMass;
-                cpVect n = con.n;
-                cpVect r1 = con.r1;
-                cpVect r2 = con.r2;
+                cpEnvironment.numApplyContact++;
+                var con = this.contacts[i];
+                var nMass = con.nMass;
+                var n = con.n;
+                var r1 = con.r1;
+                var r2 = con.r2;
 
-                cpVect vb1 = cpVect.cpvadd(a.v_bias, cpVect.cpvmult(cpVect.cpvperp(r1), a.w_bias));
-                cpVect vb2 = cpVect.cpvadd(b.v_bias, cpVect.cpvmult(cpVect.cpvperp(r2), b.w_bias));
-                cpVect vr = cpVect.cpvadd(cpEnvironment.relative_velocity(a, b, r1, r2), surface_vr);
+                //var vr = relative_velocity(a, b, r1, r2);
+                var vrx = b.Vel.x - r2.y * b.w - (a.Vel.x - r1.y * a.w);
+                var vry = b.Vel.y + r2.x * b.w - (a.Vel.y + r1.x * a.w);
 
-                float vbn = cpVect.cpvdot(cpVect.cpvsub(vb2, vb1), n);
-                float vrn = cpVect.cpvdot(vr, n);
-                float vrt = cpVect.cpvdot(vr, cpVect.cpvperp(n));
+                //var vb1 = vadd(vmult(vperp(r1), a.w_bias), a.v_bias);
+                //var vb2 = vadd(vmult(vperp(r2), b.w_bias), b.v_bias);
+                //var vbn = vdot(vsub(vb2, vb1), n);
 
-                float jbn = (con.bias - vbn) * nMass;
-                float jbnOld = con.jBias;
-                con.jBias = Math.Max(jbnOld + jbn, 0.0f);
+                var vbn = n.x * (b.v_bias.x - r2.y * b.w_bias - a.v_bias.x + r1.y * a.w_bias) +
+                        n.y * (r2.x * b.w_bias + b.v_bias.y - r1.x * a.w_bias - a.v_bias.y);
 
-                float jn = -(con.bounce + vrn) * nMass;
-                float jnOld = con.jnAcc;
-                con.jnAcc = Math.Max(jnOld + jn, 0.0f);
+                var vrn = cpVect.cpvdot2(vrx, vry, n.x, n.y);
+                //var vrt = vdot(vadd(vr, surface_vr), vperp(n));
+                var vrt = cpVect.cpvdot2(vrx + surface_vr.x, vry + surface_vr.y, -n.y, n.x);
 
-                float jtMax = friction * con.jnAcc;
-                float jt = -vrt * con.tMass;
-                float jtOld = con.jtAcc;
-                con.jtAcc = cpEnvironment.cpfclamp(jtOld + jt, -jtMax, jtMax);
+                var jbn = (con.bias - vbn) * nMass;
+                var jbnOld = con.jBias;
+                con.jBias = Math.Max(jbnOld + jbn, 0);
 
-                cpEnvironment.apply_bias_impulses(a, b, r1, r2, cpVect.cpvmult(n, con.jBias - jbnOld));
-                cpEnvironment.apply_impulses(a, b, r1, r2, cpVect.cpvrotate(n, new cpVect(con.jnAcc - jnOld, con.jtAcc - jtOld)));
+                var jn = -(con.bounce + vrn) * nMass;
+                var jnOld = con.jnAcc;
+                con.jnAcc = Math.Max(jnOld + jn, 0);
 
+                var jtMax = friction * con.jnAcc;
+                var jt = -vrt * con.tMass;
+                var jtOld = con.jtAcc;
+                con.jtAcc = cpEnvironment.cpclamp(jtOld + jt, -jtMax, jtMax);
+
+                //apply_bias_impulses(a, b, r1, r2, vmult(n, con.jBias - jbnOld));
+                var bias_x = n.x * (con.jBias - jbnOld);
+                var bias_y = n.y * (con.jBias - jbnOld);
+                cpEnvironment.apply_bias_impulse(a, -bias_x, -bias_y, r1);
+                cpEnvironment.apply_bias_impulse(b, bias_x, bias_y, r2);
+
+                //apply_impulses(a, b, r1, r2, vrotate(n, new Vect(con.jnAcc - jnOld, con.jtAcc - jtOld)));
+                var rot_x = con.jnAcc - jnOld;
+                var rot_y = con.jtAcc - jtOld;
+
+                // Inlining apply_impulses decreases speed for some reason :/
+                cpEnvironment.apply_impulses(a, b, r1, r2, n.x * rot_x - n.y * rot_y, n.x * rot_y + n.y * rot_x);
             }
         }
 
@@ -657,55 +676,34 @@ namespace ChipmunkSharp
 
                 Unthread();
 
-                //context.space.arbiters.Remove(arb); //cpArrayDeleteObj(context.space.arbiters, arb);
-                //context.space.pooledArbiters.Add(arb); //cpArrayPush(context.space.pooledArbiters, arb);
-
                 return false;
             }
 
             return true;
         }
 
-        public static cpCollisionHandler cpSpaceLookupHandler(cpSpace space, int a, int b)
-        {
-            //cpCollisionType types[] = {a, b};
-            Leaf col = null;
-            if (space.collisionHandlers.TryGetValue(cpEnvironment.CP_HASH_PAIR(a, b), out col))
-                return (cpCollisionHandler)col.obj;
-            //TODO: ??¿
-            return new cpCollisionHandler();
-
-            //return space.collisionHandlers (cpCollisionHandler *)cpHashSetFind(space->collisionHandlers, , types);
-        }
-
-
         public void CallSeparate(cpSpace space)
         {
-
-
-
             // The handler needs to be looked up again as the handler cached on the arbiter may have been deleted since the last step.
-            cpCollisionHandler handler = cpSpaceLookupHandler(space, a.collision_type, b.collision_type); //new cpCollisionHandler( cpSpaceLookupHandler();
-            handler.separate(this, space, handler.data);
+            var handler = space.LookupHandler(this.a.collision_type, this.b.collision_type);
+            handler.separate(this, space, null);
 
-            //TODO: 
-            //var handler = space.lookupHandler(this.a.collision_type, this.b.collision_type);
-            //handler.separate(this, space);
-
-            // throw new NotImplementedException();
         }
 
-        //public cpArbiter Next(cpBody body)
-        //{
-        //    //throw new NotImplementedException();
-        //    return (this.body_a == body ? this.thread_a.next : this.thread_b.next);
-        //}
 
+        public cpBB bb
+        {
+            get
+            {
+                return null;
+            }
+            set
+            {
 
+            }
+        }
     };
 
-    /// A macro shortcut for defining and retrieving the shapes from an arbiter.
-    //#define CP_ARBITER_GET_SHAPES(__arb__, __a__, __b__) cpShape __a__, __b__; cpArbiterGetShapes(__arb__, &__a__, &__b__;
 
 
 }

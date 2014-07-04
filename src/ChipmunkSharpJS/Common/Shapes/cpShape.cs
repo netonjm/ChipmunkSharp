@@ -27,7 +27,13 @@ using System;
 namespace ChipmunkSharp
 {
 
-    public class cpCircleShape : cpShape
+    public interface ICollisionShape
+    {
+        Func<object, object, List<cpContact>>[] collisionTable { get; }
+        int collisionCode { get; }
+    }
+
+    public class cpCircleShape : cpShape, ICollisionShape
     {
 
         public static cpShapeClass cpCircleShapeClass = new cpShapeClass(cpShapeType.CP_CIRCLE_SHAPE,
@@ -40,17 +46,14 @@ namespace ChipmunkSharp
         public cpVect c, tc;
         public float r;
 
-        /// @}
-        /// @defgroup cpCircleShape cpCircleShape
-
-        /// @privatepu  
-
 
         /// Allocate a circle shape.
         //cpCircleShape cpCircleShapeAlloc() { }
         /// Initialize a circle shape.
         public void Init(cpBody body, float radius, cpVect offset)
         {
+
+
             c = offset;
             r = radius;
             base.Init(cpCircleShapeClass, body);
@@ -117,10 +120,28 @@ namespace ChipmunkSharp
             c = offset;
         }
 
+
+        public Func<object, object, List<cpContact>>[] collisionTable
+        {
+            get
+            {
+                return new Func<object, object, List<cpContact>>[] {
+                    (o1,o2) => cpCollision.Circle2Circle(o1 as cpCircleShape ,o2 as cpCircleShape),
+                    (o1,o2) => cpCollision.Circle2Segment(o1 as cpCircleShape ,o2 as cpSegmentShape),
+                    (o1,o2) => cpCollision.Circle2Poly(o1 as cpCircleShape ,o2 as cpPolyShape)
+                };
+            }
+        }
+        //(
+        public int collisionCode
+        {
+            get { return 0; }
+        }
     }
 
-    public class cpSegmentShape : cpShape
+    public class cpSegmentShape : cpShape, ICollisionShape
     {
+
 
         public static cpShapeClass cpSegmentShapeClass = new cpShapeClass(cpShapeType.CP_SEGMENT_SHAPE,
        (shape, p, rot) => ShapeCacheData((cpSegmentShape)shape, p, rot),
@@ -242,6 +263,8 @@ namespace ChipmunkSharp
 
         public cpSegmentShape Init(cpBody body, cpVect a, cpVect b, float r)
         {
+
+
             this.a = a;
             this.b = b;
             this.n = cpVect.cpvperp(cpVect.cpvnormalize(cpVect.cpvsub(b, a)));
@@ -296,7 +319,22 @@ namespace ChipmunkSharp
 
         }
 
-
+        public Func<object, object, List<cpContact>>[] collisionTable
+        {
+            get
+            {
+                return new Func<object, object, List<cpContact>>[] {
+                    null,
+                    (segA, segB) => {  return null; },
+                    (o1,o2) => cpCollision.Seg2Poly(o1 as cpSegmentShape ,o2 as cpPolyShape)
+                };
+            }
+        }
+        //(o1,o2) => cpCollision.Circle2Circle(o1 as cpCircleShape ,o2 as cpCircleShape),
+        public int collisionCode
+        {
+            get { return 1; }
+        }
     }
     /// @private
     public struct cpShapeClass
@@ -345,42 +383,18 @@ namespace ChipmunkSharp
     #endregion
 
     /// Opaque collision shape struct.
-    public class cpShape : IDynamicObject
+    public class cpShape : IObjectBox
     {
 
-        public int Collides(cpShape b, int id, List<cpContact> arr)
-        {
-            return cpCollision.cpCollideShapes(this, b, id, arr);
-        }
-
-
-        public static void SegmentQuery(cpShape shape, cpVect center, float r, cpVect a, cpVect b, cpSegmentQueryInfo info)
-        {
-            cpVect da = cpVect.cpvsub(a, center);
-            cpVect db = cpVect.cpvsub(b, center);
-
-            float qa = cpVect.cpvdot(da, da) - 2.0f * cpVect.cpvdot(da, db) + cpVect.cpvdot(db, db);
-            float qb = -2.0f * cpVect.cpvdot(da, da) + 2.0f * cpVect.cpvdot(da, db);
-            float qc = cpVect.cpvdot(da, da) - r * r;
-
-            float det = qb * qb - 4.0f * qa * qc;
-
-            if (det >= 0.0f)
-            {
-                float t = (-qb - cpEnvironment.cpfsqrt(det)) / (2.0f * qa);
-                if (0.0f <= t && t <= 1.0f)
-                {
-                    info.shape = shape;
-                    info.t = t;
-                    info.n = cpVect.cpvnormalize(cpVect.cpvlerp(da, db, t));
-                }
-            }
-        }
-
-
-        public static int cpShapeIDCounter = 0;
+        public static int IDCounter = 0;
 
         #region PROPS
+
+        //public virtual int GetCollisionCode() { throw new NotImplementedException(); }
+
+        public virtual cpContact GetCollisionTable(object a, object b) { throw new NotImplementedException(); }
+
+
         public cpShapeClass klass;
 
         /// The rigid body this collision shape is attached to.
@@ -422,6 +436,36 @@ namespace ChipmunkSharp
 
         #endregion
 
+        public int Collides(cpShape b, int id, List<cpContact> arr)
+        {
+            return cpCollision.cpCollideShapes(this, b, id, arr);
+        }
+
+        public static void SegmentQuery(cpShape shape, cpVect center, float r, cpVect a, cpVect b, cpSegmentQueryInfo info)
+        {
+            cpVect da = cpVect.cpvsub(a, center);
+            cpVect db = cpVect.cpvsub(b, center);
+
+            float qa = cpVect.cpvdot(da, da) - 2.0f * cpVect.cpvdot(da, db) + cpVect.cpvdot(db, db);
+            float qb = -2.0f * cpVect.cpvdot(da, da) + 2.0f * cpVect.cpvdot(da, db);
+            float qc = cpVect.cpvdot(da, da) - r * r;
+
+            float det = qb * qb - 4.0f * qa * qc;
+
+            if (det >= 0.0f)
+            {
+                float t = (-qb - cpEnvironment.cpfsqrt(det)) / (2.0f * qa);
+                if (0.0f <= t && t <= 1.0f)
+                {
+                    info.shape = shape;
+                    info.t = t;
+                    info.n = cpVect.cpvnormalize(cpVect.cpvlerp(da, db, t));
+                }
+            }
+        }
+
+
+
         public bool Active()
         {
             return prev != null || (body != null && body.shapeList == this);
@@ -429,7 +473,7 @@ namespace ChipmunkSharp
 
         public static void cpResetShapeIdCounter()
         {
-            cpShapeIDCounter = 0;
+            IDCounter = 0;
         }
 
         public void PointQueryFirst(ref cpShape outShape)
@@ -441,7 +485,7 @@ namespace ChipmunkSharp
         {
             this.klass = klass;
 
-            this.hashid = cpShapeIDCounter++;
+            this.hashid = IDCounter++;
 
             this.body = body;
             this.sensor = false;
@@ -581,6 +625,8 @@ namespace ChipmunkSharp
         {
 
         }
+
+
     };
 
 }

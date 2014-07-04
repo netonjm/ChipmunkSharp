@@ -506,7 +506,7 @@ namespace ChipmunkSharp
             {
                 if (staticIndex.dynamicIndex != null)
                 {
-                    cpEnvironment.cpAssertHard("This static index is already associated with a dynamic index.");
+                    cpEnvironment.AssertHard("This static index is already associated with a dynamic index.");
                 }
                 staticIndex.dynamicIndex = this;
             }
@@ -542,7 +542,7 @@ namespace ChipmunkSharp
 
             if (staticIndex != null)
             {
-                cpEnvironment.cpAssertHard(staticIndex.dynamicIndex != null, "This static index is already associated with a dynamic index.");
+                cpEnvironment.AssertHard(staticIndex.dynamicIndex != null, "This static index is already associated with a dynamic index.");
                 staticIndex.dynamicIndex = index;
             }
 
@@ -971,8 +971,8 @@ namespace ChipmunkSharp
 
         public void NodeReplaceChild(Node parent, Node child, Node value)
         {
-            cpEnvironment.cpAssertSoft(!parent.IsLeaf(), "Internal Error: Cannot replace child of a leaf.");
-            cpEnvironment.cpAssertSoft(child == parent.a || child == parent.b, "Internal Error: Node is not a child of parent.");
+            cpEnvironment.AssertSoft(!parent.IsLeaf(), "Internal Error: Cannot replace child of a leaf.");
+            cpEnvironment.AssertSoft(child == parent.a || child == parent.b, "Internal Error: Node is not a child of parent.");
 
             if (parent.A == child)
             {

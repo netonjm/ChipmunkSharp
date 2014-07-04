@@ -690,9 +690,35 @@ namespace ChipmunkSharp
         #region  Collision Functions
 
 
-        // Add contact points for circle to circle collisions.
-        // Used by several collision tests.
-        // TODO should accept hash parameter
+        public static List<cpContact> Circle2Circle(cpCircleShape circ1, cpCircleShape circ2)
+        {
+            var contact = circle2circleQuery(circ1.tc, circ2.tc, circ1.r, circ2.r);
+            return contact != null ? contact : null;
+        }
+
+        public static List<cpContact> circle2circleQuery(cpVect p1, cpVect p2, float r1, float r2)
+        {
+            var mindist = r1 + r2;
+            var delta = p2.Sub(p1);
+            var distsq = delta.LengthSQ;
+
+            if (distsq >= mindist * mindist)
+                return null;
+
+            float dist = cpEnvironment.cpfsqrt(distsq);
+
+            // Allocate and initialize the contact.
+            return new List<cpContact>() { new cpContact(
+               cpVect.cpvadd(p1, cpVect.cpvmult(delta, 0.5f + (r1 - 0.5f * mindist) / (dist != 0 ? dist : cpEnvironment.INFINITY_FLOAT))),
+                (dist != 0 ? cpVect.cpvmult(delta, 1 / dist) : new cpVect(1, 0)),
+                dist - mindist,
+                0
+            )};
+        }
+
+        //Add contact points for circle to circle collisions.
+        //Used by several collision tests.
+        //TODO should accept hash parameter
         public static int CircleToCircleQuery(cpVect p1, cpVect p2, float r1, float r2, int hash, List<cpContact> con)
         {
             float mindist = r1 + r2;
@@ -704,7 +730,7 @@ namespace ChipmunkSharp
 
                 float dist = cpEnvironment.cpfsqrt(distsq);
                 cpVect n = (dist == 0 ? cpVect.cpvmult(delta, 1.0f / dist) : new cpVect(1.0f, 0.0f));
-                con.FirstOrDefault().Init(cpVect.cpvlerp(p1, p2, r1 / (r1 + r2)), n, dist - mindist, hash);
+                con.Add( new cpContact(cpVect.cpvlerp(p1, p2, r1 / (r1 + r2)), n, dist - mindist, hash));
 
 
                 return 1;
@@ -876,7 +902,7 @@ namespace ChipmunkSharp
 
         // This one is less gross, but still gross.
         // TODO: Comment me!
-        static int CircleToPoly(cpCircleShape circle, cpPolyShape poly, int id, List<cpContact> con)
+        static int CircleToPoly(cpCircleShape circle, cpPolyShape poly, int id, cpContact con)
         {
 
             SupportContext context = new SupportContext(circle, poly,
@@ -905,9 +931,7 @@ namespace ChipmunkSharp
             if (points.d - mindist <= 0.0)
             {
                 cpVect p = cpVect.cpvlerp(points.a, points.b, circle.r / (mindist));
-                cpContact ctn = new cpContact();
-                ctn.Init(p, points.n, points.d - mindist, 0);
-                con.Add(ctn);
+                con.Init(p, points.n, points.d - mindist, 0);
                 return 1;
             }
             else
@@ -918,29 +942,16 @@ namespace ChipmunkSharp
 
         static CollisionFunc[] builtinCollisionFuncs = new CollisionFunc[]  {
 
-                (a,b,c,d) => { return CircleToCircle( (cpCircleShape) a, (cpCircleShape)b,c,d);  },
-            null,
-            null,
-              (a,b,c,d) => { return CircleToSegment( (cpCircleShape) a, (cpSegmentShape)b,c,d);  },
-            null,
-            null,
-              (a,b,c,d) => { return CircleToPoly( (cpCircleShape) a, (cpPolyShape)b,c,d); },
-            (a,b,c,d) => { return SegmentToPoly( (cpSegmentShape) a, (cpPolyShape)b,c,d); },
-              (a,b,c,d) => { return PolyToPoly( (cpPolyShape) a, (cpPolyShape)b,c,d); }
-
-           
+            //(CollisionFunc)CircleToCircle,
+            //null,
+            //null,
+            //(CollisionFunc)CircleToSegment,
+            //null,
+            //null,
+            //(CollisionFunc)CircleToPoly,
+            //(CollisionFunc)SegmentToPoly,
+            //(CollisionFunc)PolyToPoly,
         };
-
-        //CircleToCircle,
-        //  null,
-        //  null,
-        //  CircleToSegment,
-        //  null,
-        //  null,
-        //  CircleToPoly,
-        //  SegmentToPoly,
-        //  PolyToPoly,
-
 
         static CollisionFunc[] colfuncs = builtinCollisionFuncs;
 
@@ -976,7 +987,6 @@ namespace ChipmunkSharp
             return numContacts;
         }
 
-
         #endregion
 
         //MARK: Support Points and Edges:
@@ -999,7 +1009,6 @@ namespace ChipmunkSharp
             return index;
         }
 
-
         public static SupportPoint CircleSupportPoint(cpCircleShape circle, cpVect n)
         {
             return new SupportPoint(circle.tc, 0);
@@ -1014,7 +1023,6 @@ namespace ChipmunkSharp
                 return new SupportPoint(seg.tb, 1);
         }
 
-
         public static SupportPoint PolySupportPoint(cpPolyShape poly, cpVect n)
         {
             int i = PolySupportPointIndex(poly.tVerts, n);
@@ -1022,388 +1030,553 @@ namespace ChipmunkSharp
             return new SupportPoint(poly.tVerts[i], i);
         }
 
-
-        //#region NOT USED
-
-        // Add contact points for circle to circle collisions.
-        // Used by several collision tests.
-        // TODO should accept hash parameter
-        //public static int circle2circleQuery(cpVect p1, cpVect p2, float r1, float r2, int hash, cpContact con)
-        //{
-        //    float mindist = r1 + r2;
-        //    cpVect delta = cpVect.Sub(p2, p1);
-        //    float distsq = delta.LengthSQ;
-        //    if (distsq >= mindist * mindist)
-        //        return 0;
-
-        //    float dist = cpEnvironment.cpfsqrt(distsq);
-        //    cpVect n = (dist == 0 ? cpVect.cpvmult(delta, 1.0f / dist) : new cpVect(1.0f, 0.0f));
-
-        //    con.Init(cpVect.cpvlerp(p1, p2, r1 / (r1 + r2)), n, dist - mindist, hash);
-        //    return 1;
-        //}
-
-
-        //// Collide circle shapes.
-        //public static int circle2circle(cpShape shape1, cpShape shape2, cpContact arr)
-        //{
-        //    throw new NotImplementedException("Not implemented");
-        //    //cpCircleShape circ1 = (cpCircleShape)shape1; //TODO
-        //    //cpCircleShape circ2 = (cpCircleShape)shape2;
-
-        //    //return circle2circleQuery(circ1.tc, circ2.tc, circ1.r, circ2.r, arr);
-        //}
-
-        //public static int circle2segment(cpCircleShape circleShape, cpSegmentShape segmentShape, List<cpContact> con)
-        //{
-        //    cpVect seg_a = segmentShape.ta;
-        //    cpVect seg_b = segmentShape.tb;
-        //    cpVect center = circleShape.tc;
-
-        //    cpVect seg_delta = cpVect.Sub(seg_b, seg_a);
-        //    float closest_t = cpEnvironment.cpfclamp01(cpVect.Dot(seg_delta, cpVect.Sub(center, seg_a)) / seg_delta.LengthSQ);
-        //    cpVect closest = cpVect.Add(seg_a, cpVect.Multiply(seg_delta, closest_t));
-
-        //    if (circle2circleQuery(center, closest, circleShape.r, segmentShape.r, con) != null)
-        //    {
-        //        cpVect n = con[0].normal;
-
-        //        // Reject endcap collisions if tangents are provided.
-        //        if (
-        //            (closest_t == 0.0f && cpVect.Dot(n, segmentShape.a_tangent) < 0.0) ||
-        //            (closest_t == 1.0f && cpVect.Dot(n, segmentShape.b_tangent) < 0.0)
-        //        ) return 0;
-
-        //        return 1;
-        //    }
-        //    else
-        //    {
-        //        return 0;
-        //    }
-        //}
-
-        //// Helper function for working with contact buffers
-        //// This used to malloc/realloc memory on the fly but was repurposed.
-        //public static cpContact nextContactPoint(List<cpContact> arr, int numPtr)
-        //{
-
-
-        //    int index = numPtr;
-
-        //    if (index < cpArbiter.CP_MAX_CONTACTS_PER_ARBITER)
-        //    {
-        //        numPtr = index + 1;
-        //        return arr[index];
-        //    }
-        //    else
-        //    {
-        //        return arr[cpArbiter.CP_MAX_CONTACTS_PER_ARBITER - 1];
-        //    }
-        //}
-
-
-        //// Add contacts for probably penetrating vertexes.
-        //// This handles the degenerate case where an overlap was detected, but no vertexes fall inside
-        //// the opposing polygon. (like a star of david)
-        //public static int findVertsFallback(List<cpContact> arr, cpPolyShape poly1, cpPolyShape poly2, cpVect n, double dist)
-        //{
-
-        //    throw new NotImplementedException("Not implemented");
-        //    //int num = 0;
-
-        //    //for (int i = 0; i < poly1.numVerts; i++)
-        //    //{
-        //    //    cpVect v = poly1.tVerts[i];
-        //    //    if (poly2.ContainsVertPartial(v, n.Neg()))
-        //    //        cpContactInit(nextContactPoint(arr, num), v, n, dist, cpEnvironment.CP_HASH_PAIR(poly1.shape.hashid, i));
-        //    //}
-
-        //    //for (int i = 0; i < poly2.numVerts; i++)
-        //    //{
-        //    //    cpVect v = poly2.tVerts[i];
-        //    //    if (poly1.ContainsVertPartial(v, n))
-        //    //        cpContactInit(nextContactPoint(arr, num), v, n, dist, cpEnvironment.CP_HASH_PAIR(poly2.shape.hashid, i));
-        //    //}
-
-        //    //return num;
-        //}
-
-        //// Add contacts for penetrating vertexes.
-        //public static int findVerts(List<cpContact> arr, cpPolyShape poly1, cpPolyShape poly2, cpVect n, double dist)
-        //{
-        //    throw new NotImplementedException("Not implemented");
-
-        //    //int num = 0;
-
-        //    //for (int i = 0; i < poly1.numVerts; i++)
-        //    //{
-        //    //    cpVect v = poly1.tVerts[i];
-        //    //    if (poly2.ContainsVert(v))
-        //    //        cpContactInit(nextContactPoint(arr, num), v, n, dist, cpEnvironment.CP_HASH_PAIR(poly1.shape.hashid, i));
-        //    //}
-
-        //    //for (int i = 0; i < poly2.numVerts; i++)
-        //    //{
-        //    //    cpVect v = poly2.tVerts[i];
-        //    //    if (cpPolyShapeContainsVert(poly1, v))
-        //    //        cpContactInit(nextContactPoint(arr, num), v, n, dist, cpEnvironment.CP_HASH_PAIR(poly2.shape.hashid, i));
-        //    //}
-
-        //    //return (num != null) ? num : findVertsFallback(arr, poly1, poly2, n, dist);
-        //}
-
-        //// Collide poly shapes together.
-        //public static int poly2poly(cpShape shape1, cpShape shape2, cpContact arr)
-        //{
-        //    throw new NotImplementedException("Not implemented");
-        //    //cpPolyShape poly1 = (cpPolyShape)shape1;
-        //    //cpPolyShape poly2 = (cpPolyShape)shape2;
-
-        //    //double min1;
-        //    //int mini1 = poly2.FindMSA(poly1.tPlanes, poly1.numVerts, min1);
-        //    //if (mini1 == -1) return 0;
-
-        //    //double min2;
-        //    //int mini2 = poly1.FindMSA(poly2.tPlanes, poly2.numVerts, min2);
-        //    //if (mini2 == -1) return 0;
-
-        //    //// There is overlap, find the penetrating verts
-        //    //if (min1 > min2)
-        //    //    return findVerts(arr, poly1, poly2, poly1.tPlanes[mini1].n, min1);
-        //    //else
-        //    //    return findVerts(arr, poly1, poly2, poly2.tPlanes[mini2].n.Neg(), min2);
-        //}
-
-        //// Like cpPolyValueOnAxis(), but for segments.
-        //public static double segValueOnAxis(cpSegmentShape seg, cpVect n, double d)
-        //{
-        //    double a = cpVect.Dot(n, seg.ta) - seg.r;
-        //    double b = cpVect.Dot(n, seg.tb) - seg.r;
-        //    return System.Math.Min(a, b) - d;
-        //}
-
-        //// Identify vertexes that have penetrated the segment.
-        //public static void findPointsBehindSeg(cpContact arr, int num, cpSegmentShape seg, cpPolyShape poly, double pDist, double coef)
-        //{
-        //    throw new NotImplementedException("Not implemented");
-
-        //    //double dta = cpVect.CrossProduct(seg.tn, seg.ta);
-        //    //double dtb = cpVect.CrossProduct(seg.tn, seg.tb);
-        //    //cpVect n = cpVect.Multiply(seg.tn, coef);
-
-        //    //for (int i = 0; i < poly.numVerts; i++)
-        //    //{
-        //    //    cpVect v = poly.tVerts[i];
-        //    //    if (cpVect.Dot(v, n) < cpVect.Dot(seg.tn, seg.ta) * coef + seg.r)
-        //    //    {
-        //    //        double dt = cpVect.CrossProduct(seg.tn, v);
-        //    //        if (dta >= dt && dt >= dtb)
-        //    //        {
-        //    //            cpContactInit(nextContactPoint(arr, num), v, n, pDist, cpEnvironment.CP_HASH_PAIR(poly.shape.hashid, i));
-        //    //        }
-        //    //    }
-        //    //}
-        //}
-
-        //// This one is complicated and gross. Just don't go there...
-        //// TODO: Comment me!
-        //public static int seg2poly(cpShape shape1, cpShape shape2, List<cpContact> arr)
-        //{
-        //    throw new NotImplementedException("Not implemented");
-
-        //    //cpSegmentShape seg = (cpSegmentShape)shape1;
-        //    //cpPolyShape poly = (cpPolyShape)shape2;
-        //    //List<cpSplittingPlane> planes = poly.tPlanes;
-
-        //    //double segD = cpVect.Dot(seg.tn, seg.ta);
-        //    //double minNorm = poly.ValueOnAxis(seg.tn, segD) - seg.r;
-        //    //double minNeg = poly.ValueOnAxis(seg.tn.Neg(), -segD) - seg.r;
-        //    //if (minNeg > 0.0f || minNorm > 0.0f) return 0;
-
-        //    //int mini = 0;
-        //    //double poly_min = segValueOnAxis(seg, planes[0].n, planes[0].d);
-        //    //if (poly_min > 0.0f) return 0;
-        //    //for (int i = 0; i < poly.numVerts; i++)
-        //    //{
-        //    //    double dist = segValueOnAxis(seg, planes[i].n, planes[i].d);
-        //    //    if (dist > 0.0f)
-        //    //    {
-        //    //        return 0;
-        //    //    }
-        //    //    else if (dist > poly_min)
-        //    //    {
-        //    //        poly_min = dist;
-        //    //        mini = i;
-        //    //    }
-        //    //}
-
-        //    //int num = 0;
-
-        //    //cpVect poly_n = planes[mini].n.Neg(); // cpvneg();
-
-        //    //cpVect va = cpVect.Add(seg.ta, cpVect.Multiply(poly_n, seg.r));
-        //    //cpVect vb = cpVect.Add(seg.tb, cpVect.Multiply(poly_n, seg.r));
-
-        //    //if (poly.ContainsVert(va))
-        //    //    cpContactInit(nextContactPoint(arr, num), va, poly_n, poly_min, cpEnvironment.CP_HASH_PAIR(seg.shape.hashid, 0));
-        //    //if (poly.ContainsVert(vb))
-        //    //    cpContactInit(nextContactPoint(arr, num), vb, poly_n, poly_min, cpEnvironment.CP_HASH_PAIR(seg.shape.hashid, 1));
-
-        //    //// doubleing point precision problems here.
-        //    //// This will have to do for now.
-        //    ////	poly_min -= cp_collision_slop; // TODO is this needed anymore?
-
-        //    //if (minNorm >= poly_min || minNeg >= poly_min)
-        //    //{
-        //    //    if (minNorm > minNeg)
-        //    //        findPointsBehindSeg(arr, num, seg, poly, minNorm, 1.0f);
-        //    //    else
-        //    //        findPointsBehindSeg(arr, num, seg, poly, minNeg, -1.0f);
-        //    //}
-
-        //    //// If no other collision points are found, try colliding endpoints.
-        //    //if (num == 0)
-        //    //{
-        //    //    cpVect poly_a = poly.tVerts[mini];
-        //    //    cpVect poly_b = poly.tVerts[(mini + 1) % poly.numVerts];
-
-        //    //    //TODO: Revise
-        //    //    if (circle2circleQuery(seg.ta, poly_a, seg.r, 0.0f) == 0) return 1;
-        //    //    if (circle2circleQuery(seg.tb, poly_a, seg.r, 0.0f) == 0) return 1;
-        //    //    if (circle2circleQuery(seg.ta, poly_b, seg.r, 0.0f) == 0) return 1;
-        //    //    if (circle2circleQuery(seg.tb, poly_b, seg.r, 0.0f) == 0) return 1;
-        //    //}
-
-        //    //return num;
-        //}
-
-        //// This one is less gross, but still gross.
-        //// TODO: Comment me!
-        //public static int circle2poly(cpShape shape1, cpShape shape2, cpContact con)
-        //{
-
-        //    throw new NotImplementedException("Not implemented");
-        //    //cpCircleShape circ = (cpCircleShape)shape1;
-        //    //cpPolyShape poly = (cpPolyShape)shape2;
-        //    //List<cpSplittingPlane> planes = poly.tPlanes;
-
-        //    //int mini = 0;
-        //    //float min = planes[0].Compare(circ.tc) - circ.r;
-        //    //for (int i = 0; i < poly.numVerts; i++)
-        //    //{
-        //    //    double dist = planes[i].Compare(circ.tc) - circ.r;
-        //    //    if (dist > 0.0f)
-        //    //    {
-        //    //        return 0;
-        //    //    }
-        //    //    else if (dist > min)
-        //    //    {
-        //    //        min = dist;
-        //    //        mini = i;
-        //    //    }
-        //    //}
-
-        //    //cpVect n = planes[mini].n;
-        //    //cpVect a = poly.tVerts[mini];
-        //    //cpVect b = poly.tVerts[(mini + 1) % poly.numVerts];
-        //    //float dta = cpVect.CrossProduct(n, a);
-        //    //float dtb = cpVect.CrossProduct(n, b);
-        //    //float dt = cpVect.CrossProduct(n, circ.tc);
-
-        //    //if (dt < dtb)
-        //    //{
-        //    //    return circle2circleQuery(circ.tc, b, circ.r, 0.0f, con);
-        //    //}
-        //    //else if (dt < dta)
-        //    //{
-        //    //    new cpContact(
-        //    //          con,
-        //    //          circ.tc.Sub(n.Multiply(circ.r + min / 2.0f)),
-        //    //         n.Neg(),
-        //    //          min,
-        //    //          0
-        //    //      );
-
-        //    //    return 1;
-        //    //}
-        //    //else
-        //    //{
-        //    //    return circle2circleQuery(circ.tc, a, circ.r, 0.0f, con);
-        //    //}
-        //}
-
-        //// Submitted by LegoCyclon
-        //public static int seg2seg(cpShape shape1, cpShape shape2, cpContact con)
-        //{
-
-        //    throw new NotImplementedException("Not implemented");
-        //    //cpSegmentShape seg1 = (cpSegmentShape)shape1;
-        //    //cpSegmentShape seg2 = (cpSegmentShape)shape2;
-
-        //    //cpVect v1 = cpVect.Sub(seg1.tb, seg1.ta);
-        //    //cpVect v2 = cpVect.Sub(seg2.tb, seg2.ta);
-
-        //    //double v1lsq = v1.LengthSQ;// cpVect.LengthSQ(v1);
-        //    //double v2lsq = v2.LengthSQ;// cpVect.LengthSQ(v2);
-        //    //// project seg2 onto seg1
-        //    //cpVect p1a = seg2.ta.Sub(seg1.ta).Project(v1);  // cpVect.cpvproject(   cpVect.Sub(seg2.ta, seg1.ta), v1);
-        //    //cpVect p1b = seg2.tb.Sub(seg1.ta).Project(v1); // cpVect.cpvproject(cpVect.Sub(seg2.tb, seg1.ta), v1);
-        //    //// project seg1 onto seg2
-        //    //cpVect p2a = seg2.ta.Sub(seg1.ta).Project(v1); //cpVect.cpvproject(cpVect.Sub(seg1.ta, seg2.ta), v2);
-        //    //cpVect p2b = seg2.ta.Sub(seg1.ta).Project(v1); //cpVect.cpvproject(cpVect.Sub(seg1.tb, seg2.ta), v2);
-
-        //    //// clamp projections to segment endcaps
-        //    //if (cpVect.Dot(p1a, v1) < 0.0f)
-        //    //    p1a = cpVect.ZERO;
-        //    //else if (cpVect.Dot(p1a, v1) > 0.0f && p1a.LengthSQ > v1lsq)
-        //    //    p1a = v1;
-        //    //if (cpVect.Dot(p1b, v1) < 0.0f)
-        //    //    p1b = cpVect.ZERO;
-        //    //else if (cpVect.Dot(p1b, v1) > 0.0f && p1b.LengthSQ > v1lsq)
-        //    //    p1b = v1;
-        //    //if (cpVect.Dot(p2a, v2) < 0.0f)
-        //    //    p2a = cpVect.ZERO;
-        //    //else if (cpVect.Dot(p2a, v2) > 0.0f && p2a.LengthSQ > v2lsq)
-        //    //    p2a = v2;
-        //    //if (cpVect.Dot(p2b, v2) < 0.0f)
-        //    //    p2b = cpVect.ZERO;
-        //    //else if (cpVect.Dot(p2b, v2) > 0.0f && p2b.LengthSQ > v2lsq)
-        //    //    p2b = v2;
-
-        //    //p1a = cpVect.Add(p1a, seg1.ta);
-        //    //p1b = cpVect.Add(p1b, seg1.ta);
-        //    //p2a = cpVect.Add(p2a, seg2.ta);
-        //    //p2b = cpVect.Add(p2b, seg2.ta);
-
-        //    //int num = 0;
-
-        //    //if (circle2circleQuery(p1a, p2a, seg1.r, seg2.r, nextContactPoint(con, num)) != 0)
-        //    //    --num;
-
-        //    //if (circle2circleQuery(p1b, p2b, seg1.r, seg2.r, nextContactPoint(con, num)) != 0)
-        //    //    --num;
-
-        //    //if (circle2circleQuery(p1a, p2b, seg1.r, seg2.r, nextContactPoint(con, num)) != 0)
-        //    //    --num;
-
-        //    //if (circle2circleQuery(p1b, p2a, seg1.r, seg2.r, nextContactPoint(con, num)) != 0)
-        //    //    --num;
-
-        //    //return num;
-        //}
-
-        //public static int cpCollideShapes(cpShape a, cpShape b, cpContact arr)
-        //{
-        //    // Their shape types must be in order.
-        //    // cpAssertSoft(a.klass.type <= b.klass.type, "Collision shapes passed to cpCollideShapes() are not sorted.");
-        //    throw new NotImplementedException("Not implemented");
-        //    //collisionFunc cfunc = colfuncs[a.type + b.type * CP_NUM_SHAPES];
-        //    //return (cfunc) ? cfunc(a, b, arr) : 0;
-        //}
-
-        //public static object cpCollisionBeginFunc { get; set; }
-        //#endregion
-
-
+        public static List<cpContact> Circle2Segment(cpCircleShape circleShape, cpSegmentShape segmentShape)
+        {
+            List<cpContact> con = new List<cpContact>();
+            cpVect seg_a = segmentShape.ta;
+            cpVect seg_b = segmentShape.tb;
+            cpVect center = circleShape.tc;
+
+            cpVect seg_delta = cpVect.cpvsub(seg_b, seg_a);
+            float closest_t = cpEnvironment.cpfclamp01(cpVect.cpvdot(seg_delta, cpVect.cpvsub(center, seg_a)) / cpVect.cpvlengthsq(seg_delta));
+            cpVect closest = cpVect.cpvadd(seg_a, cpVect.cpvmult(seg_delta, closest_t));
+
+            if (CircleToCircleQuery(center, closest, circleShape.r, segmentShape.r, 0, con) == 1)
+            {
+                cpVect n = con[0].n;
+
+                // Reject endcap collisions if tangents are provided.
+                if (
+                    (closest_t != 0.0f || cpVect.cpvdot(n, cpVect.cpvrotate(segmentShape.a_tangent, segmentShape.shape.body.Rotation)) >= 0.0f) &&
+                    (closest_t != 1.0f || cpVect.cpvdot(n, cpVect.cpvrotate(segmentShape.b_tangent, segmentShape.shape.body.Rotation)) >= 0.0f)
+                )
+                {
+                    return con;
+                }
+            }
+
+            return null;
+        }
+
+        public static List<cpContact> Circle2Poly(cpCircleShape circ, cpPolyShape poly)
+        {
+            var planes = poly.tPlanes;
+
+            var mini = 0;
+            var min = cpVect.cpvdot(planes[0].n, circ.tc) - planes[0].d - circ.r;
+            for (var i = 0; i < planes.Count; i++)
+            {
+                var dist = cpVect.cpvdot(planes[i].n, circ.tc) - planes[i].d - circ.r;
+                if (dist > 0)
+                {
+                    return null;
+                }
+                else if (dist > min)
+                {
+                    min = dist;
+                    mini = i;
+                }
+            }
+
+            var n = planes[mini].n;
+
+            var verts = poly.tVerts;
+            var len = verts.Count;
+            var mini2 = mini << 1;
+
+            //var a = poly.tVerts[mini];
+            //var b = poly.tVerts[(mini + 1)%poly.tVerts.length];
+            var ax = verts[mini2].x;
+            var ay = verts[mini2].y;
+            var bx = verts[(mini2 + 1)].x;
+            var by = verts[(mini2 + 1)].y;
+
+            var dta = cpVect.cpvcross2(n.x, n.y, ax, ay);
+            var dtb = cpVect.cpvcross2(n.x, n.y, bx, by);
+            var dt = cpVect.cpvcross(n, circ.tc);
+
+            if (dt < dtb)
+            {
+                var con = circle2circleQuery(circ.tc, new cpVect(bx, by), circ.r, 0);
+                return con != null && con.Count > 0 ? con : null;
+            }
+            else if (dt < dta)
+            {
+                return new List<cpContact>() { new cpContact(
+                    cpVect.cpvsub(circ.tc, cpVect.cpvmult(n, circ.r + min / 2)),
+                    cpVect.cpvneg(n),
+                    min,
+                    0
+                )};
+            }
+            else
+            {
+                var con = circle2circleQuery(circ.tc, new cpVect(ax, ay), circ.r, 0);
+                return con != null && con.Count > 0 ? con : null;
+            }
+        }
+
+        public static List<cpContact> Seg2Poly(cpSegmentShape seg, cpPolyShape poly)
+        {
+
+            return null;
+            //  var arr = [];
+            //List<cpContact> arr = new List<cpContact>();
+
+            //var planes = poly.tPlanes;
+            //var numVerts = planes.Count;
+
+            //var segD = cpVect.cpvdot(seg.tn, seg.ta);
+            //var minNorm = poly.valueOnAxis(seg.tn, segD) - seg.r;
+            //var minNeg = poly.valueOnAxis(cpVect.cpvneg(seg.tn), -segD) - seg.r;
+            //if (minNeg > 0 || minNorm > 0) return null;
+
+            //var mini = 0;
+            //var poly_min = segValueOnAxis(seg, planes[0].n, planes[0].d);
+            //if (poly_min > 0) return null;
+            //for (var i = 0; i < numVerts; i++)
+            //{
+            //    var dist = segValueOnAxis(seg, planes[i].n, planes[i].d);
+            //    if (dist > 0)
+            //    {
+            //        return null;
+            //    }
+            //    else if (dist > poly_min)
+            //    {
+            //        poly_min = dist;
+            //        mini = i;
+            //    }
+            //}
+
+            //var poly_n = cpVect.cpvneg(planes[mini].n);
+
+            //var va = cpVect.cpvadd(seg.ta, cpVect.cpvmult(poly_n, seg.r));
+            //var vb = cpVect.cpvadd(seg.tb, cpVect.cpvmult(poly_n, seg.r));
+            //if (poly.containsVert(va.x, va.y))
+            //    arr.Add(new cpContact(va, poly_n, poly_min, cpEnvironment.CP_HASH_PAIR(seg.hashid, 0)));
+            //if (poly.containsVert(vb.x, vb.y))
+            //    arr.Add(new cpContact(vb, poly_n, poly_min, cpEnvironment.CP_HASH_PAIR(seg.hashid, 1)));
+
+            //// Floating point precision problems here.
+            //// This will have to do for now.
+            ////	poly_min -= cp_collision_slop; // TODO is this needed anymore?
+
+            //if (minNorm >= poly_min || minNeg >= poly_min)
+            //{
+            //    if (minNorm > minNeg)
+            //        findPointsBehindSeg(arr, seg, poly, minNorm, 1);
+            //    else
+            //        findPointsBehindSeg(arr, seg, poly, minNeg, -1);
+            //}
+
+            //// If no other collision points are found, try colliding endpoints.
+            //if (arr.Count == 0)
+            //{
+            //    var mini2 = mini * 2;
+            //    var verts = poly.tVerts;
+
+            //    var poly_a = new cpVect(verts[mini2], verts[mini2 + 1]);
+
+            //    var con;
+            //    if ((con = circle2circleQuery(seg.ta, poly_a, seg.r, 0))) return new List<cpContact>() { con };
+            //    if ((con = circle2circleQuery(seg.tb, poly_a, seg.r, 0, arr))) return new List<cpContact>() { con };
+
+            //    var len = numVerts * 2;
+            //    var poly_b = new cpVect(verts[(mini2 + 2) % len], verts[(mini2 + 3) % len]);
+            //    if ((con = circle2circleQuery(seg.ta, poly_b, seg.r, 0, arr))) return new List<cpContact>() { con };
+            //    if ((con = circle2circleQuery(seg.tb, poly_b, seg.r, 0, arr))) return new List<cpContact>() { con };
+            //}
+
+            ////	console.log(poly.tVerts, poly.tPlanes);
+            ////	console.log('seg2poly', arr);
+            //return arr;
+        }
+
+        public static List<cpContact> Poly2Poly(cpPolyShape cpPolyShape1, cpPolyShape cpPolyShape2)
+        {
+            //throw new NotImplementedException();
+            return null;
+        }
     }
 }
+
+//#region NOT USED
+
+// Add contact points for circle to circle collisions.
+// Used by several collision tests.
+// TODO should accept hash parameter
+//public static int circle2circleQuery(cpVect p1, cpVect p2, float r1, float r2, int hash, cpContact con)
+//{
+//    float mindist = r1 + r2;
+//    cpVect delta = cpVect.Sub(p2, p1);
+//    float distsq = delta.LengthSQ;
+//    if (distsq >= mindist * mindist)
+//        return 0;
+
+//    float dist = cpEnvironment.cpfsqrt(distsq);
+//    cpVect n = (dist == 0 ? cpVect.cpvmult(delta, 1.0f / dist) : new cpVect(1.0f, 0.0f));
+
+//    con.Init(cpVect.cpvlerp(p1, p2, r1 / (r1 + r2)), n, dist - mindist, hash);
+//    return 1;
+//}
+
+
+//// Collide circle shapes.
+//public static int circle2circle(cpShape shape1, cpShape shape2, cpContact arr)
+//{
+//    throw new NotImplementedException("Not implemented");
+//    //cpCircleShape circ1 = (cpCircleShape)shape1; //TODO
+//    //cpCircleShape circ2 = (cpCircleShape)shape2;
+
+//    //return circle2circleQuery(circ1.tc, circ2.tc, circ1.r, circ2.r, arr);
+//}
+
+//public static int circle2segment(cpCircleShape circleShape, cpSegmentShape segmentShape, List<cpContact> con)
+//{
+//    cpVect seg_a = segmentShape.ta;
+//    cpVect seg_b = segmentShape.tb;
+//    cpVect center = circleShape.tc;
+
+//    cpVect seg_delta = cpVect.Sub(seg_b, seg_a);
+//    float closest_t = cpEnvironment.cpfclamp01(cpVect.Dot(seg_delta, cpVect.Sub(center, seg_a)) / seg_delta.LengthSQ);
+//    cpVect closest = cpVect.Add(seg_a, cpVect.Multiply(seg_delta, closest_t));
+
+//    if (circle2circleQuery(center, closest, circleShape.r, segmentShape.r, con) != null)
+//    {
+//        cpVect n = con[0].normal;
+
+//        // Reject endcap collisions if tangents are provided.
+//        if (
+//            (closest_t == 0.0f && cpVect.Dot(n, segmentShape.a_tangent) < 0.0) ||
+//            (closest_t == 1.0f && cpVect.Dot(n, segmentShape.b_tangent) < 0.0)
+//        ) return 0;
+
+//        return 1;
+//    }
+//    else
+//    {
+//        return 0;
+//    }
+//}
+
+//// Helper function for working with contact buffers
+//// This used to malloc/realloc memory on the fly but was repurposed.
+//public static cpContact nextContactPoint(List<cpContact> arr, int numPtr)
+//{
+
+
+//    int index = numPtr;
+
+//    if (index < cpArbiter.CP_MAX_CONTACTS_PER_ARBITER)
+//    {
+//        numPtr = index + 1;
+//        return arr[index];
+//    }
+//    else
+//    {
+//        return arr[cpArbiter.CP_MAX_CONTACTS_PER_ARBITER - 1];
+//    }
+//}
+
+
+//// Add contacts for probably penetrating vertexes.
+//// This handles the degenerate case where an overlap was detected, but no vertexes fall inside
+//// the opposing polygon. (like a star of david)
+//public static int findVertsFallback(List<cpContact> arr, cpPolyShape poly1, cpPolyShape poly2, cpVect n, double dist)
+//{
+
+//    throw new NotImplementedException("Not implemented");
+//    //int num = 0;
+
+//    //for (int i = 0; i < poly1.numVerts; i++)
+//    //{
+//    //    cpVect v = poly1.tVerts[i];
+//    //    if (poly2.ContainsVertPartial(v, n.Neg()))
+//    //        cpContactInit(nextContactPoint(arr, num), v, n, dist, cpEnvironment.CP_HASH_PAIR(poly1.shape.hashid, i));
+//    //}
+
+//    //for (int i = 0; i < poly2.numVerts; i++)
+//    //{
+//    //    cpVect v = poly2.tVerts[i];
+//    //    if (poly1.ContainsVertPartial(v, n))
+//    //        cpContactInit(nextContactPoint(arr, num), v, n, dist, cpEnvironment.CP_HASH_PAIR(poly2.shape.hashid, i));
+//    //}
+
+//    //return num;
+//}
+
+//// Add contacts for penetrating vertexes.
+//public static int findVerts(List<cpContact> arr, cpPolyShape poly1, cpPolyShape poly2, cpVect n, double dist)
+//{
+//    throw new NotImplementedException("Not implemented");
+
+//    //int num = 0;
+
+//    //for (int i = 0; i < poly1.numVerts; i++)
+//    //{
+//    //    cpVect v = poly1.tVerts[i];
+//    //    if (poly2.ContainsVert(v))
+//    //        cpContactInit(nextContactPoint(arr, num), v, n, dist, cpEnvironment.CP_HASH_PAIR(poly1.shape.hashid, i));
+//    //}
+
+//    //for (int i = 0; i < poly2.numVerts; i++)
+//    //{
+//    //    cpVect v = poly2.tVerts[i];
+//    //    if (cpPolyShapeContainsVert(poly1, v))
+//    //        cpContactInit(nextContactPoint(arr, num), v, n, dist, cpEnvironment.CP_HASH_PAIR(poly2.shape.hashid, i));
+//    //}
+
+//    //return (num != null) ? num : findVertsFallback(arr, poly1, poly2, n, dist);
+//}
+
+//// Collide poly shapes together.
+//public static int poly2poly(cpShape shape1, cpShape shape2, cpContact arr)
+//{
+//    throw new NotImplementedException("Not implemented");
+//    //cpPolyShape poly1 = (cpPolyShape)shape1;
+//    //cpPolyShape poly2 = (cpPolyShape)shape2;
+
+//    //double min1;
+//    //int mini1 = poly2.FindMSA(poly1.tPlanes, poly1.numVerts, min1);
+//    //if (mini1 == -1) return 0;
+
+//    //double min2;
+//    //int mini2 = poly1.FindMSA(poly2.tPlanes, poly2.numVerts, min2);
+//    //if (mini2 == -1) return 0;
+
+//    //// There is overlap, find the penetrating verts
+//    //if (min1 > min2)
+//    //    return findVerts(arr, poly1, poly2, poly1.tPlanes[mini1].n, min1);
+//    //else
+//    //    return findVerts(arr, poly1, poly2, poly2.tPlanes[mini2].n.Neg(), min2);
+//}
+
+//// Like cpPolyValueOnAxis(), but for segments.
+//public static double segValueOnAxis(cpSegmentShape seg, cpVect n, double d)
+//{
+//    double a = cpVect.Dot(n, seg.ta) - seg.r;
+//    double b = cpVect.Dot(n, seg.tb) - seg.r;
+//    return System.Math.Min(a, b) - d;
+//}
+
+//// Identify vertexes that have penetrated the segment.
+//public static void findPointsBehindSeg(cpContact arr, int num, cpSegmentShape seg, cpPolyShape poly, double pDist, double coef)
+//{
+//    throw new NotImplementedException("Not implemented");
+
+//    //double dta = cpVect.CrossProduct(seg.tn, seg.ta);
+//    //double dtb = cpVect.CrossProduct(seg.tn, seg.tb);
+//    //cpVect n = cpVect.Multiply(seg.tn, coef);
+
+//    //for (int i = 0; i < poly.numVerts; i++)
+//    //{
+//    //    cpVect v = poly.tVerts[i];
+//    //    if (cpVect.Dot(v, n) < cpVect.Dot(seg.tn, seg.ta) * coef + seg.r)
+//    //    {
+//    //        double dt = cpVect.CrossProduct(seg.tn, v);
+//    //        if (dta >= dt && dt >= dtb)
+//    //        {
+//    //            cpContactInit(nextContactPoint(arr, num), v, n, pDist, cpEnvironment.CP_HASH_PAIR(poly.shape.hashid, i));
+//    //        }
+//    //    }
+//    //}
+//}
+
+//// This one is complicated and gross. Just don't go there...
+//// TODO: Comment me!
+//public static int seg2poly(cpShape shape1, cpShape shape2, List<cpContact> arr)
+//{
+//    throw new NotImplementedException("Not implemented");
+
+//    //cpSegmentShape seg = (cpSegmentShape)shape1;
+//    //cpPolyShape poly = (cpPolyShape)shape2;
+//    //List<cpSplittingPlane> planes = poly.tPlanes;
+
+//    //double segD = cpVect.Dot(seg.tn, seg.ta);
+//    //double minNorm = poly.ValueOnAxis(seg.tn, segD) - seg.r;
+//    //double minNeg = poly.ValueOnAxis(seg.tn.Neg(), -segD) - seg.r;
+//    //if (minNeg > 0.0f || minNorm > 0.0f) return 0;
+
+//    //int mini = 0;
+//    //double poly_min = segValueOnAxis(seg, planes[0].n, planes[0].d);
+//    //if (poly_min > 0.0f) return 0;
+//    //for (int i = 0; i < poly.numVerts; i++)
+//    //{
+//    //    double dist = segValueOnAxis(seg, planes[i].n, planes[i].d);
+//    //    if (dist > 0.0f)
+//    //    {
+//    //        return 0;
+//    //    }
+//    //    else if (dist > poly_min)
+//    //    {
+//    //        poly_min = dist;
+//    //        mini = i;
+//    //    }
+//    //}
+
+//    //int num = 0;
+
+//    //cpVect poly_n = planes[mini].n.Neg(); // cpvneg();
+
+//    //cpVect va = cpVect.Add(seg.ta, cpVect.Multiply(poly_n, seg.r));
+//    //cpVect vb = cpVect.Add(seg.tb, cpVect.Multiply(poly_n, seg.r));
+
+//    //if (poly.ContainsVert(va))
+//    //    cpContactInit(nextContactPoint(arr, num), va, poly_n, poly_min, cpEnvironment.CP_HASH_PAIR(seg.shape.hashid, 0));
+//    //if (poly.ContainsVert(vb))
+//    //    cpContactInit(nextContactPoint(arr, num), vb, poly_n, poly_min, cpEnvironment.CP_HASH_PAIR(seg.shape.hashid, 1));
+
+//    //// doubleing point precision problems here.
+//    //// This will have to do for now.
+//    ////	poly_min -= cp_collision_slop; // TODO is this needed anymore?
+
+//    //if (minNorm >= poly_min || minNeg >= poly_min)
+//    //{
+//    //    if (minNorm > minNeg)
+//    //        findPointsBehindSeg(arr, num, seg, poly, minNorm, 1.0f);
+//    //    else
+//    //        findPointsBehindSeg(arr, num, seg, poly, minNeg, -1.0f);
+//    //}
+
+//    //// If no other collision points are found, try colliding endpoints.
+//    //if (num == 0)
+//    //{
+//    //    cpVect poly_a = poly.tVerts[mini];
+//    //    cpVect poly_b = poly.tVerts[(mini + 1) % poly.numVerts];
+
+//    //    //TODO: Revise
+//    //    if (circle2circleQuery(seg.ta, poly_a, seg.r, 0.0f) == 0) return 1;
+//    //    if (circle2circleQuery(seg.tb, poly_a, seg.r, 0.0f) == 0) return 1;
+//    //    if (circle2circleQuery(seg.ta, poly_b, seg.r, 0.0f) == 0) return 1;
+//    //    if (circle2circleQuery(seg.tb, poly_b, seg.r, 0.0f) == 0) return 1;
+//    //}
+
+//    //return num;
+//}
+
+//// This one is less gross, but still gross.
+//// TODO: Comment me!
+//public static int circle2poly(cpShape shape1, cpShape shape2, cpContact con)
+//{
+
+//    throw new NotImplementedException("Not implemented");
+//    //cpCircleShape circ = (cpCircleShape)shape1;
+//    //cpPolyShape poly = (cpPolyShape)shape2;
+//    //List<cpSplittingPlane> planes = poly.tPlanes;
+
+//    //int mini = 0;
+//    //float min = planes[0].Compare(circ.tc) - circ.r;
+//    //for (int i = 0; i < poly.numVerts; i++)
+//    //{
+//    //    double dist = planes[i].Compare(circ.tc) - circ.r;
+//    //    if (dist > 0.0f)
+//    //    {
+//    //        return 0;
+//    //    }
+//    //    else if (dist > min)
+//    //    {
+//    //        min = dist;
+//    //        mini = i;
+//    //    }
+//    //}
+
+//    //cpVect n = planes[mini].n;
+//    //cpVect a = poly.tVerts[mini];
+//    //cpVect b = poly.tVerts[(mini + 1) % poly.numVerts];
+//    //float dta = cpVect.CrossProduct(n, a);
+//    //float dtb = cpVect.CrossProduct(n, b);
+//    //float dt = cpVect.CrossProduct(n, circ.tc);
+
+//    //if (dt < dtb)
+//    //{
+//    //    return circle2circleQuery(circ.tc, b, circ.r, 0.0f, con);
+//    //}
+//    //else if (dt < dta)
+//    //{
+//    //    new cpContact(
+//    //          con,
+//    //          circ.tc.Sub(n.Multiply(circ.r + min / 2.0f)),
+//    //         n.Neg(),
+//    //          min,
+//    //          0
+//    //      );
+
+//    //    return 1;
+//    //}
+//    //else
+//    //{
+//    //    return circle2circleQuery(circ.tc, a, circ.r, 0.0f, con);
+//    //}
+//}
+
+//// Submitted by LegoCyclon
+//public static int seg2seg(cpShape shape1, cpShape shape2, cpContact con)
+//{
+
+//    throw new NotImplementedException("Not implemented");
+//    //cpSegmentShape seg1 = (cpSegmentShape)shape1;
+//    //cpSegmentShape seg2 = (cpSegmentShape)shape2;
+
+//    //cpVect v1 = cpVect.Sub(seg1.tb, seg1.ta);
+//    //cpVect v2 = cpVect.Sub(seg2.tb, seg2.ta);
+
+//    //double v1lsq = v1.LengthSQ;// cpVect.LengthSQ(v1);
+//    //double v2lsq = v2.LengthSQ;// cpVect.LengthSQ(v2);
+//    //// project seg2 onto seg1
+//    //cpVect p1a = seg2.ta.Sub(seg1.ta).Project(v1);  // cpVect.cpvproject(   cpVect.Sub(seg2.ta, seg1.ta), v1);
+//    //cpVect p1b = seg2.tb.Sub(seg1.ta).Project(v1); // cpVect.cpvproject(cpVect.Sub(seg2.tb, seg1.ta), v1);
+//    //// project seg1 onto seg2
+//    //cpVect p2a = seg2.ta.Sub(seg1.ta).Project(v1); //cpVect.cpvproject(cpVect.Sub(seg1.ta, seg2.ta), v2);
+//    //cpVect p2b = seg2.ta.Sub(seg1.ta).Project(v1); //cpVect.cpvproject(cpVect.Sub(seg1.tb, seg2.ta), v2);
+
+//    //// clamp projections to segment endcaps
+//    //if (cpVect.Dot(p1a, v1) < 0.0f)
+//    //    p1a = cpVect.ZERO;
+//    //else if (cpVect.Dot(p1a, v1) > 0.0f && p1a.LengthSQ > v1lsq)
+//    //    p1a = v1;
+//    //if (cpVect.Dot(p1b, v1) < 0.0f)
+//    //    p1b = cpVect.ZERO;
+//    //else if (cpVect.Dot(p1b, v1) > 0.0f && p1b.LengthSQ > v1lsq)
+//    //    p1b = v1;
+//    //if (cpVect.Dot(p2a, v2) < 0.0f)
+//    //    p2a = cpVect.ZERO;
+//    //else if (cpVect.Dot(p2a, v2) > 0.0f && p2a.LengthSQ > v2lsq)
+//    //    p2a = v2;
+//    //if (cpVect.Dot(p2b, v2) < 0.0f)
+//    //    p2b = cpVect.ZERO;
+//    //else if (cpVect.Dot(p2b, v2) > 0.0f && p2b.LengthSQ > v2lsq)
+//    //    p2b = v2;
+
+//    //p1a = cpVect.Add(p1a, seg1.ta);
+//    //p1b = cpVect.Add(p1b, seg1.ta);
+//    //p2a = cpVect.Add(p2a, seg2.ta);
+//    //p2b = cpVect.Add(p2b, seg2.ta);
+
+//    //int num = 0;
+
+//    //if (circle2circleQuery(p1a, p2a, seg1.r, seg2.r, nextContactPoint(con, num)) != 0)
+//    //    --num;
+
+//    //if (circle2circleQuery(p1b, p2b, seg1.r, seg2.r, nextContactPoint(con, num)) != 0)
+//    //    --num;
+
+//    //if (circle2circleQuery(p1a, p2b, seg1.r, seg2.r, nextContactPoint(con, num)) != 0)
+//    //    --num;
+
+//    //if (circle2circleQuery(p1b, p2a, seg1.r, seg2.r, nextContactPoint(con, num)) != 0)
+//    //    --num;
+
+//    //return num;
+//}
+
+//public static int cpCollideShapes(cpShape a, cpShape b, cpContact arr)
+//{
+//    // Their shape types must be in order.
+//    // cpAssertSoft(a.klass.type <= b.klass.type, "Collision shapes passed to cpCollideShapes() are not sorted.");
+//    throw new NotImplementedException("Not implemented");
+//    //collisionFunc cfunc = colfuncs[a.type + b.type * CP_NUM_SHAPES];
+//    //return (cfunc) ? cfunc(a, b, arr) : 0;
+//}
+
+//public static object cpCollisionBeginFunc { get; set; }
+//#endregion

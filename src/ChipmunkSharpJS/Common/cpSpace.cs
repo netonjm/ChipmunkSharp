@@ -125,12 +125,14 @@ namespace ChipmunkSharp
 
         public List<cpArbiter> arbiters;
         public List<cpContact> contactBuffersHead;
+
         public cpBBTree cachedArbiters;
         // public List<cpArbiter> pooledArbiters;
         public List<cpConstraint> constraints;
 
         // public cpArray allocatedBuffers;
         public bool locked;
+
         public cpBBTree collisionHandlers;
         //public cpCollisionHandler defaultHandler;
 
@@ -175,9 +177,9 @@ namespace ChipmunkSharp
 
             List<int> safeDelete = new List<int>();
 
-            foreach (var hash in this.cachedArbiters.elements)
+            foreach (var hash in this.cachedArbiters.leaves)
             {
-                cpArbiter arb = hash.Value.obj as cpArbiter;
+                cpArbiter arb = (cpArbiter) hash.Value.obj;
 
                 // Match on the filter shape, or if it's null the filter body
                 if (
@@ -252,16 +254,17 @@ namespace ChipmunkSharp
             enableContactGraph = false;
 
             arbiters = new List<cpArbiter>(); // cpArrayNew(0);
+            //pooledArbiters = new List<cpArbiter>();// cpArrayNew(0);
 
             contactBuffersHead = new List<cpContact>();
-            cachedArbiters = new cpBBTree(null);  // cpHashSetNew(0, (cpHashSetEqlFunc)arbiterSetEql);
+            cachedArbiters = new cpBBTree(null); //new Dictionary<int, cpArbiter>();    // cpHashSetNew(0, (cpHashSetEqlFunc)arbiterSetEql);
 
             constraints = new List<cpConstraint>(); // cpArrayNew(0);
 
             DefaultHandler = DefaultCollisionHandler;
-            collisionHandlers = new cpBBTree(null); // cpHashSetNew(0, (cpHashSetEqlFunc)handlerSetEql);
 
-            collisionHandlers.SetDefaultValue(DefaultCollisionHandler);
+            collisionHandlers = new cpBBTree(null);  //new cpBBTree(null); // cpHashSetNew(0, (cpHashSetEqlFunc)handlerSetEql);
+            //collisionHandlers.SetDefaultValue(DefaultCollisionHandler);
 
             PostStepCallbacks = new List<cpPostStepCallback>();
             skipPostStep = false;
@@ -351,82 +354,7 @@ namespace ChipmunkSharp
         /// The default collision handler is invoked for each colliding pair of shapes
         /// that isn't explicitly handled by a specific collision handler.
         /// You can pass null for any function you don't want to implement.
-        public void SetDefaultCollisionHandler(
-               cpSpace space,
-               cpCollisionBeginFunc begin,
-               cpCollisionPreSolveFunc preSolve,
-               cpCollisionPostSolveFunc postSolve,
-               cpCollisionSeparateFunc separate,
-               object data
-           )
-        {
 
-            space.AssertSpaceUnlocked();
-
-            cpCollisionHandler handler = new cpCollisionHandler(
-                0, 0,
-                begin != null ? begin : AlwaysCollide,
-                preSolve != null ? preSolve : AlwaysCollide,
-                postSolve != null ? postSolve : Nothing,
-                separate != null ? separate : Nothing,
-                data
-            );
-
-            space.DefaultHandler = handler;
-            collisionHandlers.SetDefaultValue(space.DefaultHandler);
-            //cpHashSetSetDefaultValue(space.collisionHandlers,space.defaultHandler);
-        }
-
-        /// Set a collision handler to be used whenever the two shapes with the given collision types collide.
-        /// You can pass null for any function you don't want to implement.
-        public void AddCollisionHandler(
-              cpSpace space,
-              int a, int b,
-              cpCollisionBeginFunc begin,
-              cpCollisionPreSolveFunc preSolve,
-              cpCollisionPostSolveFunc postSolve,
-              cpCollisionSeparateFunc separate,
-              object data
-          )
-        {
-
-            space.AssertSpaceUnlocked();
-
-            // Remove any old function so the new one will get added.
-            RemoveCollisionHandler(a, b);
-
-            cpCollisionHandler handler = new cpCollisionHandler(
-        a, b,
-        begin != null ? begin : AlwaysCollide,
-        preSolve != null ? preSolve : AlwaysCollide,
-        postSolve != null ? postSolve : Nothing,
-        separate != null ? separate : Nothing,
-        data
-    );
-
-            //  cpHashSetInsert(space.collisionHandlers, cpEnvironment.CP_HASH_PAIR(a, b), handler, null, (cpHashSetTransFunc)handlerSetTrans);
-
-        }
-
-        /// Unset a collision handler.
-        public void RemoveCollisionHandler(int a, int b)
-        {
-
-            AssertSpaceUnlocked();
-
-            // space.collisionHandlers.
-
-            //struct { cpCollisionType a, b; } ids = {a, b};
-            //cpCollisionHandler old_handler = new cpCollisionHandler();
-
-            collisionHandlers.Remove(cpEnvironment.CP_HASH_PAIR(a, b));
-            //cpHashSetRemove(space.collisionHandlers,ids);
-            // space.collisionHandlers.Remove()
-
-            //space.collisionHandlers.
-
-            // cpfree(old_handler);
-        }
 
         /// Add a collision shape to the simulation.
         /// If the shape is attached to a static body, it will be added as a static shape.
@@ -434,8 +362,7 @@ namespace ChipmunkSharp
         {
 
             cpBody body = shape.body;
-            if (body.IsStatic())
-                return AddStaticShape(shape);
+            if (body.IsStatic()) return AddStaticShape(shape);
 
             cpEnvironment.AssertHard(shape.space != this, "You have already added this shape to this space. You must not add it a second time.");
             cpEnvironment.AssertHard(shape.space != null, "You have already added this shape to another space. You cannot add it to a second.");
@@ -700,7 +627,7 @@ namespace ChipmunkSharp
             // cpSpatialIndexEach(space.staticShapes, updateBBCache, null);
 
             cpShape shp;
-            foreach (var item in staticShapes.elements)
+            foreach (var item in staticShapes.leaves)
             {
                 shp = (cpShape)item.Value.obj;
                 UpdateBBCache(shp, null);
@@ -753,15 +680,18 @@ namespace ChipmunkSharp
         {
             Leaf test;
             if (collisionHandlers.TryGetValue(cpEnvironment.CP_HASH_PAIR(a, b), out test))
-                return (cpCollisionHandler)test.obj;
+                return (cpCollisionHandler) test.obj;
             else
-                return new cpCollisionHandler();
+                return DefaultHandler;
         }
 
         public void SetGravity(cpVect gravity)
         {
             this.gravity = gravity;
         }
+
+
+
 
 
         #region DEBUG DRAW
@@ -798,18 +728,17 @@ namespace ChipmunkSharp
             {
                 Type actualType;
                 cpShape shape;
-                foreach (var item in activeShapes.elements)
+                foreach (var item in activeShapes.leaves)
                 {
                     shape = (cpShape)item.Value.obj;
                     shape.Draw(m_debugDraw);
                     //Console.WriteLine("dsadasdsa");
                 }
 
-                foreach (var item in staticShapes.elements)
+                foreach (var item in staticShapes.leaves)
                 {
                     shape = (cpShape)item.Value.obj;
                     shape.Draw(m_debugDraw);
-
                     //Console.WriteLine("dsadasdsa");
                 }
                 //for (b2Body b = m_bodyList; b != null; b = b.Next)

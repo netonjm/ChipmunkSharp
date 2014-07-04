@@ -232,28 +232,7 @@ namespace ChipmunkSharp
 
         }
 
-        public void RemoveShape(cpShape shape)
-        {
-            cpShape prev = shape.prev;
-            cpShape next = shape.next;
 
-            if (prev != null)
-            {
-                prev.next = next;
-            }
-            else
-            {
-                shapeList = next;
-            }
-
-            if (next != null)
-            {
-                next.prev = prev;
-            }
-
-            shape.prev = null;
-            shape.next = null;
-        }
 
 
 
@@ -317,8 +296,20 @@ namespace ChipmunkSharp
             SetAngle(0.0f);
         }
 
+
+
         public bool ComponentActive(float threshold)
         {
+            //if (EachComponent(
+            //     (s, component, o) =>
+            //     {
+            //         if (component.node.idleTime < threshold)
+            //             return true;
+
+            //         return false;
+
+            //     }, null);
+
             for (cpBody component = node.root; component != null; component = component.node.next)
                 if (component.node.idleTime < threshold)
                     return true;
@@ -395,6 +386,8 @@ namespace ChipmunkSharp
             this.arbiterList = arb;
         }
 
+
+
         /// Allocate and initialize a static cpBody.
 
         /// Destroy a cpBody.
@@ -434,13 +427,15 @@ namespace ChipmunkSharp
             SanityCheck(this);
         }
 
+
+
         public static void ComponentActivate(cpBody root)
         {
-            if (root == null || !root.IsSleeping())
-                return;
-
+            if (root == null || !root.IsSleeping()) return;
             cpEnvironment.AssertHard(!root.IsRogue(), "Internal Error: ComponentActivate() called on a rogue body.");
 
+            // cpSpace space = space;
+            //cpBody body = this;
             cpSpace space = root.space;
             cpBody body = root;
 
@@ -460,6 +455,7 @@ namespace ChipmunkSharp
             space.sleepingComponents.Remove(root);
             //cpArrayDeleteObj(, );
         }
+
 
         // Defined in cpSpace.c
         /// Wake up a sleeping or idle body.
@@ -555,6 +551,7 @@ namespace ChipmunkSharp
                 cpComponentNode node = new cpComponentNode(this, null, 0.0f);
                 this.node = node;
 
+                //cpArrayPush(space.sleepingComponents, body);
                 space.sleepingComponents.Add(this);
             }
             space.bodies.Remove(this);
@@ -604,6 +601,29 @@ namespace ChipmunkSharp
 
 
 
+
+        public void RemoveShape(cpShape shape)
+        {
+            cpShape prev = shape.prev;
+            cpShape next = shape.next;
+
+            if (prev != null)
+            {
+                prev.next = next;
+            }
+            else
+            {
+                shapeList = next;
+            }
+
+            if (next != null)
+            {
+                next.prev = prev;
+            }
+
+            shape.prev = null;
+            shape.next = null;
+        }
 
         public static cpConstraint FilterConstraints(cpConstraint node, cpBody body, cpConstraint filter)
         {

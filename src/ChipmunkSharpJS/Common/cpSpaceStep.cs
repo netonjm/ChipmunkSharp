@@ -143,75 +143,12 @@ namespace ChipmunkSharp
         }
 
         // Callback from the spatial hash.
-        public int CollideShapes(cpShape a, cpShape b, int id)
+        public List<cpContact> CollideShapes(cpShape a, cpShape b)
         {
-            // Reject any of the simple cases
-            if (QueryReject(a, b)) return id;
+            cpEnvironment.AssertWarn((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode, "Collided shapes must be sorted by type");
+            return (a as ICollisionShape).collisionTable[(b as ICollisionShape).collisionCode](a, b);
+            //return null;
 
-            cpCollisionHandler handler = LookupHandler(a.collision_type, b.collision_type);
-
-            bool sensor = a.sensor || b.sensor;
-            if (sensor && handler.Equals(DefaultCollisionHandler)) return id;
-
-            // Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
-            // TODO remove me: a < b comparison is for debugging collisions
-            if (a.klass.type > b.klass.type || (a.klass.type == b.klass.type && a.hashid < b.hashid))
-            {
-                cpShape temp = a;
-                a = b;
-                b = temp;
-            }
-
-            // Narrow-phase collision detection.
-            List<cpContact> contacts = new List<cpContact>();
-
-            int numContacts = a.Collides(b, id, contacts);
-            if (numContacts == 0) return id; // Shapes are not colliding.
-            //cpSpacePushContacts(space, numContacts);
-
-            // Get an arbiter from space.arbiterSet for the two shapes.
-            // This is where the persistant contact magic comes from.
-            //List<cpShape> shape_pair = new List<cpShape>() { a, b };
-
-            cpArbiter arb = new cpArbiter(a, b);
-
-            //cpArbiter arb =  (cpArbiter)cpHashSetInsert(space.cachedArbiters, arbHashID, shape_pair, space, (cpHashSetTransFunc)cpSpaceArbiterSetTrans);
-            cachedArbiters.Insert(cpEnvironment.CP_HASH_PAIR(a.hashid, b.hashid), arb);
-            //cachedArbiter
-
-            //cpArbiterUpdate(arb, );
-            arb.update(contacts, handler, a, b);
-            // Call the begin function first if it's the first step
-            if (arb.state == cpArbiterState.cpArbiterStateFirstColl && !handler.begin(arb, this, handler.data))
-            {
-                arb.Ignore();
-            }
-
-            if (
-                // Ignore the arbiter if it has been flagged
-                (arb.state != cpArbiterState.cpArbiterStateIgnore) &&
-                // Call preSolve
-                handler.preSolve(arb, this, handler.data) &&
-                // Process, but don't add collisions for sensors.
-                !sensor
-            )
-            {
-                arbiters.Add(arb); // cpArrayPush(, arb);
-            }
-            else
-            {
-                //cpSpacePopContacts(space, numContacts);
-
-                arb.contacts.Clear();
-
-                // Normally arbiters are set as used after calling the post-solve callback.
-                // However, post-solve callbacks are not called for sensors or arbiters rejected from pre-solve.
-                if (arb.state != cpArbiterState.cpArbiterStateIgnore) arb.state = cpArbiterState.cpArbiterStateNormal;
-            }
-
-            // Time stamp the arbiter so we know it was used recently.
-            arb.stamp = stamp;
-            return id;
         }
 
         // Hashset filter func to throw away old arbiters.
@@ -242,6 +179,8 @@ namespace ChipmunkSharp
             if (ticks >= collisionPersistence)
             {
                 arb.contacts = null;
+                //arb.numContacts = 0;
+
                 //pooledArbiters.Add(arb);
                 return false;
             }
@@ -261,6 +200,8 @@ namespace ChipmunkSharp
             // don't step if the timestep is 0!
             if (dt == 0.0f) return;
 
+            cpEnvironment.step++;
+            Console.WriteLine(cpEnvironment.step);
             stamp++;
 
             float prev_dt = curr_dt;
@@ -281,26 +222,14 @@ namespace ChipmunkSharp
 
             Lock();
             {
-
                 // Integrate positions
                 foreach (var body in bodies)
                     body.position_func(body, dt);
 
-                // Find colliding pairs.
+                this.activeShapes.Each((o) => UpdateFunc(o as cpShape));
+                this.activeShapes.ReindexQuery((a, b) => CollideShapes(a as cpShape, b as cpShape));
 
-                foreach (var item in activeShapes.elements)
-                    ShapeUpdateFunc(item.Value.obj as cpShape, null);
-
-
-                activeShapes.ReindexQuery((obj1, obj2, id, data) =>
-                {
-                    return CollideShapes(
-                        (obj1 as Leaf) != null ? (obj1 as Leaf).obj as cpShape
-                        : obj1 as cpShape, obj2 as cpShape, id);
-
-                }, this);
-            }
-            Unlock(false);
+            } Unlock(false);
 
             // Rebuild the contact graph (and detect sleeping components if sleeping is enabled)
 
@@ -309,24 +238,18 @@ namespace ChipmunkSharp
             Lock();
             {
 
-                foreach (var item in cachedArbiters.elements)
-                {
-                    ArbiterSetFilter((cpArbiter)item.Value.obj);
-                }
-                // cpHashSetFilter(cachedArbiters, ArbiterSetFilter, space);
-
 
                 List<int> safeDeleteArray = new List<int>();
 
                 // Clear out old cached arbiters and call separate callbacks
-                foreach (var item in cachedArbiters.elements)
-                    if (!ArbiterSetFilter((cpArbiter)item.Value.obj))
+                foreach (var item in cachedArbiters.leaves)
+                    if (!ArbiterSetFilter( item.Value.obj as cpArbiter ))
                         safeDeleteArray.Add(item.Key);
 
                 foreach (var item in safeDeleteArray)
                     cachedArbiters.Remove(item);
 
-
+                // cpHashSetFilter(cachedArbiters, ArbiterSetFilter, space);
 
                 // Prestep the arbiters and constraints.
                 float slop = collisionSlop;
@@ -388,8 +311,22 @@ namespace ChipmunkSharp
                     arbiters[i].handler.postSolve(arbiters[i], this, null);
                 }
 
+                // run the post-solve callbacks
+                //cpCollisionHandler handler;
+                //foreach (var arb in arbiters)
+                //{
+                //    handler = arb.handler;
+
+                //    handler.postSolve(arb, this, handler.data);
+                //}
             }
             Unlock(true);
+        }
+
+        private void UpdateFunc(cpShape shape)
+        {
+            var body = shape.body;
+            shape.Update(body.Position, body.Rotation);
         }
 
 

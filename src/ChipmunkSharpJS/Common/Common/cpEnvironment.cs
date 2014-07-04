@@ -53,6 +53,10 @@ namespace ChipmunkSharp
         public static string cpVersionString = string.Format("{0}.{1}.{2}", CP_VERSION_MAJOR, CP_VERSION_MINOR, CP_VERSION_RELEASE);
 
 
+        public static int numLeaves { get; set; }
+        public static int numNodes { get; set; }
+        public static int numPairs { get; set; }
+
         public static int shapeIDCounter = 0;
         public static int CP_USE_CGPOINTS = 1;
         public static int CP_NO_GROUP = 0;
@@ -79,8 +83,6 @@ namespace ChipmunkSharp
             shapeIDCounter = 0;
         }
 
-        //public static int CP_HASH_COEF = 3344921057ul;
-
         public static int CP_HASH_PAIR(int A, int B)
         {
             return A ^ B;
@@ -103,7 +105,6 @@ namespace ChipmunkSharp
         #region Mathemathical Operations and variables
 
         //public static double INFINITY2 = 1e1000;
-
         //public static float M_PI = 3.14159265358979323846264338327950288f;
         //public static float M_E = 2.71828182845904523536028747135266250f;
 
@@ -156,25 +157,6 @@ namespace ChipmunkSharp
         {
             return (float)Math.Cos((double)a);
         }
-
-        //public static IntPtr cpHashValue
-        //{
-        //    get
-        //    {
-        //        return new IntPtr();
-        //    }
-        //}
-
-        //public static bool cpBool
-        //{
-        //    get
-        //    {
-        //        return new IntPtr();
-        //    }
-        //}
-
-
-
 
         /// Return the max of two cpFloats.
         public static float cpfmax(float a, float b)
@@ -257,16 +239,6 @@ namespace ChipmunkSharp
 
             return value;
         }
-
-
-        public static void AssertHard(object p1, string p2)
-        {
-
-        }
-
-
-
-
 
         #region Physics Operations
 
@@ -385,7 +357,20 @@ namespace ChipmunkSharp
 
         #endregion
 
+        #region ASSERTS
 
+        #endregion
+
+        public static void AssertHard(bool p1, string p2)
+        {
+            if (!p1)
+                LogWrite(string.Format("AssertHard:{0} Value:{1}", p2, p1));
+        }
+
+        public static void AssertHard(string p)
+        {
+            LogWrite(string.Format("AssertHard:{0} Value:{1}", p, ""));
+        }
 
         public static void AssertSoft(bool p1, string p2)
         {
@@ -393,32 +378,31 @@ namespace ChipmunkSharp
                 LogWrite(string.Format("cpAssertSoft:{0} Value:{1}", p2, p1));
         }
 
-        public static void LogWrite(string message)
+
+
+        public static void AssertWarn(bool p1, string p2)
         {
-            Console.WriteLine(message);
+            if (!p1)
+                LogWrite(string.Format("AssertWarn:{0} Value:{1}", p2, p1));
         }
+
         public static void AssertWarn(string p)
         {
-            LogWrite(string.Format("cpAssertSoft:{0}", p));
+            LogWrite(string.Format("AssertWarn:{0}", p));
         }
 
         public static void AssertWarn(bool p)
         {
+            if (!p)
+                LogWrite(string.Format("AssertWarn: ERROR DETECTED"));
         }
 
-        public static void AssertWarn(bool p1, string p2)
+        public static void LogWrite(string message)
         {
-            LogWrite(string.Format("AssertWarn:{0} Value:{1}", p2, p1));
-        }
-
-
-        public static void AssertHard(string p)
-        {
-            LogWrite(string.Format("cpAssertHard:{0} Value:{1}", p, ""));
+            //Console.WriteLine(message);
         }
 
         public static float PHYSICS_INFINITY { get { return INFINITY_FLOAT; } }
-
 
         #region MOMENTS
 
@@ -537,17 +521,217 @@ namespace ChipmunkSharp
 
         #endregion
 
-        public static int numLeaves { get; set; }
+        public static void unlinkThread(Pair prev, Node leaf, Pair next)
+        {
+            if (next != null)
+            {
+                if (next.leafA == leaf)
+                    next.prevA = prev;
+                else next.prevB = prev;
+            }
+
+            if (prev != null)
+            {
+                if (prev.leafA == leaf) prev.nextA = next;
+                else prev.nextB = next;
+            }
+            else
+            {
+                leaf.pairs = next;
+            }
+        }
+
+        public static void pairInsert(Node a, Node b, cpBBTree tree)
+        {
+            Pair nextA = a.pairs, nextB = b.pairs;
+            var pair = tree.MakePair(a, nextA, b, nextB);
+            a.pairs = b.pairs = pair;
+
+            if (nextA != null)
+            {
+                if (nextA.leafA == a) nextA.prevA = pair; else nextA.prevB = pair;
+            }
+
+            if (nextB != null)
+            {
+                if (nextB.leafA == b) nextB.prevA = pair; else nextB.prevB = pair;
+            }
+        }
+
+        public static Node partitionNodes(cpBBTree tree, Dictionary<int, Leaf> nodes, int offset, int count)
+        {
+            //int count = nodes.Count;
+            //int offset = 0;
+
+            if (count == 1)
+            {
+                return nodes[0];
+            }
+            else if (count == 2)
+            {
+                return tree.MakeNode(nodes[offset], nodes[offset + 1]);
+            }
+
+            // Find the AABB for these nodes
+            //var bb = nodes[offset].bb;
+            Leaf node = nodes[offset];
+            float bb_l = node.bb.l,
+                bb_b = node.bb.b,
+                bb_r = node.bb.r,
+                bb_t = node.bb.t;
+
+            var end = offset + count;
+            for (var i = offset + 1; i < end; i++)
+            {
+                //bb = bbMerge(bb, nodes[i].bb);
+                node = nodes[i];
+                bb_l = Math.Min(bb_l, node.bb.l);
+                bb_b = Math.Min(bb_b, node.bb.b);
+                bb_r = Math.Max(bb_r, node.bb.r);
+                bb_t = Math.Max(bb_t, node.bb.t);
+            }
+
+            // Split it on it's longest axis
+            var splitWidth = (bb_r - bb_l > bb_t - bb_b);
+
+            // Sort the bounds and use the median as the splitting point
+            float[] bounds = new float[count * 2];
+            if (splitWidth)
+            {
+                for (var i = offset; i < end; i++)
+                {
+                    bounds[2 * i + 0] = nodes[i].bb.l;
+                    bounds[2 * i + 1] = nodes[i].bb.r;
+                }
+            }
+            else
+            {
+                for (var i = offset; i < end; i++)
+                {
+                    bounds[2 * i + 0] = nodes[i].bb.b;
+                    bounds[2 * i + 1] = nodes[i].bb.t;
+                }
+            }
+
+            //TODO: ¿?
+            //bounds.sort((a, b) =>
+            //{
+            //    // This might run faster if the function was moved out into the global scope.
+            //    return a - b;
+            //});
 
 
+            float split = (bounds[count - 1] + bounds[count]) * 0.5f; // use the median as the split
 
-        public static int numNodes { get; set; }
+            // Generate the child BBs
+            //var a = bb, b = bb;
+            float a_l = bb_l, a_b = bb_b, a_r = bb_r, a_t = bb_t;
+            float b_l = bb_l, b_b = bb_b, b_r = bb_r, b_t = bb_t;
 
-        public static int numPairs { get; set; }
+            if (splitWidth) a_r = b_l = split; else a_t = b_b = split;
+
+            // Partition the nodes
+            var right = end;
+
+            for (var left = offset; left < right; )
+            {
+                node = nodes[left];
+                //	if(bbMergedArea(node.bb, b) < bbMergedArea(node.bb, a)){
+                if (bbTreeMergedArea2(node, b_l, b_b, b_r, b_t) < bbTreeMergedArea2(node, a_l, a_b, a_r, a_t))
+                {
+                    right--;
+                    nodes[left] = nodes[right];
+                    nodes[right] = node;
+                }
+                else
+                {
+                    left++;
+                }
+            }
+
+            if (right == count)
+            {
+                Node tmp = null;
+                for (var i = offset; i < end; i++)
+                    tmp = tree.SubtreeInsert(tmp, nodes[i]);
+                return node;
+            }
+
+            // Recurse and build the node!
+            return new Node(
+                partitionNodes(tree, nodes, offset, right - offset),
+                partitionNodes(tree, nodes, right, end - right),
+                tree
+            );
 
 
+        }
+
+        public static float bbTreeMergedArea2(Node node, float l, float b, float r, float t)
+        {
+            return (Math.Max(node.bb.r, r) - Math.Min(node.bb.l, l)) * (Math.Max(node.bb.t, t) - Math.Min(node.bb.b, b));
+        }
+
+        public static float bbProximity(Node a, Leaf b)
+        {
+            return Math.Abs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + Math.Abs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
+        }
+
+        public static void nodeRender(Node node, int depth)
+        {
+            if (!node.IsLeaf && depth <= 10)
+            {
+                nodeRender(node.A, depth + 1);
+                nodeRender(node.B, depth + 1);
+            }
+
+            var str = "";
+            for (var i = 0; i < depth; i++)
+            {
+                str += " ";
+            }
+
+            LogWrite(str + node.bb.b + " " + node.bb.t);
+        }
+
+        public static Node SubtreeRemove(Node subtree, Leaf leaf, cpBBTree tree)
+        {
+            if (leaf == subtree)
+            {
+                return null;
+            }
+            else
+            {
+                var parent = leaf.parent;
+                if (parent == subtree)
+                {
+                    var other = subtree.OtherChild(leaf);
+                    other.parent = subtree.parent;
+                    subtree.recycle(tree);
+                    return other;
+                }
+                else
+                {
+                    if (parent == null)
+                        return null;
+
+                    parent.parent.ReplaceChild(parent, parent.OtherChild(leaf), tree);
+                    return subtree;
+                }
+            }
+        }
+
+        public static int numContacts { get; set; }
+
+        public static int step { get; set; }
 
 
-
+        public static void apply_bias_impulse(cpBody body, float jx, float jy, cpVect r)
+        {
+            //body.v_bias = vadd(body.v_bias, vmult(j, body.m_inv));
+            body.v_bias.x += jx * body.m_inv;
+            body.v_bias.y += jy * body.m_inv;
+            body.w_bias += body.i_inv * cpVect.cpvcross2(r.x, r.y, jx, jy);
+        }
     }
 }

@@ -58,7 +58,7 @@ namespace ChipmunkSharp
     } ;
 
     /// @private
-    public class cpPolyShape : cpShape
+    public class cpPolyShape : cpShape, ICollisionShape
     {
 
         public int numVerts { get { return verts.Count; } }
@@ -77,6 +77,7 @@ namespace ChipmunkSharp
             (poly, a, b, info) => cpPolyShapeSegmentQuery((cpPolyShape)poly, a, b, info));
 
 
+
         public static cpBB cpPolyShapeTransformVerts(cpPolyShape poly, cpVect p, cpVect rot)
         {
             List<cpVect> src = poly.verts;
@@ -88,8 +89,8 @@ namespace ChipmunkSharp
             for (int i = 0; i < poly.numVerts; i++)
             {
                 cpVect v = cpVect.cpvadd(p, cpVect.cpvrotate(src[i], rot));
-				var vx = p.x + src[i].x*rot.x - src[i].y*rot.y;
-				var vy = p.y + src[i].x*rot.y + src[i].y*rot.x;
+                var vx = p.x + src[i].x * rot.x - src[i].y * rot.y;
+                var vy = p.y + src[i].x * rot.y + src[i].y * rot.x;
                 dst[i] = v;
                 l = cpEnvironment.cpfmin(l, v.x);
                 r = cpEnvironment.cpfmax(r, v.x);
@@ -100,6 +101,8 @@ namespace ChipmunkSharp
             float radius = poly.r;
             return cpBB.cpBBNew(l - radius, b - radius, r + radius, t + radius);
         }
+
+
 
 
         public override void Draw(cpDraw m_debugDraw)
@@ -119,14 +122,14 @@ namespace ChipmunkSharp
 
             m_debugDraw.DrawPolygon(tVerts, numVerts, cpColor.Red);
 
-           
-        //// convert chipmunk points to coco points
-        //Point *pointArray = new Point[poly->numVerts];
-        //for (int i=0; i < poly->numVerts; i++) {
-        //    pointArray[i] = Point(poly->tVerts[i].x, poly->tVerts[i].y);
-        //}
-         
-        //DrawPrimitives::drawPoly(pointArray, poly->numVerts, true);
+
+            //// convert chipmunk points to coco points
+            //Point *pointArray = new Point[poly->numVerts];
+            //for (int i=0; i < poly->numVerts; i++) {
+            //    pointArray[i] = Point(poly->tVerts[i].x, poly->tVerts[i].y);
+            //}
+
+            //DrawPrimitives::drawPoly(pointArray, poly->numVerts, true);
 
         }
 
@@ -257,8 +260,8 @@ namespace ChipmunkSharp
             poly.verts = verts; // (cpVect)cpcalloc(2 * numVerts, sizeof(cpVect));
             poly.planes = new List<cpSplittingPlane>();  // (cpSplittingPlane)cpcalloc(2 * numVerts, sizeof(cpSplittingPlane));
             //poly.tVerts = poly.verts; // +numVerts;
-			poly.tVerts = new List<cpVect>();
-			poly.tPlanes = new List<cpSplittingPlane>(); //+ numVerts;
+            poly.tVerts = new List<cpVect>();
+            poly.tPlanes = new List<cpSplittingPlane>(); //+ numVerts;
 
             for (int i = 0; i < numVerts; i++)
             {
@@ -267,23 +270,21 @@ namespace ChipmunkSharp
                 cpVect n = cpVect.cpvnormalize(cpVect.cpvperp(cpVect.cpvsub(b, a)));
 
                 poly.verts[i] = a;
-				poly.planes.Add(new cpSplittingPlane(n, cpVect.cpvdot(n,a)));
-				poly.tPlanes.Add(new cpSplittingPlane(cpVect.ZERO, 0));
+                poly.planes.Add(new cpSplittingPlane(n, cpVect.cpvdot(n, a)));
+                poly.tPlanes.Add(new cpSplittingPlane(cpVect.ZERO, 0));
                 //poly.planes[i].n = n;
                 //poly.planes[i].d = cpVect.cpvdot(n, a);
-				poly.tVerts.Add(cpVect.ZERO);
+                poly.tVerts.Add(cpVect.ZERO);
             }
 
             // TODO: Why did I add this? It duplicates work from above.
-//            for (int i = 0; i < numVerts; i++)
-//            {
-//				var a = poly.verts[(i - 1 + numVerts) % numVerts];
-//				var b = poly.verts[i];
-//				poly.planes.Add(cpSplittingPlane.cpSplittingPlaneNew(a,b));
-//            }
+            //            for (int i = 0; i < numVerts; i++)
+            //            {
+            //				var a = poly.verts[(i - 1 + numVerts) % numVerts];
+            //				var b = poly.verts[i];
+            //				poly.planes.Add(cpSplittingPlane.cpSplittingPlaneNew(a,b));
+            //            }
         }
-
-
 
         /// Allocate a polygon shape.
 
@@ -425,6 +426,38 @@ namespace ChipmunkSharp
 
             return verts[idx];
         }
-    } ;
+
+        public Func<object, object, List<cpContact>>[] collisionTable
+        {
+            get
+            {
+                return new Func<object, object, List<cpContact>>[] {
+                    null,
+                    null,
+                    (o1,o2) => cpCollision.Poly2Poly(o1 as cpPolyShape ,o2 as cpPolyShape)
+                };
+            }
+        }
+        //(o1,o2) => cpCollision.Circle2Circle(o1 as cpCircleShape ,o2 as cpCircleShape),
+        public int collisionCode
+        {
+            get { return 2; }
+        }
+
+
+
+        //internal float valueOnAxis(cpVect n, float d)
+        //{
+        //    var verts = this.tVerts;
+        //    var m = cpVect.cpvdot2(n.x, n.y, verts[0], verts[1]);
+
+        //    for (var i = 2; i < verts.Count; i += 2)
+        //    {
+        //        m = Math.Min(m, cpVect.cpvdot2(n.x, n.y, verts[i], verts[i + 1]));
+        //    }
+
+        //    return m - d;
+        //}
+    }
 
 }

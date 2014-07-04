@@ -66,7 +66,12 @@ namespace ChipmunkSharp
                     if (body == bodyA || bodyA.IsStatic())
                     {
 
-                 
+                        //int numContacts = arb.numContacts;
+                        //cpContact contacts = arb.contacts;
+                        // Restore contact values back to the space's contact buffer memory
+                        //arb.contacts = contactBuffersHead;
+                        //memcpy(arb.contacts, contacts, numContacts*sizeof(cpContact));
+                        //(this, numContacts);
 
 
                         // Reinsert the arbiter into the arbiter cache
@@ -346,10 +351,10 @@ namespace ChipmunkSharp
         {
             if (sleepTimeThreshold != cpEnvironment.INFINITY_FLOAT)
             {
-                ShapeQuery(shape, (s, p, o) =>
+                ShapeQuery(shape, (s, p) =>
                 {
-                    activateTouchingHelper(shape, p, (cpShape)o);
-                }, shape);
+                    shape.body.Activate();
+                });
             }
         }
 
