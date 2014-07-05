@@ -31,14 +31,14 @@ namespace ChipmunkSharp
     {
 
 
-        public int a;
-        public int b;
+        public string a;
+        public string b;
 
 
         public CollisionHandler()
         {
-            this.a = 0;
-            this.b = 0;
+            this.a = "0";
+            this.b = "0";
         }
 
         public CollisionHandler Clone()
@@ -54,7 +54,12 @@ namespace ChipmunkSharp
         public Func<cpArbiter, cpSpace, bool> postSolve;
         public Action<cpArbiter, cpSpace> separate;
 
-        public cpBB bb { get; set; }
+
+
+        public float bb_l { get; set; }
+        public float bb_b { get; set; }
+        public float bb_r { get; set; }
+        public float bb_t { get; set; }
 
     };
 
@@ -683,21 +688,14 @@ namespace ChipmunkSharp
         //}
 
 
-        public cpBB bb
-        {
-            get
-            {
-                return null;
-            }
-            set
-            {
 
-            }
-        }
-
-        public int Key { get { return cpEnvironment.CP_HASH_PAIR(a.hashid, b.hashid); } }
+        public string Key { get { return cpEnvironment.hashPair(a.hashid, b.hashid); } }
 
 
+        public float bb_l { get; set; }
+        public float bb_b { get; set; }
+        public float bb_r { get; set; }
+        public float bb_t { get; set; }
     };
 
 

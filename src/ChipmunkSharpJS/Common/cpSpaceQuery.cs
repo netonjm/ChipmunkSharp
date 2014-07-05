@@ -53,8 +53,7 @@ namespace ChipmunkSharp
             var helper = new Action<cpShape>(shape =>
             {
                 if (
-                    !(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) &&
-                    shape.PointQuery(point)
+                    !(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) && shape.pointQuery(point) != null
                 )
                 {
                     func(shape);
@@ -94,7 +93,7 @@ namespace ChipmunkSharp
                 shape.update(body.Position, body.Rotation);
             }
 
-            var bb = shape.bb;
+            var bb = new cpBB(shape.bb_l, shape.bb_b, shape.bb_r, shape.bb_t);
 
             //shapeQueryContext context = {func, data, false};
             bool anyCollision = false;
@@ -171,7 +170,7 @@ namespace ChipmunkSharp
             {
                 if (
                     !(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) &&
-                     cpEnvironment.bbIntersects2(bb, shape.bb.l, shape.bb.b, shape.bb.r, shape.bb.t)
+                     cpEnvironment.bbIntersects2(bb, shape.bb_l, shape.bb_b, shape.bb_r, shape.bb_t)
                 )
                 {
                     func(shape);

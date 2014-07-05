@@ -112,6 +112,10 @@ namespace ChipmunkSharp
         // public cpArray allocatedBuffers;
         public int locked;
 
+        public CollisionHandler defaultHandler { get; set; }
+        //public Action<cpShape, cpShape> CollideShapes { get; set; }
+
+        /// returns true from inside a callback and objects cannot be added/removed.
         public bool isLocked
         {
             get { return (locked > 0); }
@@ -127,6 +131,12 @@ namespace ChipmunkSharp
 
         public CollisionHandler DefaultHandler { get; set; }
         #endregion
+
+        public List<ContactPoint> collideShapes(cpShape a, cpShape b)
+        {
+            cpEnvironment.assert((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode, "Collided shapes must be sorted by type");
+            return (a as ICollisionShape).collisionTable[(b as ICollisionShape).collisionCode](a, b);
+        }
 
         public cpSpace()
         {
@@ -204,9 +214,11 @@ namespace ChipmunkSharp
 
 
             // Cache the collideShapes callback function for the space.
-            this.CollideShapes = this.makeCollideShapes();
+            collideShapeFunc = this.makeCollideShapes();
 
         }
+
+        Action<cpShape, cpShape> collideShapeFunc;
 
         public Action<cpShape, cpShape> makeCollideShapes()
         {
@@ -220,7 +232,7 @@ namespace ChipmunkSharp
                 if (
                     // BBoxes must overlap
                     //!bbIntersects(a.bb, b.bb)
-                    !(a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t)
+                    !(a.bb_l <= b.bb_r && b.bb_l <= a.bb_r && a.bb_b <= b.bb_t && b.bb_b <= a.bb_t)
                     // Don't collide shapes attached to the same body.
                     || a.body == b.body
                     // Don't collide objects in the same non-zero group
@@ -251,7 +263,7 @@ namespace ChipmunkSharp
 
                 // Get an arbiter from space.arbiterSet for the two shapes.
                 // This is where the persistant contact magic comes from.
-                var arbHash = cpEnvironment.CP_HASH_PAIR(a.hashid, b.hashid);
+                var arbHash = cpEnvironment.hashPair(a.hashid, b.hashid);
 
                 var leaf = space.cachedArbiters.Get(arbHash);
                 if (leaf == null)
@@ -383,7 +395,7 @@ namespace ChipmunkSharp
             Lock();
             {
 
-                List<int> safeDelete = new List<int>();
+                List<string> safeDelete = new List<string>();
                 // Clear out old cached arbiters and call separate callbacks
                 foreach (var hash in this.cachedArbiters.leaves)
                 {
@@ -459,6 +471,14 @@ namespace ChipmunkSharp
                 }
             } this.Unlock(true);
         }
+
+
+        public float getCurrentTimeStep()
+        {
+            return this.curr_dt;
+        }
+
+        public void setIterations(int iter) { this.iterations = iter; }
 
 
         public void useSpatialHash(int dim, int count)
@@ -625,7 +645,7 @@ namespace ChipmunkSharp
 
         public void filterArbiters(cpBody body, cpShape filter)
         {
-            List<int> safeDelete = new List<int>();
+            List<string> safeDelete = new List<string>();
 
             foreach (var hash in this.cachedArbiters.leaves)
             {
@@ -699,11 +719,13 @@ namespace ChipmunkSharp
 
         /// Add a collision shape to the simulation.
         /// If the shape is attached to a static body, it will be added as a static shape.
-        public cpShape AddShape(cpShape shape)
+        public cpShape addShape(cpShape shape)
         {
 
-            var body = shape.body;
-            if (body.isStatic()) return this.addStaticShape(shape);
+            var body =shape.body ;
+
+            if (shape.body.isStatic())
+                return this.addStaticShape(shape);
 
             cpEnvironment.assertHard(shape.space != this, "You have already added this shape to this space. You must not add it a second time.");
             cpEnvironment.assertHard(shape.space != null, "You have already added this shape to another space. You cannot add it to a second.");
@@ -791,26 +813,26 @@ namespace ChipmunkSharp
         }
 
 
-        public CollisionHandler lookupHandler(int a, int b)
+        public CollisionHandler lookupHandler(string a, string b)
         {
             Leaf test;
-            if (collisionHandlers.TryGetValue(cpEnvironment.CP_HASH_PAIR(a, b), out test))
+            if (collisionHandlers.TryGetValue(cpEnvironment.hashPair(a, b), out test))
                 return (CollisionHandler)test.obj;
             else
                 return DefaultHandler;
         }
 
         /// Unset a collision handler.
-        public void removeCollisionHandler(int a, int b)
+        public void removeCollisionHandler(string a, string b)
         {
             cpEnvironment.assertSpaceUnlocked(this);
-            collisionHandlers.remove(cpEnvironment.CP_HASH_PAIR(a, b));
+            collisionHandlers.remove(cpEnvironment.hashPair(a, b));
 
         }
 
         /// Set a collision handler to be used whenever the two shapes with the given collision types collide.
         /// You can pass null for any function you don't want to implement.
-        public void addCollisionHandler(int a, int b,
+        public void addCollisionHandler(string a, string b,
             Func<cpArbiter, cpSpace, bool> begin, Func<cpArbiter, cpSpace, bool> preSolve, Func<cpArbiter, cpSpace, bool> postSolve, Action<cpArbiter, cpSpace> separate)
         {
 
@@ -831,7 +853,7 @@ namespace ChipmunkSharp
             if (separate != null)
                 handler.separate = separate;
 
-            collisionHandlers.insert(cpEnvironment.CP_HASH_PAIR(a, b), handler);
+            collisionHandlers.insert(cpEnvironment.hashPair(a, b), handler);
         }
 
 
@@ -872,7 +894,7 @@ namespace ChipmunkSharp
 
                         // Reinsert the arbiter into the arbiter cache
                         cpShape a = arb.a, b = arb.b;
-                        cachedArbiters.insert(cpEnvironment.CP_HASH_PAIR(a.hashid, b.hashid), arb);
+                        cachedArbiters.insert(cpEnvironment.hashPair(a.hashid, b.hashid), arb);
 
                         // Update the arbiter's state
                         arb.stamp = this.stamp;
@@ -1276,16 +1298,10 @@ namespace ChipmunkSharp
         //            shape.Update(body.Position, body.Rotation);
         //        }
 
-
-
         //        public void SetGravity(cpVect gravity)
         //        {
         //            this.gravity = gravity;
         //        }
-
-
-
-
 
         #region DEBUG DRAW
 
@@ -1505,10 +1521,5 @@ namespace ChipmunkSharp
 
 
 
-
-
-        public CollisionHandler defaultHandler { get; set; }
-
-        public Action<cpShape, cpShape> CollideShapes { get; set; }
     }
 }

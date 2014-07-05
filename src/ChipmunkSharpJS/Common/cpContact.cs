@@ -61,9 +61,9 @@ namespace ChipmunkSharp
         public float jnAcc, jtAcc, jBias;
         public float bias;
 
-        public int hash;
+        public string hash;
 
-        public ContactPoint(cpVect p, cpVect n, float dist, int hash)
+        public ContactPoint(cpVect p, cpVect n, float dist, string hash)
         {
             Init(p, n, dist, hash);
         }
@@ -74,7 +74,7 @@ namespace ChipmunkSharp
             return tmp;
         }
 
-        public void Init(cpVect p, cpVect n, float dist, int hash)
+        public void Init(cpVect p, cpVect n, float dist, string hash)
         {
             this.p = p;
             this.n = n;

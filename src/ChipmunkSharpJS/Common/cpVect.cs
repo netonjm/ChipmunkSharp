@@ -82,13 +82,13 @@ namespace ChipmunkSharp
 
         public override bool Equals(object obj)
         {
-			if (ReferenceEquals(this, obj)) return true;
-			return Equals(obj as cpVect);
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as cpVect);
         }
 
         public bool Equals(cpVect p)
         {
-			if (p == null) return false;
+            if (p == null) return false;
             return x == p.x && y == p.y;
         }
 
@@ -716,7 +716,7 @@ namespace ChipmunkSharp
 
         public static float cpvcross2(float x1, float y1, float x2, float y2)
         {
-            throw new NotImplementedException("Not implemented");
+            return x1 * y2 - y1 * x2;
             //return v1.x * v2.y - v1.y * v2.x;
         }
 

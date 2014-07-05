@@ -150,7 +150,7 @@ namespace ChipmunkSharp
         public cpArbiter arbiterList;
         public cpConstraint constraintList;
 
-        public cpComponentNode node;
+        //public cpComponentNode node;
 
         #endregion
 
@@ -243,8 +243,6 @@ namespace ChipmunkSharp
 
         }
 
-
-
         #endregion
 
         #region PUBLIC METHODS
@@ -274,13 +272,13 @@ namespace ChipmunkSharp
         /// Returns true if the body is sleeping.
         public bool isSleeping()
         {
-            return (node.root != null);// ((cpBody)0));
+            return this.nodeRoot != null;
         }
 
         /// Returns true if the body is static.
         public bool isStatic()
         {
-            return node.idleTime == cpEnvironment.Infinity;
+            return nodeIdleTime == cpEnvironment.Infinity;
         }
 
         /// Returns true if the body has not been added to a space.

@@ -112,36 +112,36 @@ namespace ChipmunkSharp
 
 
 
-        static bool QueryReject(cpShape a, cpShape b)
-        {
-            return (
-                // BBoxes must overlap
-                !a.bb.Intersects(b.bb)
-                // Don't collide shapes attached to the same body.
-                || a.body == b.body
-                // Don't collide objects in the same non-zero group
-                || (a.group != 0 && a.group == b.group)
-                // Don't collide objects that don't share at least on layer.
-                || !(a.layers != 0 & b.layers != 0)
-                // Don't collide infinite mass objects
-                || (a.body.Mass == cpEnvironment.Infinity && b.body.Mass == cpEnvironment.Infinity)
-            );
-        }
+        //static bool QueryReject(cpShape a, cpShape b)
+        //{
+        //    return (
+        //        // BBoxes must overlap
+        //        !a.bb.Intersects(b.bb)
+        //        // Don't collide shapes attached to the same body.
+        //        || a.body == b.body
+        //        // Don't collide objects in the same non-zero group
+        //        || (a.group != 0 && a.group == b.group)
+        //        // Don't collide objects that don't share at least on layer.
+        //        || !(a.layers != 0 & b.layers != 0)
+        //        // Don't collide infinite mass objects
+        //        || (a.body.Mass == cpEnvironment.Infinity && b.body.Mass == cpEnvironment.Infinity)
+        //    );
+        //}
 
-        // Callback from the spatial hash.
-        public List<ContactPoint> collideShapes(cpShape a, cpShape b)
-        {
-            cpEnvironment.assertWarn((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode, "Collided shapes must be sorted by type");
-            return (a as ICollisionShape).collisionTable[(b as ICollisionShape).collisionCode](a, b);
-            //return null;
+        //// Callback from the spatial hash.
+        //public List<ContactPoint> collideShapes(cpShape a, cpShape b)
+        //{
+        //    cpEnvironment.assertWarn((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode, "Collided shapes must be sorted by type");
+        //    return (a as ICollisionShape).collisionTable[(b as ICollisionShape).collisionCode](a, b);
+        //    //return null;
 
-        }
+        //}
 
-        private void UpdateFunc(cpShape shape)
-        {
-            var body = shape.body;
-            shape.update(body.Position, body.Rotation);
-        }
+        //private void UpdateFunc(cpShape shape)
+        //{
+        //    var body = shape.body;
+        //    shape.update(body.Position, body.Rotation);
+        //}
 
 
     }

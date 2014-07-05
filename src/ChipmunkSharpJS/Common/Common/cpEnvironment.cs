@@ -20,6 +20,7 @@
  */
 
 using ChipmunkSharp.Constraints;
+using ChipmunkSharp.Shapes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -84,19 +85,19 @@ namespace ChipmunkSharp
             shapeIDCounter = 0;
         }
 
-        public static int CP_HASH_PAIR(int A, int B)
+        public static string hashPair(string a, string b)
         {
-            return A ^ B;
+            return Convert.ToInt32(a) < Convert.ToInt32(b) ? a + " " + b : b + " " + a;
         }
 
-        public static int CP_HASH_PAIR(cpPolyShape poly, int B)
-        {
-            return poly.hashid ^ B;
-        }
-        public static int CP_HASH_PAIR(cpSegmentShape seg, int B)
-        {
-            return seg.hashid ^ B;
-        }
+        //public static int CP_HASH_PAIR(cpPolyShape poly, int B)
+        //{
+        //    return poly.hashid ^ B;
+        //}
+        //public static int CP_HASH_PAIR(cpSegmentShape seg, int B)
+        //{
+        //    return seg.hashid ^ B;
+        //}
 
         //===========================================================
 
@@ -415,7 +416,7 @@ namespace ChipmunkSharp
 
         public static void LogWrite(string message)
         {
-            //Console.WriteLine(message);
+            Console.WriteLine(message);
         }
 
         public static float PHYSICS_INFINITY { get { return Infinity; } }
@@ -466,10 +467,10 @@ namespace ChipmunkSharp
             return (m * sum1) / (6 * sum2);
         }
 
-        public static float areaForPoly(List<float> verts)
+        public static float areaForPoly(float[] verts)
         {
             float area = 0.0f;
-            for (int i = 0, len = verts.Count; i < len; i += 2)
+            for (int i = 0, len = verts.Length; i < len; i += 2)
             {
                 area += cpVect.cpvcross(new cpVect(verts[i], verts[i + 1]), new cpVect(verts[(i + 2) % len], verts[(i + 3) % len]));
             }
@@ -591,20 +592,21 @@ namespace ChipmunkSharp
             // Find the AABB for these nodes
             //var bb = nodes[offset].bb;
             Leaf node = nodes[offset];
-            float bb_l = node.bb.l,
-                bb_b = node.bb.b,
-                bb_r = node.bb.r,
-                bb_t = node.bb.t;
+            float bb_l = node.bb_l,
+        bb_b = node.bb_b,
+        bb_r = node.bb_r,
+        bb_t = node.bb_t;
+
 
             var end = offset + count;
             for (var i = offset + 1; i < end; i++)
             {
                 //bb = bbMerge(bb, nodes[i].bb);
                 node = nodes[i];
-                bb_l = Math.Min(bb_l, node.bb.l);
-                bb_b = Math.Min(bb_b, node.bb.b);
-                bb_r = Math.Max(bb_r, node.bb.r);
-                bb_t = Math.Max(bb_t, node.bb.t);
+                bb_l = Math.Min(bb_l, node.bb_l);
+                bb_b = Math.Min(bb_b, node.bb_b);
+                bb_r = Math.Max(bb_r, node.bb_r);
+                bb_t = Math.Max(bb_t, node.bb_t);
             }
 
             // Split it on it's longest axis
@@ -616,25 +618,20 @@ namespace ChipmunkSharp
             {
                 for (var i = offset; i < end; i++)
                 {
-                    bounds[2 * i + 0] = nodes[i].bb.l;
-                    bounds[2 * i + 1] = nodes[i].bb.r;
+                    bounds[2 * i + 0] = nodes[i].bb_l;
+                    bounds[2 * i + 1] = nodes[i].bb_r;
                 }
             }
             else
             {
                 for (var i = offset; i < end; i++)
                 {
-                    bounds[2 * i + 0] = nodes[i].bb.b;
-                    bounds[2 * i + 1] = nodes[i].bb.t;
+                    bounds[2 * i + 0] = nodes[i].bb_b;
+                    bounds[2 * i + 1] = nodes[i].bb_t;
                 }
             }
 
             //TODO: ¿?
-            //bounds.sort((a, b) =>
-            //{
-            //    // This might run faster if the function was moved out into the global scope.
-            //    return a - b;
-            //});
 
 
             float split = (bounds[count - 1] + bounds[count]) * 0.5f; // use the median as the split
@@ -669,7 +666,7 @@ namespace ChipmunkSharp
             {
                 Node tmp = null;
                 for (var i = offset; i < end; i++)
-                    tmp = tree.SubtreeInsert(tmp, nodes[i]);
+                    tmp = cpEnvironment.SubtreeInsert(tmp, nodes[i], tree);
                 return node;
             }
 
@@ -685,17 +682,19 @@ namespace ChipmunkSharp
 
         public static float bbTreeMergedArea2(Node node, float l, float b, float r, float t)
         {
-            return (Math.Max(node.bb.r, r) - Math.Min(node.bb.l, l)) * (Math.Max(node.bb.t, t) - Math.Min(node.bb.b, b));
+            return (Math.Max(node.bb_r, r) - Math.Min(node.bb_l, l)) * (Math.Max(node.bb_t, t) - Math.Min(node.bb_b, b));
+            //return (Math.Max(node.bb.r, r) - Math.Min(node.bb.l, l)) * (Math.Max(node.bb.t, t) - Math.Min(node.bb.b, b));
         }
 
         public static float bbProximity(Node a, Leaf b)
         {
-            return Math.Abs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + Math.Abs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
+            return Math.Abs(a.bb_l + a.bb_r - b.bb_l - b.bb_r) + Math.Abs(a.bb_b + a.bb_t - b.bb_b - b.bb_t);
+            //return Math.Abs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + Math.Abs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
         }
 
         public static void nodeRender(Node node, int depth)
         {
-            if (!node.IsLeaf && depth <= 10)
+            if (!node.isLeaf && depth <= 10)
             {
                 nodeRender(node.A, depth + 1);
                 nodeRender(node.B, depth + 1);
@@ -707,7 +706,7 @@ namespace ChipmunkSharp
                 str += " ";
             }
 
-            LogWrite(str + node.bb.b + " " + node.bb.t);
+            LogWrite(str + node.bb_b + " " + node.bb_t);
         }
 
         public static Node SubtreeRemove(Node subtree, Leaf leaf, cpBBTree tree)
@@ -718,11 +717,10 @@ namespace ChipmunkSharp
             }
             else
             {
-
                 var parent = leaf.parent;
                 if (parent == subtree)
                 {
-                    var other = subtree.OtherChild(leaf);
+                    var other = subtree.otherChild(leaf);
                     other.parent = subtree.parent;
                     subtree.recycle(tree);
                     return other;
@@ -732,7 +730,7 @@ namespace ChipmunkSharp
                     if (parent == null)
                         return null;
 
-                    parent.parent.ReplaceChild(parent, parent.OtherChild(leaf), tree);
+                    parent.parent.ReplaceChild(parent, parent.otherChild(leaf), tree);
                     return subtree;
                 }
             }
@@ -911,8 +909,267 @@ namespace ChipmunkSharp
             return (bb.l <= r && l <= bb.r && bb.b <= t && b <= bb.t);
         }
 
+        public static float bbProximity(Node a, Node b)
+        {
+            return Math.Abs(a.bb_l + a.bb_r - b.bb_l - b.bb_r) + Math.Abs(a.bb_b + a.bb_t - b.bb_b - b.bb_t);
+            // return Math.Abs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + Math.Abs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
+        }
+
+        public static float bbTreeMergedArea(Node a, Node b)
+        {
+            return (Math.Max(a.bb_r, b.bb_r) - Math.Min(a.bb_l, b.bb_l)) * (Math.Max(a.bb_t, b.bb_t) - Math.Min(a.bb_b, b.bb_b));
+            //return (Math.Max(a.bb.r, b.bb.r) - Math.Min(a.bb.l, b.bb.l)) * (Math.Max(a.bb.t, b.bb.t) - Math.Min(a.bb.b, b.bb.b));
+        }
+
+
+        public static bool bbTreeIntersectsNode(Node a, Node b)
+        {
+            return (a.bb_l <= b.bb_r && b.bb_l <= a.bb_r && a.bb_b <= b.bb_t && b.bb_b <= a.bb_t);
+            //return (a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t);
+        }
+
+
+        public static Node subtreeInsert(Node subtree, Leaf leaf, cpBBTree tree)
+        {
+            //	var s = new Error().stack;
+            //	traces[s] = traces[s] ? traces[s]+1 : 1;
+
+            if (subtree == null)
+            {
+                return leaf;
+            }
+            else if (subtree.isLeaf)
+            {
+                return tree.makeNode(leaf, subtree);
+            }
+            else
+            {
+                var cost_a = subtree.B.bbArea() + bbTreeMergedArea(subtree.A, leaf);
+                var cost_b = subtree.A.bbArea() + bbTreeMergedArea(subtree.B, leaf);
+
+                if (cost_a == cost_b)
+                {
+                    cost_a = bbProximity(subtree.A, leaf);
+                    cost_b = bbProximity(subtree.B, leaf);
+                }
+
+                if (cost_b < cost_a)
+                {
+                    subtree.setB(subtreeInsert(subtree.B, leaf, tree));
+                }
+                else
+                {
+                    subtree.setA(subtreeInsert(subtree.A, leaf, tree));
+                }
+
+                //		subtree.bb = bbMerge(subtree.bb, leaf.bb);
+                subtree.bb_l = Math.Min(subtree.bb_l, leaf.bb_l);
+                subtree.bb_b = Math.Min(subtree.bb_b, leaf.bb_b);
+                subtree.bb_r = Math.Max(subtree.bb_r, leaf.bb_r);
+                subtree.bb_t = Math.Max(subtree.bb_t, leaf.bb_t);
+
+
+                return subtree;
+            }
+        }
+
+        /// Check that a set of vertexes is convex and has a clockwise winding.
+        public static bool polyValidate(float[] verts)
+        {
+            var len = verts.Length;
+            for (var i = 0; i < len; i += 2)
+            {
+                var ax = verts[i];
+                var ay = verts[i + 1];
+                var bx = verts[(i + 2) % len];
+                var by = verts[(i + 3) % len];
+                var cx = verts[(i + 4) % len];
+                var cy = verts[(i + 5) % len];
+
+                //if(vcross(vsub(b, a), vsub(c, b)) > 0){
+                if (cpVect.cpvcross2(bx - ax, by - ay, cx - bx, cy - by) > 0)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+
+        internal static cpVect closestPointOnSegment2(float px, float py, float ax, float ay, float bx, float by)
+        {
+            var deltax = ax - bx;
+            var deltay = ay - by;
+            var t = cpfclamp01(cpVect.cpvdot2(deltax, deltay, px - bx, py - by) / cpVect.vlengthsq2(deltax, deltay));
+            return new cpVect(bx + deltax * t, by + deltay * t);
+        }
+
+
+        public static cpPolyShape BoxShape(cpBody body, float width, float height)
+        {
+            var hw = width / 2;
+            var hh = height / 2;
+
+            return BoxShape2(body, new cpBB(-hw, -hh, hw, hh));
+        }
+        public static cpPolyShape BoxShape2(cpBody body, cpBB box)
+        {
+            float[] verts = new float[] {
+		box.l, box.b,
+		box.l, box.t,
+		box.r, box.t,
+		box.r, box.b};
+
+            return new cpPolyShape(body, verts, cpVect.ZERO);
+        }
 
 
 
+
+
+        //public static cpNearestPointQueryInfo BoxShape2(cpBody body, cpBB box)
+        //{
+
+        //    cpPolyShape dev = new cpPolyShape(body, new float[] { box.b, box.l, box.r, box.t }, cpVect.ZERO);
+
+        //    var planes = dev.tPlanes;
+        //    var verts = dev.tVerts;
+
+        //    float v0x = verts[verts.Length - 2];
+        //    float v0y = verts[verts.Length - 1];
+        //    float minDist = Infinity;
+        //    cpVect closestPoint = cpVect.ZERO;
+        //    bool outside = false;
+
+        //    for (var i = 0; i < planes.Length; i++)
+        //    {
+        //        if (planes[i].compare(body.Position) > 0) outside = true;
+
+        //        var v1x = verts[i * 2];
+        //        var v1y = verts[i * 2 + 1];
+        //        var closest = closestPointOnSegment2(body.Position.x, body.Position.y, v0x, v0y, v1x, v1y);
+
+        //        var dist = cpVect.cpvdist(body.Position, closest);
+        //        if (dist < minDist)
+        //        {
+        //            minDist = dist;
+        //            closestPoint = closest;
+        //        }
+
+        //        v0x = v1x;
+        //        v0y = v1y;
+        //    }
+
+        //    return new cpNearestPointQueryInfo(dev, closestPoint, (outside ? minDist : -minDist));
+        //}
+
+
+        internal static cpSegmentQueryInfo circleSegmentQuery(cpShape shape, cpVect center, float r, cpVect a, cpVect b)
+        {
+            // offset the line to be relative to the circle
+            a = cpVect.cpvsub(a, center);
+            b = cpVect.cpvsub(b, center);
+
+            var qa = cpVect.cpvdot(a, a) - 2 * cpVect.cpvdot(a, b) + cpVect.cpvdot(b, b);
+            var qb = -2 * cpVect.cpvdot(a, a) + 2 * cpVect.cpvdot(a, b);
+            var qc = cpVect.cpvdot(a, a) - r * r;
+
+            var det = qb * qb - 4 * qa * qc;
+
+            if (det >= 0)
+            {
+                var t = (-qb - cpEnvironment.cpfsqrt(det)) / (2 * qa);
+                if (0 <= t && t <= 1)
+                {
+                    return new cpSegmentQueryInfo(shape, t, cpVect.cpvnormalize(cpVect.cpvlerp(a, b, t)));
+                }
+
+            }
+            return cpSegmentQueryInfo.CreateBlanck();
+        }
+
+        public static cpVect closestPointOnSegment(cpVect p, cpVect a, cpVect b)
+        {
+            var delta = cpVect.cpvsub(a, b);
+            var t = cpEnvironment.cpfclamp01(cpVect.cpvdot(delta, cpVect.cpvsub(p, b)) / cpVect.cpvlengthsq(delta));
+            return cpVect.cpvadd(b, cpVect.cpvmult(delta, t));
+        }
+
+        public static float segValueOnAxis(cpSegmentShape seg, cpVect n, float d)
+        {
+            // Like cpPolyValueOnAxis(), but for segments.
+            var a = cpVect.cpvdot(n, seg.ta) - seg.r;
+            var b = cpVect.cpvdot(n, seg.tb) - seg.r;
+            return Math.Min(a, b) - d;
+        }
+
+        public static void findPointsBehindSeg(List<ContactPoint> arr, cpSegmentShape seg, cpPolyShape poly, float pDist, int coef)
+        {
+            var dta = cpVect.cpvcross(seg.tn, seg.ta);
+            var dtb = cpVect.cpvcross(seg.tn, seg.tb);
+            var n = cpVect.cpvmult(seg.tn, coef);
+
+            var verts = poly.tVerts;
+            for (var i = 0; i < verts.Length; i += 2)
+            {
+                var vx = verts[i];
+                var vy = verts[i + 1];
+                if (cpVect.cpvdot2(vx, vy, n.x, n.y) < cpVect.cpvdot(seg.tn, seg.ta) * coef + seg.r)
+                {
+                    var dt = cpVect.cpvcross2(seg.tn.x, seg.tn.y, vx, vy);
+                    if (dta >= dt && dt >= dtb)
+                    {
+                        arr.Add(new ContactPoint(new cpVect(vx, vy), n, pDist, hashPair(poly.hashid, i.ToString())));
+                    }
+                }
+            }
+        }
+
+        public static int GRABABLE_MASK_BIT { get { return (1 << 31); } }
+        public static int NOT_GRABABLE_MASK { get { return ~GRABABLE_MASK_BIT; } }
+
+        public static Node SubtreeInsert(Node subtree, Leaf leaf, cpBBTree tree)
+        {
+            //	var s = new Error().stack;
+            //	traces[s] = traces[s] ? traces[s]+1 : 1;
+
+            if (subtree == null)
+            {
+                return leaf;
+            }
+            else if (subtree.isLeaf)
+            {
+                return tree.makeNode(leaf, subtree);
+            }
+            else
+            {
+                var cost_a = subtree.B.bbArea() + bbTreeMergedArea(subtree.A, leaf);
+                var cost_b = subtree.A.bbArea() + bbTreeMergedArea(subtree.B, leaf);
+
+                if (cost_a == cost_b)
+                {
+                    cost_a = bbProximity(subtree.A, leaf);
+                    cost_b = bbProximity(subtree.B, leaf);
+                }
+
+                if (cost_b < cost_a)
+                {
+                    subtree.setB(subtreeInsert(subtree.B, leaf, tree));
+                }
+                else
+                {
+                    subtree.setA(subtreeInsert(subtree.A, leaf, tree));
+                }
+
+                //		subtree.bb = bbMerge(subtree.bb, leaf.bb);
+                subtree.bb_l = Math.Min(subtree.bb_l, leaf.bb_l);
+                subtree.bb_b = Math.Min(subtree.bb_b, leaf.bb_b);
+                subtree.bb_r = Math.Max(subtree.bb_r, leaf.bb_r);
+                subtree.bb_t = Math.Max(subtree.bb_t, leaf.bb_t);
+
+                return subtree;
+            }
+        }
     }
 }

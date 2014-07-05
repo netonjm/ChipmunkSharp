@@ -28,7 +28,7 @@ namespace ChipmunkSharp.Shapes
 {
 
 
-    public struct cpNearestPointQueryInfo
+    public class cpNearestPointQueryInfo
     {
 
         /// The nearest shape, NULL if no shape was within range.
@@ -39,9 +39,9 @@ namespace ChipmunkSharp.Shapes
         public float d;
         /// The gradient of the signed distance function.
         /// The same as info.p/info.d, but accurate even for very small values of info.d.
-        public cpVect g;
+        //   public cpVect g;
 
-        public cpNearestPointQueryInfo(cpShape shape, cpVect p, float d, cpVect g)
+        public cpNearestPointQueryInfo(cpShape shape, cpVect p, float d)
         {
             /// The nearest shape, NULL if no shape was within range.
             this.shape = shape;
@@ -49,7 +49,7 @@ namespace ChipmunkSharp.Shapes
             this.p = p;
             /// The distance to the point. The distance is negative if the point is inside the shape.
             this.d = d;
-            this.g = g;
+            //    this.g = g;
         }
 
 
@@ -59,18 +59,18 @@ namespace ChipmunkSharp.Shapes
             shape = newPointInfo.shape;
             p = newPointInfo.p;
             d = newPointInfo.d;
-            g = newPointInfo.g;
+            // g = newPointInfo.g;
         }
 
-        public static cpNearestPointQueryInfo CreateEmpty()
-        {
-            cpNearestPointQueryInfo tmp = new cpNearestPointQueryInfo(null, cpVect.ZERO, cpEnvironment.Infinity, cpVect.ZERO);
-            return tmp;
-        }
+        //public static cpNearestPointQueryInfo CreateEmpty()
+        //{
+        //    cpNearestPointQueryInfo tmp = new cpNearestPointQueryInfo(null, cpVect.ZERO, cpEnvironment.Infinity, cpVect.ZERO);
+        //    return tmp;
+        //}
     }
 
     /// Extended point query info struct. Returned from calling pointQuery on a shape.
-    public struct cpSegmentQueryInfo
+    public class cpSegmentQueryInfo
     {
 
         /// The shape that was hit, NULL if no collision occured.

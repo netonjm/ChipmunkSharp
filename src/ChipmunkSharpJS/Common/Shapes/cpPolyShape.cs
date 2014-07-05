@@ -30,10 +30,15 @@ namespace ChipmunkSharp
 
 
 
+
     public class cpSplittingPlane
     {
         public cpVect n;
         public float d;
+
+
+        /// Initialize a polygon shape.
+        /// The vertexes must be convex and have a clockwise winding.
 
         public cpSplittingPlane(cpVect n, float d)
         {
@@ -42,68 +47,255 @@ namespace ChipmunkSharp
             this.d = d;
         }
 
-
-        public static cpSplittingPlane cpSplittingPlaneNew(cpVect a, cpVect b)
+        public float compare(cpVect v)
         {
-            cpVect n = cpVect.cpvnormalize(cpVect.cpvperp(cpVect.cpvsub(b, a)));
-            cpSplittingPlane plane = new cpSplittingPlane(n, cpVect.cpvdot(n, a));
-            return plane;
+            return cpVect.cpvdot(n, v) - d;
         }
 
-        public static float cpSplittingPlaneCompare(cpSplittingPlane plane, cpVect v)
-        {
-            return cpVect.cpvdot(plane.n, v) - plane.d;
-        }
-
-    } ;
+    }
 
     /// @private
     public class cpPolyShape : cpShape, ICollisionShape
     {
 
-        public int numVerts { get { return verts.Count; } }
+
+        public int numVerts { get { return verts.Length; } }
 
         //int numVerts;
-        public List<cpVect> verts, tVerts;
-        public List<cpSplittingPlane> planes, tPlanes;
+        public float[] verts, tVerts;
+        public cpSplittingPlane[] planes, tPlanes;
 
         public float r;
 
-        public static cpShapeClass polyClass = new cpShapeClass(
-            cpShapeType.CP_POLY_SHAPE,
-           (poly, p, rot) => cpPolyShapeCacheData((cpPolyShape)poly, p, rot),
-            (poly) => cpPolyShapeDestroy((cpPolyShape)poly),
-            (poly, p, info) => cpPolyShapeNearestPointQuery((cpPolyShape)poly, p, info),
-            (poly, a, b, info) => cpPolyShapeSegmentQuery((cpPolyShape)poly, a, b, info));
-
-
-
-        public static cpBB cpPolyShapeTransformVerts(cpPolyShape poly, cpVect p, cpVect rot)
+        public cpPolyShape(cpBody body, float[] verts, cpVect offset)
+            : base(body)
         {
-            List<cpVect> src = poly.verts;
-            List<cpVect> dst = poly.tVerts;
+            this.setVerts(verts, offset);
+            this.shapeType = cpShapeType.POLY_SHAPE;
+            //Shape.call(this, body);
+        }
 
-            float l = (float)cpEnvironment.Infinity, r = -(float)cpEnvironment.Infinity;
-            float b = (float)cpEnvironment.Infinity, t = -(float)cpEnvironment.Infinity;
+        public void setVerts(float[] verts, cpVect offset)
+        {
+            cpEnvironment.assert(verts.Length >= 4, "Polygons require some verts");
+            //cpEnvironment.assert(typeof(verts[0]) == 'number',
+            //        'Polygon verticies should be specified in a flattened list (eg [x1,y1,x2,y2,x3,y3,...])');
 
-            for (int i = 0; i < poly.numVerts; i++)
+            // Fail if the user attempts to pass a concave poly, or a bad winding.
+            cpEnvironment.assert(cpEnvironment.polyValidate(verts), "Polygon is concave or has a reversed winding. Consider using cpConvexHull()");
+
+            var len = verts.Length;
+            var numVerts = len >> 1;
+
+            // This a pretty bad way to do this in javascript. As a first pass, I want to keep
+            // the code similar to the C.
+            this.verts = new float[len];
+            this.tVerts = new float[len];
+            this.planes = new cpSplittingPlane[numVerts];
+            this.tPlanes = new cpSplittingPlane[numVerts];
+
+            for (var i = 0; i < len; i += 2)
             {
-                cpVect v = cpVect.cpvadd(p, cpVect.cpvrotate(src[i], rot));
-                var vx = p.x + src[i].x * rot.x - src[i].y * rot.y;
-                var vy = p.y + src[i].x * rot.y + src[i].y * rot.x;
-                dst[i] = v;
-                l = cpEnvironment.cpfmin(l, v.x);
-                r = cpEnvironment.cpfmax(r, v.x);
-                b = cpEnvironment.cpfmin(b, v.y);
-                t = cpEnvironment.cpfmax(t, v.y);
-            }
+                //var a = vadd(offset, verts[i]);
+                //var b = vadd(offset, verts[(i+1)%numVerts]);
+                var ax = verts[i] + offset.x;
+                var ay = verts[i + 1] + offset.y;
+                var bx = verts[(i + 2) % len] + offset.x;
+                var by = verts[(i + 3) % len] + offset.y;
 
-            float radius = poly.r;
-            return cpBB.cpBBNew(l - radius, b - radius, r + radius, t + radius);
+                // Inefficient, but only called during object initialization.
+                var n = cpVect.cpvnormalize(cpVect.cpvperp(new cpVect(bx - ax, by - ay)));
+
+                this.verts[i] = ax;
+                this.verts[i + 1] = ay;
+                this.planes[i >> 1] = new cpSplittingPlane(n, cpVect.cpvdot2(n.x, n.y, ax, ay));
+                this.tPlanes[i >> 1] = new cpSplittingPlane(new cpVect(0, 0), 0);
+            }
         }
 
 
+        public void transformVerts(cpVect p, cpVect rot)
+        {
+            var src = this.verts;
+            var dst = this.tVerts;
 
+            float l = cpEnvironment.Infinity, r = -cpEnvironment.Infinity;
+            float b = cpEnvironment.Infinity, t = -cpEnvironment.Infinity;
+
+            for (var i = 0; i < src.Length; i += 2)
+            {
+                //var v = vadd(p, vrotate(src[i], rot));
+                var x = src[i];
+                var y = src[i + 1];
+
+                var vx = p.x + x * rot.x - y * rot.y;
+                var vy = p.y + x * rot.y + y * rot.x;
+
+                //console.log('(' + x + ',' + y + ') -> (' + vx + ',' + vy + ')');
+
+                dst[i] = vx;
+                dst[i + 1] = vy;
+
+                l = Math.Min(l, vx);
+                r = Math.Max(r, vx);
+                b = Math.Min(b, vy);
+                t = Math.Max(t, vy);
+            }
+
+            this.bb_l = l;
+            this.bb_b = b;
+            this.bb_r = r;
+            this.bb_t = t;
+        }
+
+
+        public void transformAxes(cpVect p, cpVect rot)
+        {
+            var src = this.planes;
+            var dst = this.tPlanes;
+
+            for (var i = 0; i < src.Length; i++)
+            {
+                var n = cpVect.cpvrotate(src[i].n, rot);
+                dst[i].n = n;
+                dst[i].d = cpVect.cpvdot(p, n) + src[i].d;
+            }
+        }
+
+
+        public override void cacheData(cpVect p, cpVect rot)
+        {
+            this.transformAxes(p, rot);
+            this.transformVerts(p, rot);
+        }
+
+        public override cpNearestPointQueryInfo nearestPointQuery(cpVect p)
+        {
+            var planes = this.tPlanes;
+            var verts = this.tVerts;
+
+            var v0x = verts[verts.Length - 2];
+            var v0y = verts[verts.Length - 1];
+            var minDist = cpEnvironment.Infinity;
+            var closestPoint = cpVect.ZERO;
+            var outside = false;
+
+            for (var i = 0; i < planes.Length; i++)
+            {
+                if (planes[i].compare(p) > 0) outside = true;
+
+                var v1x = verts[i * 2];
+                var v1y = verts[i * 2 + 1];
+                var closest = cpEnvironment.closestPointOnSegment2(p.x, p.y, v0x, v0y, v1x, v1y);
+
+                var dist = cpVect.cpvdist(p, closest);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    closestPoint = closest;
+                }
+
+                v0x = v1x;
+                v0y = v1y;
+            }
+
+            return new cpNearestPointQueryInfo(this, closestPoint, (outside ? minDist : -minDist));
+        }
+
+        public override cpSegmentQueryInfo segmentQuery(cpVect a, cpVect b)
+        {
+            var axes = this.tPlanes;
+            var verts = this.tVerts;
+            var numVerts = axes.Length;
+            var len = numVerts * 2;
+
+            for (var i = 0; i < numVerts; i++)
+            {
+                var n = axes[i].n;
+                var an = cpVect.cpvdot(a, n);
+                if (axes[i].d > an) continue;
+
+                var bn = cpVect.cpvdot(b, n);
+                var t = (axes[i].d - an) / (bn - an);
+                if (t < 0 || 1 < t) continue;
+
+                var point = cpVect.cpvlerp(a, b, t);
+                var dt = -cpVect.cpvcross(n, point);
+                var dtMin = -cpVect.cpvcross2(n.x, n.y, verts[i * 2], verts[i * 2 + 1]);
+                var dtMax = -cpVect.cpvcross2(n.x, n.y, verts[(i * 2 + 2) % len], verts[(i * 2 + 3) % len]);
+
+                if (dtMin <= dt && dt <= dtMax)
+                {
+                    // josephg: In the original C code, this function keeps
+                    // looping through axes after finding a match. I *think*
+                    // this code is equivalent...
+                    return new cpSegmentQueryInfo(this, t, n);
+                }
+            }
+            return cpSegmentQueryInfo.CreateBlanck();
+        }
+
+        public float valueOnAxis(cpVect n, float d)
+        {
+            var verts = this.tVerts;
+            var m = cpVect.cpvdot2(n.x, n.y, verts[0], verts[1]);
+
+            for (var i = 2; i < verts.Length; i += 2)
+            {
+                m = Math.Min(m, cpVect.cpvdot2(n.x, n.y, verts[i], verts[i + 1]));
+            }
+
+            return m - d;
+        }
+
+        public bool containsVert(float vx, float vy)
+        {
+            var planes = this.tPlanes;
+
+            for (var i = 0; i < planes.Length; i++)
+            {
+                var n = planes[i].n;
+                var dist = cpVect.cpvdot2(n.x, n.y, vx, vy) - planes[i].d;
+                if (dist > 0) return false;
+            }
+
+            return true;
+        }
+
+        public bool containsVertPartial(float vx, float vy, cpVect n)
+        {
+            var planes = this.tPlanes;
+
+            for (var i = 0; i < planes.Length; i++)
+            {
+                var n2 = planes[i].n;
+                if (cpVect.cpvdot(n2, n) < 0) continue;
+                var dist = cpVect.cpvdot2(n2.x, n2.y, vx, vy) - planes[i].d;
+                if (dist > 0) return false;
+            }
+
+            return true;
+        }
+
+        public int getNumVerts()
+        {
+            return this.verts.Length / 2;
+        }
+
+        // These methods are provided for API compatibility with Chipmunk. I recommend against using
+        // them - just access the poly.verts list directly.
+        public cpVect getVert(int i)
+        {
+            return new cpVect(this.verts[i * 2], this.verts[i * 2 + 1]);
+        }
+
+        public List<cpVect> getVers()
+        {
+            List<cpVect> dev = new List<cpVect>();
+            for (int i = 0; i < getNumVerts(); i++)
+                dev.Add(getVert(i));
+            return dev;
+        }
 
         public override void Draw(cpDraw m_debugDraw)
         {
@@ -120,7 +312,7 @@ namespace ChipmunkSharp
             //    lastPoint = p;
             //}
 
-            m_debugDraw.DrawPolygon(tVerts, numVerts, cpColor.Red);
+            m_debugDraw.DrawPolygon(getVers(), getNumVerts(), cpColor.Red);
 
 
             //// convert chipmunk points to coco points
@@ -134,77 +326,30 @@ namespace ChipmunkSharp
         }
 
 
-        public static void cpPolyShapeTransformAxes(cpPolyShape poly, cpVect p, cpVect rot)
+        public Func<object, object, List<ContactPoint>>[] collisionTable
         {
-            List<cpSplittingPlane> src = poly.planes;
-            List<cpSplittingPlane> dst = poly.tPlanes;
-
-            for (int i = 0; i < poly.numVerts; i++)
+            get
             {
-                cpVect n = cpVect.cpvrotate(src[i].n, rot);
-                dst[i].n = n;
-                dst[i].d = cpVect.cpvdot(p, n) + src[i].d;
+                return new Func<object, object, List<ContactPoint>>[] {
+                    null,
+                    null,
+                    (o1,o2) => cpCollision.Poly2Poly(o1 as cpPolyShape ,o2 as cpPolyShape)
+                };
             }
         }
-
-        public static cpBB cpPolyShapeCacheData(cpPolyShape poly, cpVect p, cpVect rot)
+        //(o1,o2) => cpCollision.Circle2Circle(o1 as cpCircleShape ,o2 as cpCircleShape),
+        public int collisionCode
         {
-            cpPolyShapeTransformAxes(poly, p, rot);
-            cpBB bb = poly.bb = cpPolyShapeTransformVerts(poly, p, rot);
-
-            return bb;
+            get { return 2; }
         }
 
 
-        public static void cpPolyShapeDestroy(cpPolyShape poly)
-        {
-            //cpfree(poly.verts);
-            //cpfree(poly.planes);
-        }
+    }
+
+}
 
 
-        public static void cpPolyShapeNearestPointQuery(cpPolyShape poly, cpVect p, cpNearestPointQueryInfo info)
-        {
-            int count = poly.numVerts;
-            List<cpSplittingPlane> planes = poly.tPlanes;
-            List<cpVect> verts = poly.tVerts;
-            float r = poly.r;
-
-            cpVect v0 = verts[count - 1];
-            float minDist = cpEnvironment.Infinity;
-            cpVect closestPoint = cpVect.ZERO;
-            cpVect closestNormal = cpVect.ZERO;
-            bool outside = false;
-
-            for (int i = 0; i < count; i++)
-            {
-                if (cpSplittingPlane.cpSplittingPlaneCompare(planes[i], p) > 0.0f) outside = true;
-
-                cpVect v1 = verts[i];
-                cpVect closest = cpVect.closestPointOnSegment(p, v0, v1);
-
-                float dist = cpVect.cpvdist(p, closest);
-                if (dist < minDist)
-                {
-                    minDist = dist;
-                    closestPoint = closest;
-                    closestNormal = planes[i].n;
-                }
-
-                v0 = v1;
-            }
-
-            float dist2 = (outside ? minDist : -minDist);
-            cpVect g = cpVect.cpvmult(cpVect.cpvsub(p, closestPoint), 1.0f / dist2);
-
-            info.shape = (cpShape)poly;
-            info.p = cpVect.cpvadd(closestPoint, cpVect.cpvmult(g, r));
-            info.d = dist2 - r;
-
-            // Use the normal of the closest segment if the distance is small.
-            info.g = (minDist > cpEnvironment.MAGIC_EPSILON ? g : closestNormal);
-        }
-
+/*
 
         public static void cpPolyShapeSegmentQuery(cpPolyShape poly, cpVect a, cpVect b, cpSegmentQueryInfo info)
         {
@@ -249,42 +394,6 @@ namespace ChipmunkSharp
             }
         }
 
-
-        public static void setUpVerts(cpPolyShape poly, List<cpVect> verts, cpVect offset)
-        {
-            int numVerts = verts.Count;
-
-            // Fail if the user attempts to pass a concave poly, or a bad winding.
-            cpEnvironment.assertHard(cpPolyShape.cpPolyValidate(verts, numVerts), "Polygon is concave or has a reversed winding. Consider using cpConvexHull() or CP_CONVEX_HULL().");
-            //poly.numVerts = numVerts;
-            poly.verts = verts; // (cpVect)cpcalloc(2 * numVerts, sizeof(cpVect));
-            poly.planes = new List<cpSplittingPlane>();  // (cpSplittingPlane)cpcalloc(2 * numVerts, sizeof(cpSplittingPlane));
-            //poly.tVerts = poly.verts; // +numVerts;
-            poly.tVerts = new List<cpVect>();
-            poly.tPlanes = new List<cpSplittingPlane>(); //+ numVerts;
-
-            for (int i = 0; i < numVerts; i++)
-            {
-                cpVect a = cpVect.cpvadd(offset, verts[i]);
-                cpVect b = cpVect.cpvadd(offset, verts[(i + 1) % numVerts]);
-                cpVect n = cpVect.cpvnormalize(cpVect.cpvperp(cpVect.cpvsub(b, a)));
-
-                poly.verts[i] = a;
-                poly.planes.Add(new cpSplittingPlane(n, cpVect.cpvdot(n, a)));
-                poly.tPlanes.Add(new cpSplittingPlane(cpVect.ZERO, 0));
-                //poly.planes[i].n = n;
-                //poly.planes[i].d = cpVect.cpvdot(n, a);
-                poly.tVerts.Add(cpVect.ZERO);
-            }
-
-            // TODO: Why did I add this? It duplicates work from above.
-            //            for (int i = 0; i < numVerts; i++)
-            //            {
-            //				var a = poly.verts[(i - 1 + numVerts) % numVerts];
-            //				var b = poly.verts[i];
-            //				poly.planes.Add(cpSplittingPlane.cpSplittingPlaneNew(a,b));
-            //            }
-        }
 
         /// Allocate a polygon shape.
 
@@ -425,39 +534,4 @@ namespace ChipmunkSharp
             cpEnvironment.assertHard(0 <= idx && idx < cpPolyShapeGetNumVerts(this), "Index out of range.");
 
             return verts[idx];
-        }
-
-        public Func<object, object, List<ContactPoint>>[] collisionTable
-        {
-            get
-            {
-                return new Func<object, object, List<ContactPoint>>[] {
-                    null,
-                    null,
-                    (o1,o2) => cpCollision.Poly2Poly(o1 as cpPolyShape ,o2 as cpPolyShape)
-                };
-            }
-        }
-        //(o1,o2) => cpCollision.Circle2Circle(o1 as cpCircleShape ,o2 as cpCircleShape),
-        public int collisionCode
-        {
-            get { return 2; }
-        }
-
-
-
-        //internal float valueOnAxis(cpVect n, float d)
-        //{
-        //    var verts = this.tVerts;
-        //    var m = cpVect.cpvdot2(n.x, n.y, verts[0], verts[1]);
-
-        //    for (var i = 2; i < verts.Count; i += 2)
-        //    {
-        //        m = Math.Min(m, cpVect.cpvdot2(n.x, n.y, verts[i], verts[i + 1]));
-        //    }
-
-        //    return m - d;
-        //}
-    }
-
-}
+        }*/
