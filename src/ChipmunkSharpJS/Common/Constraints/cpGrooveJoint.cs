@@ -114,7 +114,7 @@ namespace ChipmunkSharp.Constraints
             }
 
             // Calculate mass tensor
-            cpEnvironment.k_tensor(a, b, this.r1, this.r2, this.k1, this.k2);
+            cp.k_tensor(a, b, this.r1, this.r2, this.k1, this.k2);
 
             // compute max impulse
             this.jMaxLen = this.maxForce * dt;
@@ -122,13 +122,13 @@ namespace ChipmunkSharp.Constraints
             // calculate bias velocity
             var delta = b.Position.Add(this.r2).Sub(a.Position.Add(this.r1)); //  vsub(vadd(b.p, this.r2), vadd(a.p, this.r1));
 
-            this.bias = delta.Multiply(-cpEnvironment.bias_coef(this.errorBias, dt) / dt).Clamp(this.maxBias);
+            this.bias = delta.Multiply(-cp.bias_coef(this.errorBias, dt) / dt).Clamp(this.maxBias);
             //this.bias = vclamp(vmult(delta, -bias_coef(this.errorBias, dt) / dt), this.maxBias);
         }
 
         public override void ApplyCachedImpulse(float dt_coef)
         {
-            cpEnvironment.apply_impulses(this.a, this.b, this.r1, this.r2, this.jAcc.x * dt_coef, this.jAcc.y * dt_coef);
+            cp.apply_impulses(this.a, this.b, this.r1, this.r2, this.jAcc.x * dt_coef, this.jAcc.y * dt_coef);
         }
 
         public cpVect grooveConstrain(cpVect j)
@@ -142,14 +142,14 @@ namespace ChipmunkSharp.Constraints
         {
 
             // compute impulse
-            var vr = cpEnvironment.relative_velocity(a, b, r1, r2);
+            var vr = cp.relative_velocity(a, b, r1, r2);
 
             var j = cpVect.mult_k(this.bias.Sub(vr), this.k1, this.k2);
             var jOld = this.jAcc;
             this.jAcc = this.grooveConstrain(jOld.Add(j));
 
             // apply impulse
-            cpEnvironment.apply_impulses(a, b, this.r1, this.r2, this.jAcc.x - jOld.x, this.jAcc.y - jOld.y);
+            cp.apply_impulses(a, b, this.r1, this.r2, this.jAcc.x - jOld.x, this.jAcc.y - jOld.y);
         }
 
         public override float GetImpulse()

@@ -84,7 +84,6 @@ using System.Linq;
 namespace ChipmunkSharp
 {
 
-
     public interface IObjectBox
     {
         float bb_l { get; set; }
@@ -102,7 +101,9 @@ namespace ChipmunkSharp
     public class Node : IObjectBox
     {
 
+        #region MyRegion
 
+        #endregion
 
         public bool isLeaf;
 
@@ -157,7 +158,7 @@ namespace ChipmunkSharp
         public void ReplaceChild(Node child, Node value, cpBBTree tree)
         {
 
-            cpEnvironment.assertSoft(child == this.A || child == this.B, "Node is not a child of parent.");
+            cp.assertSoft(child == this.A || child == this.B, "Node is not a child of parent.");
 
             if (this.A == child)
             {
@@ -188,7 +189,7 @@ namespace ChipmunkSharp
         public virtual void markLeafQuery(Leaf leaf, bool left, cpBBTree tree, Func<object, object, object> func)
         {
 
-            if (cpEnvironment.bbTreeIntersectsNode(leaf, this))
+            if (cp.bbTreeIntersectsNode(leaf, this))
             {
                 this.A.markLeafQuery(leaf, left, tree, func);
                 this.B.markLeafQuery(leaf, left, tree, func);
@@ -229,8 +230,7 @@ namespace ChipmunkSharp
             return (this.bb_l <= bb.r && bb.l <= this.bb_r && this.bb_b <= bb.t && bb.b <= this.bb_t);
         }
 
-
-         float IObjectBox.bb_l
+        float IObjectBox.bb_l
         {
             get
             {
@@ -246,7 +246,7 @@ namespace ChipmunkSharp
             }
         }
 
-         float IObjectBox.bb_b
+        float IObjectBox.bb_b
         {
             get
             {
@@ -262,7 +262,7 @@ namespace ChipmunkSharp
             }
         }
 
-         float IObjectBox.bb_r
+        float IObjectBox.bb_r
         {
             get
             {
@@ -278,7 +278,7 @@ namespace ChipmunkSharp
             }
         }
 
-         float IObjectBox.bb_t
+        float IObjectBox.bb_t
         {
             get
             {
@@ -320,13 +320,8 @@ namespace ChipmunkSharp
             this.stamp = 1;
             this.pairs = null;
 
-            cpEnvironment.numLeaves++;
+            cp.numLeaves++;
         }
-
-
-
-
-
 
         public void clearPairs(cpBBTree tree)
         {
@@ -341,12 +336,12 @@ namespace ChipmunkSharp
                 if (pair.leafA == this)
                 {
                     next = pair.nextA;
-                    cpEnvironment.unlinkThread(pair.prevB, pair.leafB, pair.nextB);
+                    cp.unlinkThread(pair.prevB, pair.leafB, pair.nextB);
                 }
                 else
                 {
                     next = pair.nextB;
-                    cpEnvironment.unlinkThread(pair.prevA, pair.leafA, pair.nextA);
+                    cp.unlinkThread(pair.prevA, pair.leafA, pair.nextA);
                 }
                 pair.recycle(tree);
                 pair = next;
@@ -360,7 +355,7 @@ namespace ChipmunkSharp
 
         public override void markLeafQuery(Leaf leaf, bool left, cpBBTree tree, Func<object, object, object> func)
         {
-            if (cpEnvironment.bbTreeIntersectsNode(leaf, this))
+            if (cp.bbTreeIntersectsNode(leaf, this))
             {
                 if (left)
                 {
@@ -433,8 +428,8 @@ namespace ChipmunkSharp
 
                 tree.getBB(this.obj, this);
 
-                root = cpEnvironment.SubtreeRemove(root, this, tree);
-                tree.root = cpEnvironment.SubtreeInsert(root, this, tree);//tree.root = SubtreeInsert(root, this, tree);
+                root = cp.SubtreeRemove(root, this, tree);
+                tree.root = cp.subtreeInsert(root, this, tree);//tree.root = SubtreeInsert(root, this, tree);
                 this.clearPairs(tree);
                 this.stamp = tree.getStamp();
 
@@ -518,7 +513,6 @@ namespace ChipmunkSharp
         {
             if (staticIndex.Count > 0)
             {
-                //var query = staticIndex.Query;
 
                 each((obj) =>
                 {
@@ -601,7 +595,7 @@ namespace ChipmunkSharp
             }
             else
             {
-                cpEnvironment.numPairs++;
+                cp.numPairs++;
                 return new Pair(leafA, nextA, leafB, nextB);
             }
         }
@@ -621,7 +615,7 @@ namespace ChipmunkSharp
             var leaf = new Leaf(this, value);
             this.leaves.Add(hashid, leaf);
 
-            this.root = cpEnvironment.subtreeInsert(root, leaf, this);
+            this.root = cp.subtreeInsert(root, leaf, this);
 
             leaf.stamp = getStamp();
             leaf.AddPairs(this);
@@ -637,7 +631,7 @@ namespace ChipmunkSharp
                 //remove elements adds more functionality than simple array
                 leaves.Remove(key);
                 if (root != null)
-                    this.root = cpEnvironment.SubtreeRemove(this.root, leaf, this);
+                    this.root = cp.SubtreeRemove(this.root, leaf, this);
                 leaf.clearPairs(this);
                 leaf.recycle(this);
             }
@@ -687,7 +681,7 @@ namespace ChipmunkSharp
             }
             else
             {
-                cpEnvironment.numNodes++;
+                cp.numNodes++;
                 return new Node(a, b, this);
             }
         }
@@ -822,14 +816,14 @@ namespace ChipmunkSharp
         public float NodeSegmentQuery(Node node, cpVect a, cpVect b)
         {
             float idx = 1 / (b.x - a.x);
-            float tx1 = (node.bb_l == a.x ? -cpEnvironment.Infinity : (node.bb_l - a.x) * idx);
-            float tx2 = (node.bb_r == a.x ? cpEnvironment.Infinity : (node.bb_r - a.x) * idx);
+            float tx1 = (node.bb_l == a.x ? -cp.Infinity : (node.bb_l - a.x) * idx);
+            float tx2 = (node.bb_r == a.x ? cp.Infinity : (node.bb_r - a.x) * idx);
             float txmin = Math.Min(tx1, tx2);
             float txmax = Math.Max(tx1, tx2);
 
             float idy = 1 / (b.y - a.y);
-            float ty1 = (node.bb_b == a.y ? -cpEnvironment.Infinity : (node.bb_b - a.y) * idy);
-            float ty2 = (node.bb_t == a.y ? cpEnvironment.Infinity : (node.bb_t - a.y) * idy);
+            float ty1 = (node.bb_b == a.y ? -cp.Infinity : (node.bb_b - a.y) * idy);
+            float ty2 = (node.bb_t == a.y ? cp.Infinity : (node.bb_t - a.y) * idy);
             float tymin = Math.Min(ty1, ty2);
             float tymax = Math.Max(ty1, ty2);
 
@@ -841,7 +835,7 @@ namespace ChipmunkSharp
                 if (0.0 <= max_ && min_ <= 1.0f) return Math.Max(min_, 0.0f);
             }
 
-            return cpEnvironment.Infinity;
+            return cp.Infinity;
         }
 
         public void query(cpBB bb, Func<object, object, object> func)
@@ -881,7 +875,7 @@ namespace ChipmunkSharp
                 nodes.Add(i++, hashid.Value);
             SubtreeRecycle(root);
 
-            root = cpEnvironment.partitionNodes(this, nodes, 0, nodes.Count);
+            root = cp.partitionNodes(this, nodes, 0, nodes.Count);
         }
 
         public void PairInsert(Leaf a, Leaf b)
@@ -904,7 +898,7 @@ namespace ChipmunkSharp
         public void Log()
         {
             if (this.root != null)
-                cpEnvironment.nodeRender(this.root, 0);
+                cp.nodeRender(this.root, 0);
         }
 
 

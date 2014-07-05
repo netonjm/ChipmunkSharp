@@ -93,10 +93,10 @@ namespace ChipmunkSharp
         public static cpBB Merge(cpBB a, cpBB b)
         {
             return new cpBB(
-                cpEnvironment.cpfmin(a.l, b.l),
-                cpEnvironment.cpfmin(a.b, b.b),
-                cpEnvironment.cpfmax(a.r, b.r),
-                cpEnvironment.cpfmax(a.t, b.t)
+                cp.cpfmin(a.l, b.l),
+                cp.cpfmin(a.b, b.b),
+                cp.cpfmax(a.r, b.r),
+                cp.cpfmax(a.t, b.t)
             );
         }
 
@@ -108,10 +108,10 @@ namespace ChipmunkSharp
         public static cpBB Expand(cpBB bb, cpVect v)
         {
             return new cpBB(
-                cpEnvironment.cpfmin(bb.l, v.x),
-                cpEnvironment.cpfmin(bb.b, v.y),
-                cpEnvironment.cpfmax(bb.r, v.x),
-                cpEnvironment.cpfmax(bb.t, v.y)
+                cp.cpfmin(bb.l, v.x),
+                cp.cpfmin(bb.b, v.y),
+                cp.cpfmax(bb.r, v.x),
+                cp.cpfmax(bb.t, v.y)
             );
         }
 
@@ -140,7 +140,7 @@ namespace ChipmunkSharp
         /// Merges @c a and @c b and returns the area of the merged bounding box.
         public static float MergedArea(cpBB a, cpBB b)
         {
-            return (cpEnvironment.cpfmax(a.r, b.r) - cpEnvironment.cpfmin(a.l, b.l)) * (cpEnvironment.cpfmax(a.t, b.t) - cpEnvironment.cpfmin(a.b, b.b));
+            return (cp.cpfmax(a.r, b.r) - cp.cpfmin(a.l, b.l)) * (cp.cpfmax(a.t, b.t) - cp.cpfmin(a.b, b.b));
         }
 
         public float MergedArea(cpBB a)
@@ -153,26 +153,26 @@ namespace ChipmunkSharp
         public static float SegmentQuery(cpBB bb, cpVect a, cpVect b)
         {
             float idx = 1.0f / (b.x - a.x);
-            float tx1 = (bb.l == a.x ? -cpEnvironment.Infinity : (bb.l - a.x) * idx);
-            float tx2 = (bb.r == a.x ? cpEnvironment.Infinity : (bb.r - a.x) * idx);
-            float txmin = cpEnvironment.cpfmin(tx1, tx2);
-            float txmax = cpEnvironment.cpfmax(tx1, tx2);
+            float tx1 = (bb.l == a.x ? -cp.Infinity : (bb.l - a.x) * idx);
+            float tx2 = (bb.r == a.x ? cp.Infinity : (bb.r - a.x) * idx);
+            float txmin = cp.cpfmin(tx1, tx2);
+            float txmax = cp.cpfmax(tx1, tx2);
 
             float idy = 1.0f / (b.y - a.y);
-            float ty1 = (bb.b == a.y ? -cpEnvironment.Infinity : (bb.b - a.y) * idy);
-            float ty2 = (bb.t == a.y ? cpEnvironment.Infinity : (bb.t - a.y) * idy);
-            float tymin = cpEnvironment.cpfmin(ty1, ty2);
-            float tymax = cpEnvironment.cpfmax(ty1, ty2);
+            float ty1 = (bb.b == a.y ? -cp.Infinity : (bb.b - a.y) * idy);
+            float ty2 = (bb.t == a.y ? cp.Infinity : (bb.t - a.y) * idy);
+            float tymin = cp.cpfmin(ty1, ty2);
+            float tymax = cp.cpfmax(ty1, ty2);
 
             if (tymin <= txmax && txmin <= tymax)
             {
-                float min = cpEnvironment.cpfmax(txmin, tymin);
-                float max = cpEnvironment.cpfmin(txmax, tymax);
+                float min = cp.cpfmax(txmin, tymin);
+                float max = cp.cpfmin(txmax, tymax);
 
-                if (0.0 <= max && min <= 1.0) return cpEnvironment.cpfmax(min, 0.0f);
+                if (0.0 <= max && min <= 1.0) return cp.cpfmax(min, 0.0f);
             }
 
-            return cpEnvironment.Infinity;
+            return cp.Infinity;
         }
 
         public float SegmentQuery(cpVect a, cpVect b)
@@ -184,7 +184,7 @@ namespace ChipmunkSharp
         /// Return true if the bounding box intersects the line segment with ends @c a and @c b.
         public static bool IntersectsSegment(cpBB bb, cpVect a, cpVect b)
         {
-            return (SegmentQuery(bb, a, b) != cpEnvironment.Infinity);
+            return (SegmentQuery(bb, a, b) != cp.Infinity);
         }
         public bool IntersectsSegment(cpVect a, cpVect b)
         {
@@ -195,7 +195,7 @@ namespace ChipmunkSharp
         /// Clamp a vector to a bounding box.
         public static cpVect ClampVect(cpBB bb, cpVect v)
         {
-            return cpVect.cpv(cpEnvironment.cpfclamp(v.x, bb.l, bb.r), cpEnvironment.cpfclamp(v.y, bb.b, bb.t));
+            return cpVect.cpv(cp.cpfclamp(v.x, bb.l, bb.r), cp.cpfclamp(v.y, bb.b, bb.t));
         }
         public cpVect ClampVect(cpVect v)
         {

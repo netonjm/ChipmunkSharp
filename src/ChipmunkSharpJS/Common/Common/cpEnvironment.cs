@@ -44,7 +44,7 @@ namespace ChipmunkSharp
 
     } ;
 
-    public class cpEnvironment
+    public class cp
     {
 
         // Chipmunk 6.2.1
@@ -361,7 +361,6 @@ namespace ChipmunkSharp
 
         #region ASSERTS
 
-        #endregion
 
 
         public static void assert(string p2)
@@ -418,6 +417,8 @@ namespace ChipmunkSharp
         {
             Console.WriteLine(message);
         }
+
+        #endregion
 
         public static float PHYSICS_INFINITY { get { return Infinity; } }
 
@@ -478,29 +479,29 @@ namespace ChipmunkSharp
             return -area / 2;
         }
 
-        public static cpVect centroidForPoly(List<float> verts)
+        public static cpVect centroidForPoly(float[] verts)
         {
-            var sum = 0.0f;
-            var vsum = cpVect.ZERO;
+            float sum = 0;
+            var vsum = new cpVect(0, 0);
 
-            for (int i = 0, len = verts.Count; i < len; i += 2)
+            for (int i = 0, len = verts.Length; i < len; i += 2)
             {
                 var v1 = new cpVect(verts[i], verts[i + 1]);
                 var v2 = new cpVect(verts[(i + 2) % len], verts[(i + 3) % len]);
                 var cross = cpVect.cpvcross(v1, v2);
 
                 sum += cross;
-                vsum = vsum.Add(v1.Add(v2).Multiply(cross)); //  vadd(vsum, vmult(vadd(v1, v2), cross));
+                vsum = cpVect.cpvadd(vsum, cpVect.cpvmult(cpVect.cpvadd(v1, v2), cross));
             }
 
-            return vsum.Multiply(1 / (3 * sum));
+            return cpVect.cpvmult(vsum, 1 / (3 * sum));
         }
 
-        public static void recenterPoly(ref List<float> verts)
+        public static void recenterPoly(float[] verts)
         {
             var centroid = centroidForPoly(verts);
 
-            for (var i = 0; i < verts.Count; i += 2)
+            for (var i = 0; i < verts.Length; i += 2)
             {
                 verts[i] -= centroid.x;
                 verts[i + 1] -= centroid.y;
@@ -666,7 +667,7 @@ namespace ChipmunkSharp
             {
                 Node tmp = null;
                 for (var i = offset; i < end; i++)
-                    tmp = cpEnvironment.SubtreeInsert(tmp, nodes[i], tree);
+                    tmp = cp.subtreeInsert(tmp, nodes[i], tree);
                 return node;
             }
 
@@ -740,7 +741,6 @@ namespace ChipmunkSharp
 
         public static int step { get; set; }
 
-
         public static void apply_bias_impulse(cpBody body, float jx, float jy, cpVect r)
         {
             //body.v_bias = vadd(body.v_bias, vmult(j, body.m_inv));
@@ -809,7 +809,7 @@ namespace ChipmunkSharp
         public static void componentActivate(cpBody root)
         {
             if (root == null || !root.isSleeping()) return;
-            cpEnvironment.assertHard(!root.isRogue(), "Internal Error: componentActivate() called on a rogue body.");
+            cp.assertHard(!root.isRogue(), "Internal Error: componentActivate() called on a rogue body.");
 
             var space = root.space;
             cpBody body = root;
@@ -828,7 +828,6 @@ namespace ChipmunkSharp
 
 
             space.sleepingComponents.Remove(root);
-            //deleteObjFromList(space.sleepingComponents, root);
         }
 
 
@@ -891,11 +890,6 @@ namespace ChipmunkSharp
 
         //// **** All Important cpSpaceStep() Function
 
-        //var updateFunc = function(shape)
-        //{
-        //    var body = shape.body;
-        //    shape.update(body.p, body.rot);
-        //};
 
         /// Returns true if @c a and @c b intersect.
 
@@ -1028,43 +1022,6 @@ namespace ChipmunkSharp
 
 
 
-        //public static cpNearestPointQueryInfo BoxShape2(cpBody body, cpBB box)
-        //{
-
-        //    cpPolyShape dev = new cpPolyShape(body, new float[] { box.b, box.l, box.r, box.t }, cpVect.ZERO);
-
-        //    var planes = dev.tPlanes;
-        //    var verts = dev.tVerts;
-
-        //    float v0x = verts[verts.Length - 2];
-        //    float v0y = verts[verts.Length - 1];
-        //    float minDist = Infinity;
-        //    cpVect closestPoint = cpVect.ZERO;
-        //    bool outside = false;
-
-        //    for (var i = 0; i < planes.Length; i++)
-        //    {
-        //        if (planes[i].compare(body.Position) > 0) outside = true;
-
-        //        var v1x = verts[i * 2];
-        //        var v1y = verts[i * 2 + 1];
-        //        var closest = closestPointOnSegment2(body.Position.x, body.Position.y, v0x, v0y, v1x, v1y);
-
-        //        var dist = cpVect.cpvdist(body.Position, closest);
-        //        if (dist < minDist)
-        //        {
-        //            minDist = dist;
-        //            closestPoint = closest;
-        //        }
-
-        //        v0x = v1x;
-        //        v0y = v1y;
-        //    }
-
-        //    return new cpNearestPointQueryInfo(dev, closestPoint, (outside ? minDist : -minDist));
-        //}
-
-
         internal static cpSegmentQueryInfo circleSegmentQuery(cpShape shape, cpVect center, float r, cpVect a, cpVect b)
         {
             // offset the line to be relative to the circle
@@ -1079,7 +1036,7 @@ namespace ChipmunkSharp
 
             if (det >= 0)
             {
-                var t = (-qb - cpEnvironment.cpfsqrt(det)) / (2 * qa);
+                var t = (-qb - cp.cpfsqrt(det)) / (2 * qa);
                 if (0 <= t && t <= 1)
                 {
                     return new cpSegmentQueryInfo(shape, t, cpVect.cpvnormalize(cpVect.cpvlerp(a, b, t)));
@@ -1092,7 +1049,7 @@ namespace ChipmunkSharp
         public static cpVect closestPointOnSegment(cpVect p, cpVect a, cpVect b)
         {
             var delta = cpVect.cpvsub(a, b);
-            var t = cpEnvironment.cpfclamp01(cpVect.cpvdot(delta, cpVect.cpvsub(p, b)) / cpVect.cpvlengthsq(delta));
+            var t = cp.cpfclamp01(cpVect.cpvdot(delta, cpVect.cpvsub(p, b)) / cpVect.cpvlengthsq(delta));
             return cpVect.cpvadd(b, cpVect.cpvmult(delta, t));
         }
 
@@ -1129,47 +1086,230 @@ namespace ChipmunkSharp
         public static int GRABABLE_MASK_BIT { get { return (1 << 31); } }
         public static int NOT_GRABABLE_MASK { get { return ~GRABABLE_MASK_BIT; } }
 
-        public static Node SubtreeInsert(Node subtree, Leaf leaf, cpBBTree tree)
-        {
-            //	var s = new Error().stack;
-            //	traces[s] = traces[s] ? traces[s]+1 : 1;
+        //public static Node SubtreeInsert(Node subtree, Leaf leaf, cpBBTree tree)
+        //{
+        //    //	var s = new Error().stack;
+        //    //	traces[s] = traces[s] ? traces[s]+1 : 1;
 
-            if (subtree == null)
+        //    if (subtree == null)
+        //    {
+        //        return leaf;
+        //    }
+        //    else if (subtree.isLeaf)
+        //    {
+        //        return tree.makeNode(leaf, subtree);
+        //    }
+        //    else
+        //    {
+        //        var cost_a = subtree.B.bbArea() + bbTreeMergedArea(subtree.A, leaf);
+        //        var cost_b = subtree.A.bbArea() + bbTreeMergedArea(subtree.B, leaf);
+
+        //        if (cost_a == cost_b)
+        //        {
+        //            cost_a = bbProximity(subtree.A, leaf);
+        //            cost_b = bbProximity(subtree.B, leaf);
+        //        }
+
+        //        if (cost_b < cost_a)
+        //        {
+        //            subtree.setB(subtreeInsert(subtree.B, leaf, tree));
+        //        }
+        //        else
+        //        {
+        //            subtree.setA(subtreeInsert(subtree.A, leaf, tree));
+        //        }
+
+        //        //		subtree.bb = bbMerge(subtree.bb, leaf.bb);
+        //        subtree.bb_l = Math.Min(subtree.bb_l, leaf.bb_l);
+        //        subtree.bb_b = Math.Min(subtree.bb_b, leaf.bb_b);
+        //        subtree.bb_r = Math.Max(subtree.bb_r, leaf.bb_r);
+        //        subtree.bb_t = Math.Max(subtree.bb_t, leaf.bb_t);
+
+        //        return subtree;
+        //    }
+        //}
+
+
+        public static float[] convexHull(float[] verts, float[] result, float tolerance)
+        {
+            if (result != null)
             {
-                return leaf;
-            }
-            else if (subtree.isLeaf)
-            {
-                return tree.makeNode(leaf, subtree);
+                // Copy the line vertexes into the empty part of the result polyline to use as a scratch buffer.
+                for (var i = 0; i < verts.Length; i++)
+                {
+                    result[i] = verts[i];
+                }
             }
             else
             {
-                var cost_a = subtree.B.bbArea() + bbTreeMergedArea(subtree.A, leaf);
-                var cost_b = subtree.A.bbArea() + bbTreeMergedArea(subtree.B, leaf);
+                // If a result array was not specified, reduce the input instead.
+                result = verts;
+            }
 
-                if (cost_a == cost_b)
-                {
-                    cost_a = bbProximity(subtree.A, leaf);
-                    cost_b = bbProximity(subtree.B, leaf);
-                }
+            // Degenerate case, all points are the same.
+            int[] indexes = loopIndexes(verts);
+            int start = indexes[0], end = indexes[1];
 
-                if (cost_b < cost_a)
+            int position;
+            float[] dev;
+
+            if (start == end)
+            {
+                //if(first) (*first) = 0;
+                position = 2;
+                dev = new float[position];
+                for (int i = 0; i < position; i++)
+                    dev[i] = result[i];
+                return dev;
+            }
+
+            SWAP(result, 0, start);
+            SWAP(result, 1, end == 0 ? start : end);
+
+            var a = new cpVect(result[0], result[1]);
+            var b = new cpVect(result[2], result[3]);
+
+            var count = verts.Length >> 1;
+            //if(first) (*first) = start;
+            var resultCount = QHullReduce(tolerance, result, 2, count - 2, a, b, a, 1) + 1;
+
+            position = resultCount * 2;
+
+            dev = new float[position];
+            for (int i = 0; i < position; i++)
+                dev[i] = result[i];
+
+            assertSoft(polyValidate(result),
+                "Internal error: cpConvexHull() and cpPolyValidate() did not agree." +
+                "Please report this error with as much info as you can.");
+            return dev;
+        }
+
+        public static int QHullReduce(float tol, float[] verts, int offs, int count, cpVect a, cpVect pivot, cpVect b, int resultPos)
+        {
+            if (count < 0)
+            {
+                return 0;
+            }
+            else if (count == 0)
+            {
+                verts[resultPos * 2] = pivot.x;
+                verts[resultPos * 2 + 1] = pivot.y;
+                return 1;
+            }
+            else
+            {
+                var left_count = QHullPartition(verts, offs, count, a, pivot, tol);
+                var left = new cpVect(verts[offs * 2], verts[offs * 2 + 1]);
+                var index = QHullReduce(tol, verts, offs + 1, left_count - 1, a, left, pivot, resultPos);
+
+                var pivotPos = resultPos + index++;
+                verts[pivotPos * 2] = pivot.x;
+                verts[pivotPos * 2 + 1] = pivot.y;
+
+                var right_count = QHullPartition(verts, offs + left_count, count - left_count, pivot, b, tol);
+                var right = new cpVect(verts[(offs + left_count) * 2], verts[(offs + left_count) * 2 + 1]);
+                return index + QHullReduce(tol, verts, offs + left_count + 1, right_count - 1, pivot, right, b, resultPos + index);
+            }
+        }
+
+        private static int QHullPartition(float[] verts, int offs, int count, cpVect a, cpVect b, float tol)
+        {
+            if (count == 0) return 0;
+
+            float max = 0;
+            var pivot = offs;
+
+            var delta = cpVect.cpvsub(b, a);
+            var valueTol = tol * cpVect.cpvlength(delta);
+
+            var head = offs;
+            for (var tail = offs + count - 1; head <= tail; )
+            {
+                var v = new cpVect(verts[head * 2], verts[head * 2 + 1]);
+                float value = cpVect.cpvcross(delta, cpVect.cpvsub(v, a));
+                if (value > valueTol)
                 {
-                    subtree.setB(subtreeInsert(subtree.B, leaf, tree));
+                    if (value > max)
+                    {
+                        max = value;
+                        pivot = head;
+                    }
+
+                    head++;
                 }
                 else
                 {
-                    subtree.setA(subtreeInsert(subtree.A, leaf, tree));
+                    SWAP(verts, head, tail);
+                    tail--;
                 }
-
-                //		subtree.bb = bbMerge(subtree.bb, leaf.bb);
-                subtree.bb_l = Math.Min(subtree.bb_l, leaf.bb_l);
-                subtree.bb_b = Math.Min(subtree.bb_b, leaf.bb_b);
-                subtree.bb_r = Math.Max(subtree.bb_r, leaf.bb_r);
-                subtree.bb_t = Math.Max(subtree.bb_t, leaf.bb_t);
-
-                return subtree;
             }
+
+            // move the new pivot to the front if it's not already there.
+            if (pivot != offs) SWAP(verts, offs, pivot);
+            return head - offs;
+        }
+
+        public static int[] loopIndexes(float[] verts)
+        {
+            int start = 0, end = 0;
+            float minx, miny, maxx, maxy;
+            minx = maxx = verts[0];
+            miny = maxy = verts[1];
+
+            var count = verts.Length >> 1;
+            for (var i = 1; i < count; i++)
+            {
+                var x = verts[i * 2];
+                var y = verts[i * 2 + 1];
+
+                if (x < minx || (x == minx && y < miny))
+                {
+                    minx = x;
+                    miny = y;
+                    start = i;
+                }
+                else if (x > maxx || (x == maxx && y > maxy))
+                {
+                    maxx = x;
+                    maxy = y;
+                    end = i;
+                }
+            }
+            return new int[] { start, end };
+        }
+
+        public static void SWAP(float[] arr, int idx1, int idx2)
+        {
+            var tmp = arr[idx1 * 2];
+            arr[idx1 * 2] = arr[idx2 * 2];
+            arr[idx2 * 2] = tmp;
+
+            tmp = arr[idx1 * 2 + 1];
+            arr[idx1 * 2 + 1] = arr[idx2 * 2 + 1];
+            arr[idx2 * 2 + 1] = tmp;
+        }
+
+        public static float momentForPoly(float m, float[] verts, cpVect offset)
+        {
+            float sum1 = 0f;
+            float sum2 = 0f;
+            int len = verts.Length;
+            for (var i = 0; i < len; i += 2)
+            {
+                var v1x = verts[i] + offset.x;
+                var v1y = verts[i + 1] + offset.y;
+                var v2x = verts[(i + 2) % len] + offset.x;
+                var v2y = verts[(i + 3) % len] + offset.y;
+
+                var a = cpVect.cpvcross2(v2x, v2y, v1x, v1y);
+                var b = cpVect.cpvdot2(v1x, v1y, v1x, v1y) + cpVect.cpvdot2(v1x, v1y, v2x, v2y) + cpVect.cpvdot2(v2x, v2y, v2x, v2y);
+
+                sum1 += a * b;
+                sum2 += a;
+            }
+
+            return (m * sum1) / (6 * sum2);
         }
     }
 }

@@ -99,11 +99,11 @@ namespace ChipmunkSharp
             var distsq = cpVect.cpvlengthsq(delta);
             if (distsq >= mindist * mindist) return null;
 
-            var dist = cpEnvironment.cpfsqrt(distsq);
+            var dist = cp.cpfsqrt(distsq);
 
             // Allocate and initialize the contact.
             return new List<ContactPoint>() {  new ContactPoint(
-                 cpVect.cpvadd(p1, cpVect.cpvmult(delta, 0.5f + (r1 - 0.5f * mindist) / (dist > 0 ? dist : cpEnvironment.Infinity))),
+                 cpVect.cpvadd(p1, cpVect.cpvmult(delta, 0.5f + (r1 - 0.5f * mindist) / (dist > 0 ? dist : cp.Infinity))),
                 (dist > 0 ? cpVect.cpvmult(delta, 1 / dist) : new cpVect(1, 0)),
                 dist - mindist,
                 "0"
@@ -119,7 +119,7 @@ namespace ChipmunkSharp
             var center = circleShape.tc;
 
             var seg_delta = cpVect.cpvsub(seg_b, seg_a);
-            var closest_t = cpEnvironment.cpfclamp01(cpVect.cpvdot(seg_delta, cpVect.cpvsub(center, seg_a)) / cpVect.cpvlengthsq(seg_delta));
+            var closest_t = cp.cpfclamp01(cpVect.cpvdot(seg_delta, cpVect.cpvsub(center, seg_a)) / cpVect.cpvlengthsq(seg_delta));
             var closest = cpVect.cpvadd(seg_a, cpVect.cpvmult(seg_delta, closest_t));
 
             var contact = circle2circleQuery(center, closest, circleShape.r, segmentShape.r);
@@ -218,11 +218,11 @@ namespace ChipmunkSharp
             if (minNeg > 0 || minNorm > 0) return null;
 
             var mini = 0;
-            var poly_min = cpEnvironment.segValueOnAxis(seg, planes[0].n, planes[0].d);
+            var poly_min = cp.segValueOnAxis(seg, planes[0].n, planes[0].d);
             if (poly_min > 0) return null;
             for (var i = 0; i < numVerts; i++)
             {
-                var dist = cpEnvironment.segValueOnAxis(seg, planes[i].n, planes[i].d);
+                var dist = cp.segValueOnAxis(seg, planes[i].n, planes[i].d);
                 if (dist > 0)
                 {
                     return null;
@@ -239,9 +239,9 @@ namespace ChipmunkSharp
             var va = cpVect.cpvadd(seg.ta, cpVect.cpvmult(poly_n, seg.r));
             var vb = cpVect.cpvadd(seg.tb, cpVect.cpvmult(poly_n, seg.r));
             if (poly.containsVert(va.x, va.y))
-                arr.Add(new ContactPoint(va, poly_n, poly_min, cpEnvironment.hashPair(seg.hashid, "0")));
+                arr.Add(new ContactPoint(va, poly_n, poly_min, cp.hashPair(seg.hashid, "0")));
             if (poly.containsVert(vb.x, vb.y))
-                arr.Add(new ContactPoint(vb, poly_n, poly_min, cpEnvironment.hashPair(seg.hashid, "1")));
+                arr.Add(new ContactPoint(vb, poly_n, poly_min, cp.hashPair(seg.hashid, "1")));
 
             // Floating point precision problems here.
             // This will have to do for now.
@@ -250,9 +250,9 @@ namespace ChipmunkSharp
             if (minNorm >= poly_min || minNeg >= poly_min)
             {
                 if (minNorm > minNeg)
-                    cpEnvironment.findPointsBehindSeg(arr, seg, poly, minNorm, 1);
+                    cp.findPointsBehindSeg(arr, seg, poly, minNorm, 1);
                 else
-                    cpEnvironment.findPointsBehindSeg(arr, seg, poly, minNeg, -1);
+                    cp.findPointsBehindSeg(arr, seg, poly, minNeg, -1);
             }
 
             // If no other collision points are found, try colliding endpoints.

@@ -27,22 +27,6 @@ using System.Text;
 namespace ChipmunkSharp
 {
 
-
-    ///// Segment query callback function type.
-    //public delegate void cpSpaceSegmentQueryFunc(cpShape shape, float t, cpVect n, object data);
-    ///// Point query callback function type.
-    //public delegate void cpSpacePointQueryFunc(cpShape shape, object data);
-    ///// Nearest point query callback function type.
-    //public delegate void cpSpaceNearestPointQueryFunc(cpShape shape, float distance, cpVect point, object data);
-    ///// Rectangle Query callback function type.
-    //public delegate void cpSpaceBBQueryFunc(cpShape shape, object data);
-    ///// Space/body iterator callback function type.
-    //public delegate void cpSpaceBodyIteratorFunc(cpBody body, object data);
-    ///// Shape query callback function type.
-    //public delegate void cpSpaceShapeQueryFunc(cpShape shape, List<ContactPoint> points, object data);
-    ////struct cpContactBufferHeader cpContactBufferHeader;
-
-
     public partial class cpSpace
     {
 
@@ -170,7 +154,7 @@ namespace ChipmunkSharp
             {
                 if (
                     !(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) &&
-                     cpEnvironment.bbIntersects2(bb, shape.bb_l, shape.bb_b, shape.bb_r, shape.bb_t)
+                     cp.bbIntersects2(bb, shape.bb_l, shape.bb_b, shape.bb_r, shape.bb_t)
                 )
                 {
                     func(shape);
@@ -187,34 +171,6 @@ namespace ChipmunkSharp
 
 
 
-
-
-
-        ///// Query the space at a point and call @c func for each shape found.
-        //public void cpSpaceNearestPointQuery(cpSpace space, cpVect point, float maxDistance, int layers, int group, cpSpaceNearestPointQueryFunc func, object data);
-        ///// Query the space at a point and return the nearest shape found. Returns null if no shapes were found.
-        //public cpShape cpSpaceNearestPointQueryNearest(cpSpace space, cpVect point, float maxDistance, int layers, int group, cpNearestPointQueryInfo output);
-
-        ///// Perform a directed line segment query (like a raycast) against the space calling @c func for each shape intersected.
-        //public void cpSpaceSegmentQuery(cpSpace space, cpVect start, cpVect end, int layers, int group, cpSpaceSegmentQueryFunc func, object data);
-        ///// Perform a directed line segment query (like a raycast) against the space and return the first shape hit. Returns null if no shapes were hit.
-        //public cpShape cpSpaceSegmentQueryFirst(cpSpace space, cpVect start, cpVect end, int layers, int group, cpSegmentQueryInfo output);
-
-        ///// Perform a fast rectangle query on the space calling @c func for each shape found.
-        ///// Only the shape's bounding boxes are checked for overlap, not their full shape.
-        //public void cpSpaceBBQuery(cpSpace space, cpBB bb, int layers, int group, cpSpaceBBQueryFunc func, object data);
-
-        ///// Query a space for any shapes overlapping the given shape and call @c func for each shape found.
-        //public bool cpSpaceShapeQuery(cpSpace space, cpShape shape, cpSpaceShapeQueryFunc func, object data);
-
-        /// Call cpBodyActivate() for any shape that is overlaps the given shape.
-        //public void cpSpaceActivateShapesTouchingShape(cpSpace space, cpShape shape);
-
-
-        //public static void spaceEachShapeIterator(cpShape shape, spaceShapeContext context)
-        //{
-        //    //context.func(shape, context.data);
-        //}
 
 
     }

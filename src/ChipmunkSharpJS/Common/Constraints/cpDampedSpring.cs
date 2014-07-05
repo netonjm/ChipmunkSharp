@@ -139,9 +139,9 @@ namespace ChipmunkSharp.Constraints
 
             var delta = b.Position.Add(r2).Sub(a.Position.Add(r1)); //  vsub(vadd(b.p, this.r2), vadd(a.p, this.r1));
             var dist = delta.Length; // vlength(delta);
-            this.n = delta.Multiply(1 / (dist > 0 ? dist : cpEnvironment.Infinity));
+            this.n = delta.Multiply(1 / (dist > 0 ? dist : cp.Infinity));
 
-            var k = cpEnvironment.k_scalar(a, b, this.r1, this.r2, this.n);
+            var k = cp.k_scalar(a, b, this.r1, this.r2, this.n);
 
             //assertSoft(k !== 0, "Unsolvable this.");
             if (k == 0)
@@ -155,7 +155,7 @@ namespace ChipmunkSharp.Constraints
             // apply this force
             var f_spring = this.springForceFunc(this, dist);
 
-            cpEnvironment.apply_impulses(a, b, this.r1, this.r2, this.n.x * f_spring * dt, this.n.y * f_spring * dt);
+            cp.apply_impulses(a, b, this.r1, this.r2, this.n.x * f_spring * dt, this.n.y * f_spring * dt);
         }
 
         public override void ApplyCachedImpulse(float coef)
@@ -166,14 +166,14 @@ namespace ChipmunkSharp.Constraints
         public override void ApplyImpulse(float dt)
         {
             // compute relative velocity
-            var vrn = cpEnvironment.normal_relative_velocity(a, b, r1, r2, n);
+            var vrn = cp.normal_relative_velocity(a, b, r1, r2, n);
 
             // compute velocity loss from drag
             var v_damp = (this.target_vrn - vrn) * this.v_coef;
             this.target_vrn = vrn + v_damp;
 
             v_damp *= this.nMass;
-            cpEnvironment.apply_impulses(a, b, this.r1, this.r2, this.n.x * v_damp, this.n.y * v_damp);
+            cp.apply_impulses(a, b, this.r1, this.r2, this.n.x * v_damp, this.n.y * v_damp);
         }
 
         public override float GetImpulse()

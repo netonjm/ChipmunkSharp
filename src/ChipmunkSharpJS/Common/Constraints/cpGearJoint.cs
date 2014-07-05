@@ -56,7 +56,7 @@ namespace ChipmunkSharp.Constraints
             this.iSum = 1 / (a.i_inv * this.ratio_inv + this.ratio * b.i_inv);
 
             // calculate bias velocity
-            this.bias = cpEnvironment.cpfclamp(-cpEnvironment.bias_coef(this.errorBias, dt) * (b.Angle * this.ratio - a.Angle - this.phase) / dt, -maxBias, maxBias);
+            this.bias = cp.cpfclamp(-cp.bias_coef(this.errorBias, dt) * (b.Angle * this.ratio - a.Angle - this.phase) / dt, -maxBias, maxBias);
 
             // compute max impulse
             this.jMax = this.maxForce * dt;
@@ -79,7 +79,7 @@ namespace ChipmunkSharp.Constraints
             // compute normal impulse	
             var j = (this.bias - wr) * this.iSum;
             var jOld = this.jAcc;
-            this.jAcc = cpEnvironment.cpfclamp(jOld + j, -this.jMax, this.jMax);
+            this.jAcc = cp.cpfclamp(jOld + j, -this.jMax, this.jMax);
 
             j = this.jAcc - jOld;
 

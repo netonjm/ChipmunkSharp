@@ -77,13 +77,13 @@ namespace ChipmunkSharp.Constraints
             this.next_b = null;
 
             /// The maximum force that this constraint is allowed to use.
-            this.maxForce = cpEnvironment.Infinity;
+            this.maxForce = cp.Infinity;
             /// The rate at which joint error is corrected.
             /// Defaults to pow(1 - 0.1, 60) meaning that it will
             /// correct 10% of the error every 1/60th of a second.
             this.errorBias = (float)Math.Pow(1 - 0.1, 60);
             /// The maximum rate at which joint error is corrected.
-            this.maxBias = cpEnvironment.Infinity;
+            this.maxBias = cp.Infinity;
         }
 
         public void activateBodies()

@@ -41,9 +41,9 @@ namespace ChipmunkSharp
 
 
         // **** Post Step Callback Functions
-        public void AddPostStepCallback(Action func)
+        public void addPostStepCallback(Action func)
         {
-            cpEnvironment.assertSoft(this.isLocked,
+            cp.assertSoft(this.isLocked,
          "Adding a post-step callback when the space is not locked is unnecessary. " +
          "Post-step callbacks will not called until the end of the next call to cpSpaceStep() or the next query.");
 
@@ -71,7 +71,7 @@ namespace ChipmunkSharp
         {
 
             this.locked--;
-            cpEnvironment.assertSoft(this.locked >= 0, "Internal Error: Space lock underflow.");
+            cp.assertSoft(this.locked >= 0, "Internal Error: Space lock underflow.");
 
             if (this.locked == 0 && runPostStep)
             {
@@ -83,12 +83,6 @@ namespace ChipmunkSharp
             }
 
         }
-
-
-
-
-
-
 
 
 
@@ -147,88 +141,3 @@ namespace ChipmunkSharp
     }
 }
 
-
-//#define CP_CONTACTS_BUFFER_SIZE ((CP_BUFFER_BYTES - sizeof(cpContactBufferHeader))/sizeof(cpContact))
-//struct cpContactBuffer {
-//    cpContactBufferHeader header;
-//    cpContact contacts[CP_CONTACTS_BUFFER_SIZE];
-//} cpContactBuffer;
-
-//public static cpContactBufferHeader  cpSpaceAllocContactBuffer(cpSpace space)
-//{
-//    cpContactBuffer buffer = (cpContactBuffer)cpcalloc(1, sizeof(cpContactBuffer));
-//    cpArrayPush(space.allocatedBuffers, buffer);
-//    return (cpContactBufferHeader *)buffer;
-//}
-
-//static cpContactBufferHeader cpContactBufferHeaderInit(cpContactBufferHeader header, int stamp, cpContactBufferHeader splice)
-//{
-//    header.stamp = stamp;
-//    header.next = (splice != null ? splice.next : header);
-//    header.numContacts = 0;
-//    return header;
-//}
-
-//void cpSpacePushFreshContactBuffer(cpSpace space)
-//{
-//    int stamp = space.stamp;
-
-//    //List<cpContactBufferHeader> head = ;
-
-//    if(space.contactBuffersHead!=null){
-//        // No buffers have been allocated, make one
-//        space.contactBuffersHead = new List<cpContact>();
-//    } else if(stamp - head.next.stamp > space.collisionPersistence){
-//        // The tail buffer is available, rotate the ring
-//    cpContactBufferHeader tail = head.next;
-//        space.contactBuffersHead = cpContactBufferHeaderInit(tail, stamp, tail);
-//    } else {
-//        // Allocate a new buffer and push it into the ring
-//        cpContactBufferHeader *buffer = cpContactBufferHeaderInit(cpSpaceAllocContactBuffer(space), stamp, head);
-//        space.contactBuffersHead = head.next = buffer;
-//    }
-//}
-
-
-//cpContact cpContactBufferGetArray(cpSpace space)
-//{
-//    if (space.contactBuffersHead.numContacts + CP_MAX_CONTACTS_PER_ARBITER > CP_CONTACTS_BUFFER_SIZE)
-//    {
-//        // contact buffer could overflow on the next collision, push a fresh one.
-//        cpSpacePushFreshContactBuffer(space);
-//    }
-
-//    cpContactBufferHeader head = space.contactBuffersHead;
-//    return ((cpContactBuffer)head).contacts + head.numContacts;
-//}
-
-//void
-//cpSpacePushContacts(cpSpace space, int count)
-//{
-//    cpAssertHard(count <= CP_MAX_CONTACTS_PER_ARBITER, "Internal Error: Contact buffer overflow!");
-//    space.contactBuffersHead.numContacts += count;
-//}
-
-//static void cpSpacePopContacts(cpSpace space, int count)
-//{
-//    space.contactBuffersHead.numContacts -= count;
-//}
-
-//MARK: Collision Detection Functions
-
-//static void cpSpaceArbiterSetTrans(cpShape shapes, cpSpace space)
-//{
-//    if (space.pooledArbiters.Count == 0)
-//    {
-//        // arbiter pool is exhausted, make more
-//        int count = CP_BUFFER_BYTES / sizeof(cpArbiter);
-//        cpAssertHard(count, "Internal Error: Buffer size too small.");
-
-//        cpArbiterbuffer = (cpArbiter)cpcalloc(1, CP_BUFFER_BYTES);
-//        cpArrayPush(space.allocatedBuffers, buffer);
-
-//        for (int i = 0; i < count; i++) cpArrayPush(space.pooledArbiters, buffer + i);
-//    }
-
-//    return cpArbiterInit(space.pooledArbiters, shapes[0], shapes[1]);
-//}

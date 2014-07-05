@@ -431,8 +431,8 @@ namespace ChipmunkSharp
         public static cpVect Clamp(cpVect p, cpVect from, cpVect to)
         {
             return new cpVect(
-                cpEnvironment.cpclamp(p.x, from.x, to.x),
-               cpEnvironment.cpclamp(p.y, from.y, to.y)
+                cp.cpclamp(p.x, from.x, to.x),
+               cp.cpclamp(p.y, from.y, to.y)
                 );
             //            return CreatePoint(Clamp(p.x, from.x, to.x), Clamp(p.y, from.y, to.y));
         }
@@ -735,7 +735,7 @@ namespace ChipmunkSharp
         /// Returns the unit length vector for the given angle (in radians).
         public static cpVect cpvforangle(float a)
         {
-            return cpv(cpEnvironment.cpfcos(a), cpEnvironment.cpfsin(a));
+            return cpv(cp.cpfcos(a), cp.cpfsin(a));
         }
 
 
@@ -790,7 +790,7 @@ namespace ChipmunkSharp
         public static cpVect cpvslerp(cpVect v1, cpVect v2, float t)
         {
             float dot = cpVect.Dot(cpVect.Normalize(v1), cpvnormalize(v2));
-            float omega = (float)System.Math.Acos(cpEnvironment.cpfclamp(dot, -1.0f, 1.0f));
+            float omega = (float)System.Math.Acos(cp.cpfclamp(dot, -1.0f, 1.0f));
 
             if (omega < 1e-3)
             {
@@ -808,7 +808,7 @@ namespace ChipmunkSharp
         public static cpVect cpvslerpconst(cpVect v1, cpVect v2, float a)
         {
             float dot = cpVect.Dot(cpvnormalize(v1), cpvnormalize(v2));
-            float omega = (float)System.Math.Acos(cpEnvironment.cpfclamp(dot, -1.0f, 1.0f));
+            float omega = (float)System.Math.Acos(cp.cpfclamp(dot, -1.0f, 1.0f));
 
             return cpvslerp(v1, v2, System.Math.Min(a, omega) / omega);
         }
@@ -880,7 +880,7 @@ namespace ChipmunkSharp
         public static cpVect closestPointOnSegment(cpVect p, cpVect a, cpVect b)
         {
             var delta = cpvsub(a, b);
-            var t = cpEnvironment.cpfclamp01(cpvdot(delta, cpvsub(p, b)) / cpvlengthsq(delta));
+            var t = cp.cpfclamp01(cpvdot(delta, cpvsub(p, b)) / cpvlengthsq(delta));
             return cpvadd(b, cpvmult(delta, t));
         }
 

@@ -215,7 +215,7 @@ namespace ChipmunkSharp
         /// Return the colliding shapes involved for this arbiter.
         /// The order of their cpSpace.collision_type values will match
         /// the order set when the collision handler was registered.
-        public cpShape[] GetShapes()
+        public cpShape[] getShapes()
         {
             if (swappedColl)
                 return new cpShape[] { b, a };
@@ -223,7 +223,7 @@ namespace ChipmunkSharp
                 return new cpShape[] { a, b };
         }
 
-        public void GetShapes(out cpShape a, out cpShape b)
+        public void getShapes(out cpShape a, out cpShape b)
         {
             if (swappedColl)
             {
@@ -321,7 +321,7 @@ namespace ChipmunkSharp
         /// Get the position of the @c ith contact point.
         public cpVect getPoint(int i)
         {
-            cpEnvironment.assertHard(0 <= i && i < contacts.Count, "Index error: The specified contact index is invalid for this arbiter");
+            cp.assertHard(0 <= i && i < contacts.Count, "Index error: The specified contact index is invalid for this arbiter");
             return contacts[i].p;
             // return contacts[i].point;
         }
@@ -329,7 +329,7 @@ namespace ChipmunkSharp
         /// Get the normal of the @c ith contact point.
         public cpVect getNormal(int i)
         {
-            cpEnvironment.assertHard(0 <= i && i < contacts.Count, "Index error: The specified contact index is invalid for this arbiter");
+            cp.assertHard(0 <= i && i < contacts.Count, "Index error: The specified contact index is invalid for this arbiter");
 
             var n = this.contacts[i].n;
             return this.swappedColl ? n.Neg() : n;
@@ -340,7 +340,7 @@ namespace ChipmunkSharp
         public float getDepth(int i)
         {
             // return this.contacts[i].dist;
-            cpEnvironment.assertHard(0 <= i && i < contacts.Count, "Index error: The specified contact index is invalid for this arbiter");
+            cp.assertHard(0 <= i && i < contacts.Count, "Index error: The specified contact index is invalid for this arbiter");
             return contacts[i].dist;
 
         }
@@ -348,8 +348,8 @@ namespace ChipmunkSharp
 
         public void unthread()
         {
-            cpEnvironment.unthreadHelper(this, this.body_a, this.thread_a_prev, this.thread_a_next);
-            cpEnvironment.unthreadHelper(this, this.body_b, this.thread_b_prev, this.thread_b_next);
+            cp.unthreadHelper(this, this.body_a, this.thread_a_prev, this.thread_a_next);
+            cp.unthreadHelper(this, this.body_b, this.thread_b_prev, this.thread_b_next);
             this.thread_a_prev = this.thread_a_next = null;
             this.thread_b_prev = this.thread_b_next = null;
         }
@@ -416,15 +416,15 @@ namespace ChipmunkSharp
                 con.r2 = cpVect.cpvsub(con.p, b.Position);
 
                 // Calculate the mass normal and mass tangent.
-                con.nMass = 1 / cpEnvironment.k_scalar(a, b, con.r1, con.r2, con.n);
-                con.tMass = 1 / cpEnvironment.k_scalar(a, b, con.r1, con.r2, cpVect.cpvperp(con.n));
+                con.nMass = 1 / cp.k_scalar(a, b, con.r1, con.r2, con.n);
+                con.tMass = 1 / cp.k_scalar(a, b, con.r1, con.r2, cpVect.cpvperp(con.n));
 
                 // Calculate the target bias velocity.
                 con.bias = -bias * Math.Min(0, con.dist + slop) / dt;
                 con.jBias = 0;
 
                 // Calculate the target bounce velocity.
-                con.bounce = cpEnvironment.normal_relative_velocity(a, b, con.r1, con.r2, con.n) * this.e;
+                con.bounce = cp.normal_relative_velocity(a, b, con.r1, con.r2, con.n) * this.e;
             }
         }
 
@@ -445,14 +445,14 @@ namespace ChipmunkSharp
                 var ny = con.n.y;
                 var jx = nx * con.jnAcc - ny * con.jtAcc;
                 var jy = nx * con.jtAcc + ny * con.jnAcc;
-                cpEnvironment.apply_impulses(a, b, con.r1, con.r2, jx * dt_coef, jy * dt_coef);
+                cp.apply_impulses(a, b, con.r1, con.r2, jx * dt_coef, jy * dt_coef);
             }
         }
 
         public void applyImpulse(float dt)
         {
 
-            cpEnvironment.numApplyImpulse++;
+            cp.numApplyImpulse++;
             //if (!this.contacts) { throw new Error('contacts is undefined'); }
             var a = this.body_a;
             var b = this.body_b;
@@ -461,7 +461,7 @@ namespace ChipmunkSharp
 
             for (var i = 0; i < this.contacts.Count; i++)
             {
-                cpEnvironment.numApplyContact++;
+                cp.numApplyContact++;
                 var con = this.contacts[i];
                 var nMass = con.nMass;
                 var n = con.n;
@@ -494,20 +494,20 @@ namespace ChipmunkSharp
                 var jtMax = friction * con.jnAcc;
                 var jt = -vrt * con.tMass;
                 var jtOld = con.jtAcc;
-                con.jtAcc = cpEnvironment.cpclamp(jtOld + jt, -jtMax, jtMax);
+                con.jtAcc = cp.cpclamp(jtOld + jt, -jtMax, jtMax);
 
                 //apply_bias_impulses(a, b, r1, r2, vmult(n, con.jBias - jbnOld));
                 var bias_x = n.x * (con.jBias - jbnOld);
                 var bias_y = n.y * (con.jBias - jbnOld);
-                cpEnvironment.apply_bias_impulse(a, -bias_x, -bias_y, r1);
-                cpEnvironment.apply_bias_impulse(b, bias_x, bias_y, r2);
+                cp.apply_bias_impulse(a, -bias_x, -bias_y, r1);
+                cp.apply_bias_impulse(b, bias_x, bias_y, r2);
 
                 //apply_impulses(a, b, r1, r2, vrotate(n, new Vect(con.jnAcc - jnOld, con.jtAcc - jtOld)));
                 var rot_x = con.jnAcc - jnOld;
                 var rot_y = con.jtAcc - jtOld;
 
                 // Inlining apply_impulses decreases speed for some reason :/
-                cpEnvironment.apply_impulses(a, b, r1, r2, n.x * rot_x - n.y * rot_y, n.x * rot_y + n.y * rot_x);
+                cp.apply_impulses(a, b, r1, r2, n.x * rot_x - n.y * rot_y, n.x * rot_y + n.y * rot_x);
             }
         }
 
@@ -689,7 +689,7 @@ namespace ChipmunkSharp
 
 
 
-        public string Key { get { return cpEnvironment.hashPair(a.hashid, b.hashid); } }
+        public string Key { get { return cp.hashPair(a.hashid, b.hashid); } }
 
 
         public float bb_l { get; set; }

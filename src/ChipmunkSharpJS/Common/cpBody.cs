@@ -108,7 +108,7 @@ namespace ChipmunkSharp
 
         /// Moment of inertia of the body.
         /// Must agree with cpBody.i_inv! Use cpBodySetMoment() when changing the moment for this reason.
-        private float i;
+        public float i;
         /// Moment of inertia inverse.
         public float i_inv;
 
@@ -165,9 +165,9 @@ namespace ChipmunkSharp
         /// CREATES A STATIC BODY
         /// </summary>
         public cpBody()
-            : this(cpEnvironment.Infinity, cpEnvironment.Infinity)
+            : this(cp.Infinity, cp.Infinity)
         {
-            nodeIdleTime = cpEnvironment.Infinity;
+            nodeIdleTime = cp.Infinity;
         }
 
         /// <summary>
@@ -209,9 +209,9 @@ namespace ChipmunkSharp
             //cpVect rot;
 
             /// Maximum velocity allowed when updating the velocity.
-            this.v_limit = cpEnvironment.Infinity;
+            this.v_limit = cp.Infinity;
             /// Maximum rotational rate (in radians/second) allowed when updating the angular velocity.
-            this.w_limit = cpEnvironment.Infinity;
+            this.w_limit = cp.Infinity;
 
             // This stuff is all private.
             this.v_bias = cpVect.ZERO; //x = this.v_biasy = 0;
@@ -278,7 +278,7 @@ namespace ChipmunkSharp
         /// Returns true if the body is static.
         public bool isStatic()
         {
-            return nodeIdleTime == cpEnvironment.Infinity;
+            return nodeIdleTime == cp.Infinity;
         }
 
         /// Returns true if the body has not been added to a space.
@@ -291,7 +291,7 @@ namespace ChipmunkSharp
         /// Set the mass of a body.
         public void setMass(float mass)
         {
-            cpEnvironment.assertHard(mass > 0.0f, "Mass must be positive and non-zero.");
+            cp.assertHard(mass > 0.0f, "Mass must be positive and non-zero.");
 
             activate();
             m = mass;
@@ -302,7 +302,7 @@ namespace ChipmunkSharp
         /// Set the moment of a body.
         public void setMoment(float moment)
         {
-            cpEnvironment.assertHard(moment > 0.0f, "Moment of Inertia must be positive and non-zero.");
+            cp.assertHard(moment > 0.0f, "Moment of Inertia must be positive and non-zero.");
 
             activate();
             i = moment;
@@ -326,7 +326,7 @@ namespace ChipmunkSharp
 
         public void removeConstraint(cpConstraint constraint)
         {
-            constraintList = cpEnvironment.filterConstraints(constraintList, this, constraint);
+            constraintList = cp.filterConstraints(constraintList, this, constraint);
         }
 
 
@@ -366,12 +366,12 @@ namespace ChipmunkSharp
 
         public void setAngleInternal(float angle)
         {
-            cpEnvironment.assertHard(!float.IsNaN(angle), "Internal Error: Attempting to set body's angle to NaN");
+            cp.assertHard(!float.IsNaN(angle), "Internal Error: Attempting to set body's angle to NaN");
             this.a = angle;//fmod(a, (cpFloat)M_PI*2.0f);
 
             //this.rot = vforangle(angle);
-            this.rot.x = cpEnvironment.cpfcos(angle);
-            this.rot.y = cpEnvironment.cpfsin(angle);
+            this.rot.x = cp.cpfcos(angle);
+            this.rot.y = cp.cpfsin(angle);
         }
 
 
@@ -391,12 +391,12 @@ namespace ChipmunkSharp
             //this.vx = v.x; this.vy = v.y;
             var v_limit = this.v_limit;
             var lensq = vx * vx + vy * vy;
-            var scale = (lensq > v_limit * v_limit) ? v_limit / cpEnvironment.cpfsqrt(lensq) : 1;
+            var scale = (lensq > v_limit * v_limit) ? v_limit / cp.cpfsqrt(lensq) : 1;
             this.v.x = vx * scale;
             this.v.y = vy * scale;
 
             var w_limit = this.w_limit;
-            this.w = cpEnvironment.cpfclamp(this.w * damping + this.t * this.i_inv * dt, -w_limit, w_limit);
+            this.w = cp.cpfclamp(this.w * damping + this.t * this.i_inv * dt, -w_limit, w_limit);
 
             this.sanityCheck();
         }
@@ -438,7 +438,7 @@ namespace ChipmunkSharp
         public void applyImpulse(cpVect j, cpVect r)
         {
             this.activate();
-            cpEnvironment.apply_impulse(this, j, r);
+            cp.apply_impulse(this, j, r);
         }
 
         public cpVect getVelAtPoint(cpVect r)
@@ -538,14 +538,14 @@ namespace ChipmunkSharp
             if (!this.isRogue())
             {
                 this.nodeIdleTime = 0;
-                cpEnvironment.componentActivate(cpEnvironment.componentRoot(this));
+                cp.componentActivate(cp.componentRoot(this));
             }
 
         }
         //        /// Wake up any sleeping or idle bodies touching a static body.
         public void activateStatic(cpShape filter)
         {
-            cpEnvironment.assertHard(this.isStatic(), "Body.activateStatic() called on a non-static body.");
+            cp.assertHard(this.isStatic(), "Body.activateStatic() called on a non-static body.");
 
             for (var arb = this.arbiterList; arb != null; arb = arb.next(this))
             {
@@ -564,13 +564,13 @@ namespace ChipmunkSharp
         public void pushArbiter(cpArbiter arb)
         {
 
-            cpEnvironment.assertSoft((arb.body_a == this ? arb.thread_a_next : arb.thread_b_next) == null,
+            cp.assertSoft((arb.body_a == this ? arb.thread_a_next : arb.thread_b_next) == null,
             "Internal Error: Dangling contact graph pointers detected. (A)");
-            cpEnvironment.assertSoft((arb.body_a == this ? arb.thread_a_prev : arb.thread_b_prev) == null,
+            cp.assertSoft((arb.body_a == this ? arb.thread_a_prev : arb.thread_b_prev) == null,
                 "Internal Error: Dangling contact graph pointers detected. (B)");
 
             var next = this.arbiterList;
-            cpEnvironment.assertSoft(next == null || (next.body_a == this ? next.thread_a_prev : next.thread_b_prev) == null,
+            cp.assertSoft(next == null || (next.body_a == this ? next.thread_a_prev : next.thread_b_prev) == null,
                 "Internal Error: Dangling contact graph pointers detected. (C)");
 
             if (arb.body_a == this)
@@ -608,16 +608,16 @@ namespace ChipmunkSharp
         //        /// Force a body to fall asleep immediately along with other bodies in a group.
         public void sleepWithGroup(cpBody group)
         {
-            cpEnvironment.assertSoft(!this.isStatic() && !this.isRogue(), "Rogue and static bodies cannot be put to sleep.");
+            cp.assertSoft(!this.isStatic() && !this.isRogue(), "Rogue and static bodies cannot be put to sleep.");
 
             var space = this.space;
-            cpEnvironment.assertSoft(space != null, "Cannot put a rogue body to sleep.");
-            cpEnvironment.assertSoft(space.isLocked, "Bodies cannot be put to sleep during a query or a call to cpSpaceStep(). Put these calls into a post-step callback.");
-            cpEnvironment.assertSoft(group == null || group.isSleeping(), "Cannot use a non-sleeping body as a group identifier.");
+            cp.assertSoft(space != null, "Cannot put a rogue body to sleep.");
+            cp.assertSoft(space.isLocked, "Bodies cannot be put to sleep during a query or a call to cpSpaceStep(). Put these calls into a post-step callback.");
+            cp.assertSoft(group == null || group.isSleeping(), "Cannot use a non-sleeping body as a group identifier.");
 
             if (this.isSleeping())
             {
-                cpEnvironment.assertSoft(cpEnvironment.componentRoot(this) == cpEnvironment.componentRoot(group), "The body is already sleeping and it's group cannot be reassigned.");
+                cp.assertSoft(cp.componentRoot(this) == cp.componentRoot(group), "The body is already sleeping and it's group cannot be reassigned.");
                 return;
             }
 
@@ -629,7 +629,7 @@ namespace ChipmunkSharp
 
             if (group != null)
             {
-                var root = cpEnvironment.componentRoot(group);
+                var root = cp.componentRoot(group);
 
                 this.nodeRoot = root;
                 this.nodeNext = root.nodeNext;

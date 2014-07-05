@@ -77,14 +77,14 @@ namespace ChipmunkSharp.Constraints
             var delta = b.Position.Add(this.r2).Sub(a.Position.Add(this.r1));// vsub(vadd(b.p, this.r2), vadd(a.p, this.r1));
             var dist = delta.Length; // vlength(delta);
 
-            this.n = delta.Multiply(1 / (dist > 0 ? dist : cpEnvironment.Infinity));  //vmult(delta, 1 / (dist ? dist : Infinity));
+            this.n = delta.Multiply(1 / (dist > 0 ? dist : cp.Infinity));  //vmult(delta, 1 / (dist ? dist : Infinity));
 
             // calculate mass normal
-            this.nMass = 1 / cpEnvironment.k_scalar(a, b, this.r1, this.r2, this.n);
+            this.nMass = 1 / cp.k_scalar(a, b, this.r1, this.r2, this.n);
 
             // calculate bias velocity
             var maxBias = this.maxBias;
-            this.bias = cpEnvironment.cpfclamp(-cpEnvironment.bias_coef(this.errorBias, dt) * (dist - this.dist) / dt, -maxBias, maxBias);
+            this.bias = cp.cpfclamp(-cp.bias_coef(this.errorBias, dt) * (dist - this.dist) / dt, -maxBias, maxBias);
 
             // compute max impulse
             this.jnMax = this.maxForce * dt;
@@ -93,7 +93,7 @@ namespace ChipmunkSharp.Constraints
         public override void ApplyCachedImpulse(float dt_coef)
         {
             var j = cpVect.cpvmult(this.n, this.jnAcc * dt_coef);
-            cpEnvironment.apply_impulses(this.a, this.b, this.r1, this.r2, j.x, j.y);
+            cp.apply_impulses(this.a, this.b, this.r1, this.r2, j.x, j.y);
         }
 
         public override void ApplyImpulse(float dt)
@@ -101,16 +101,16 @@ namespace ChipmunkSharp.Constraints
 
 
             // compute relative velocity
-            var vrn = cpEnvironment.normal_relative_velocity(a, b, this.r1, this.r2, n);
+            var vrn = cp.normal_relative_velocity(a, b, this.r1, this.r2, n);
 
             // compute normal impulse
             var jn = (this.bias - vrn) * this.nMass;
             var jnOld = this.jnAcc;
-            this.jnAcc = cpEnvironment.cpclamp(jnOld + jn, -this.jnMax, this.jnMax);
+            this.jnAcc = cp.cpclamp(jnOld + jn, -this.jnMax, this.jnMax);
             jn = this.jnAcc - jnOld;
 
             // apply impulse
-            cpEnvironment.apply_impulses(a, b, this.r1, this.r2, n.x * jn, n.y * jn);
+            cp.apply_impulses(a, b, this.r1, this.r2, n.x * jn, n.y * jn);
         }
 
         public override float GetImpulse()

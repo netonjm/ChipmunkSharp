@@ -108,11 +108,11 @@ namespace ChipmunkSharp.Constraints
             }
 
             // calculate mass normal
-            this.nMass = 1 / cpEnvironment.k_scalar(a, b, this.r1, this.r2, this.n);
+            this.nMass = 1 / cp.k_scalar(a, b, this.r1, this.r2, this.n);
 
 
             // calculate bias velocity
-            this.bias = cpEnvironment.cpclamp(-cpEnvironment.bias_coef(this.errorBias, dt) * pdist / dt, -maxBias, maxBias);
+            this.bias = cp.cpclamp(-cp.bias_coef(this.errorBias, dt) * pdist / dt, -maxBias, maxBias);
 
             // compute max impulse
             this.jnMax = this.maxForce * dt;
@@ -121,7 +121,7 @@ namespace ChipmunkSharp.Constraints
         public override void ApplyCachedImpulse(float dt_coef)
         {
             var jn = this.jnAcc * dt_coef;
-            cpEnvironment.apply_impulses(this.a, this.b, this.r1, this.r2, this.n.x * jn, this.n.y * jn);
+            cp.apply_impulses(this.a, this.b, this.r1, this.r2, this.n.x * jn, this.n.y * jn);
         }
 
 
@@ -132,17 +132,17 @@ namespace ChipmunkSharp.Constraints
 
 
             // compute relative velocity
-            var vr = cpEnvironment.relative_velocity(a, b, r1, r2);
+            var vr = cp.relative_velocity(a, b, r1, r2);
             var vrn = vr.Dot(n); // cpvdot(vr, n);
 
             // compute normal impulse
             var jn = (this.bias - vrn) * this.nMass;
             var jnOld = this.jnAcc;
-            this.jnAcc = cpEnvironment.cpclamp(jnOld + jn, -this.jnMax, 0f);
+            this.jnAcc = cp.cpclamp(jnOld + jn, -this.jnMax, 0f);
             jn = this.jnAcc - jnOld;
 
             // apply impulse
-            cpEnvironment.apply_impulses(a, b, this.r1, this.r2, n.x * jn, n.y * jn);
+            cp.apply_impulses(a, b, this.r1, this.r2, n.x * jn, n.y * jn);
 
         }
 

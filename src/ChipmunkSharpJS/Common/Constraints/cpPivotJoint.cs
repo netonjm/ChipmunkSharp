@@ -87,26 +87,26 @@ namespace ChipmunkSharp.Constraints
             this.r2 = anchr2.Rotate(b.Rotation); // cpvrotate(this.anchr2, b.rot);
 
             // Calculate mass tensor. Result is stored into this.k1 & this.k2.
-            cpEnvironment.k_tensor(a, b, this.r1, this.r2, this.k1, this.k2);
+            cp.k_tensor(a, b, this.r1, this.r2, this.k1, this.k2);
 
             // compute max impulse
             this.jMaxLen = this.maxForce * dt;
 
             // calculate bias velocity
             var delta = b.Position.Add(r2).Sub(a.Position.Add(r1));  //cpvsub(cpvadd(b.p, this.r2), cpvadd(a.p, this.r1));
-            this.bias = delta.Multiply(-cpEnvironment.bias_coef(errorBias, dt) / dt).Clamp(maxBias);  //cpvclamp(cpvmult(delta, -Util.bias_coef(this.errorBias, dt) / dt), this.maxBias);
+            this.bias = delta.Multiply(-cp.bias_coef(errorBias, dt) / dt).Clamp(maxBias);  //cpvclamp(cpvmult(delta, -Util.bias_coef(this.errorBias, dt) / dt), this.maxBias);
         }
 
         public override void ApplyCachedImpulse(float dt_coef)
         {
-            cpEnvironment.apply_impulses(this.a, this.b, this.r1, this.r2, this.jAcc.x * dt_coef, this.jAcc.y * dt_coef);
+            cp.apply_impulses(this.a, this.b, this.r1, this.r2, this.jAcc.x * dt_coef, this.jAcc.y * dt_coef);
         }
 
         public override void ApplyImpulse(float dt)
         {
 
             // compute relative velocity
-            var vr = cpEnvironment.relative_velocity(a, b, r1, r2);
+            var vr = cp.relative_velocity(a, b, r1, r2);
 
             // compute normal impulse
             var j = cpVect.mult_k(bias.Sub(vr), k1, k2);   // Util.mult_k(cpvsub(this.bias, vr), this.k1, this.k2);
@@ -114,7 +114,7 @@ namespace ChipmunkSharp.Constraints
             this.jAcc = jAcc.Add(j).Clamp(jMaxLen);  // cpEnvironment.cpvclamp(cpvadd(this.jAcc, j), this.jMaxLen);
 
             // apply impulse
-            cpEnvironment.apply_impulses(a, b, this.r1, this.r2, this.jAcc.x - jOld.x, this.jAcc.y - jOld.y);
+            cp.apply_impulses(a, b, this.r1, this.r2, this.jAcc.x - jOld.x, this.jAcc.y - jOld.y);
         }
 
         public override float GetImpulse()

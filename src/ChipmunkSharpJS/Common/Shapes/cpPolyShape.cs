@@ -77,12 +77,12 @@ namespace ChipmunkSharp
 
         public void setVerts(float[] verts, cpVect offset)
         {
-            cpEnvironment.assert(verts.Length >= 4, "Polygons require some verts");
+            cp.assert(verts.Length >= 4, "Polygons require some verts");
             //cpEnvironment.assert(typeof(verts[0]) == 'number',
             //        'Polygon verticies should be specified in a flattened list (eg [x1,y1,x2,y2,x3,y3,...])');
 
             // Fail if the user attempts to pass a concave poly, or a bad winding.
-            cpEnvironment.assert(cpEnvironment.polyValidate(verts), "Polygon is concave or has a reversed winding. Consider using cpConvexHull()");
+            cp.assert(cp.polyValidate(verts), "Polygon is concave or has a reversed winding. Consider using cpConvexHull()");
 
             var len = verts.Length;
             var numVerts = len >> 1;
@@ -119,8 +119,8 @@ namespace ChipmunkSharp
             var src = this.verts;
             var dst = this.tVerts;
 
-            float l = cpEnvironment.Infinity, r = -cpEnvironment.Infinity;
-            float b = cpEnvironment.Infinity, t = -cpEnvironment.Infinity;
+            float l = cp.Infinity, r = -cp.Infinity;
+            float b = cp.Infinity, t = -cp.Infinity;
 
             for (var i = 0; i < src.Length; i += 2)
             {
@@ -176,7 +176,7 @@ namespace ChipmunkSharp
 
             var v0x = verts[verts.Length - 2];
             var v0y = verts[verts.Length - 1];
-            var minDist = cpEnvironment.Infinity;
+            var minDist = cp.Infinity;
             var closestPoint = cpVect.ZERO;
             var outside = false;
 
@@ -186,7 +186,7 @@ namespace ChipmunkSharp
 
                 var v1x = verts[i * 2];
                 var v1y = verts[i * 2 + 1];
-                var closest = cpEnvironment.closestPointOnSegment2(p.x, p.y, v0x, v0y, v1x, v1y);
+                var closest = cp.closestPointOnSegment2(p.x, p.y, v0x, v0y, v1x, v1y);
 
                 var dist = cpVect.cpvdist(p, closest);
                 if (dist < minDist)

@@ -65,7 +65,7 @@ namespace ChipmunkSharp.Constraints
             // compute normal impulse	
             var j = -wr * this.iSum;
             var jOld = this.jAcc;
-            this.jAcc = cpEnvironment.cpclamp(jOld + j, -this.jMax, this.jMax);
+            this.jAcc = cp.cpclamp(jOld + j, -this.jMax, this.jMax);
             j = this.jAcc - jOld;
 
             // apply impulse

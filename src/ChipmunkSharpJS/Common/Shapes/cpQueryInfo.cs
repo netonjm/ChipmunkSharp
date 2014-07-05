@@ -118,6 +118,9 @@ namespace ChipmunkSharp.Shapes
         }
 
 
+
+
+
     }
 
 
@@ -133,7 +136,7 @@ namespace ChipmunkSharp.Shapes
             /// The nearest shape, NULL if no shape was within range.
             this.shape = tShape;
             /// The closest point on the shape's surface. (in world space coordinates)
-            this.d = cpEnvironment.Infinity;
+            this.d = cp.Infinity;
             /// The distance to the point. The distance is negative if the point is inside the shape.
             this.n = cpVect.ZERO;
         }

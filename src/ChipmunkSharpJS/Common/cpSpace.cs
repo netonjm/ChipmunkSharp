@@ -134,7 +134,7 @@ namespace ChipmunkSharp
 
         public List<ContactPoint> collideShapes(cpShape a, cpShape b)
         {
-            cpEnvironment.assert((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode, "Collided shapes must be sorted by type");
+            cp.assert((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode, "Collided shapes must be sorted by type");
             return (a as ICollisionShape).collisionTable[(b as ICollisionShape).collisionCode](a, b);
         }
 
@@ -163,7 +163,7 @@ namespace ChipmunkSharp
 
             this.collisionHandlers = new cpBBTree(null);
 
-            this.defaultHandler = cpEnvironment.defaultCollisionHandler;
+            this.defaultHandler = cp.defaultCollisionHandler;
 
             this.postStepCallbacks = new List<Action>();
 
@@ -186,7 +186,7 @@ namespace ChipmunkSharp
             /// Time a group of bodies must remain idle in order to fall asleep.
             /// Enabling sleeping also implicitly enables the the contact graph.
             /// The default value of Infinity disables the sleeping algorithm.
-            this.sleepTimeThreshold = cpEnvironment.Infinity;
+            this.sleepTimeThreshold = cp.Infinity;
 
             /// Amount of encouraged penetration between colliding shapes..
             /// Used to reduce oscillating contacts and keep the collision cache warm.
@@ -244,7 +244,7 @@ namespace ChipmunkSharp
                 var handler = space.lookupHandler(a.collision_type, b.collision_type);
 
                 var sensor = a.sensor || b.sensor;
-                if (sensor && handler == cpEnvironment.defaultCollisionHandler) return;
+                if (sensor && handler == cp.defaultCollisionHandler) return;
 
                 // Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
                 if ((a as ICollisionShape).collisionCode > (b as ICollisionShape).collisionCode)
@@ -263,7 +263,7 @@ namespace ChipmunkSharp
 
                 // Get an arbiter from space.arbiterSet for the two shapes.
                 // This is where the persistant contact magic comes from.
-                var arbHash = cpEnvironment.hashPair(a.hashid, b.hashid);
+                var arbHash = cp.hashPair(a.hashid, b.hashid);
 
                 var leaf = space.cachedArbiters.Get(arbHash);
                 if (leaf == null)
@@ -384,7 +384,7 @@ namespace ChipmunkSharp
                 }
 
                 // Find colliding pairs.
-                this.activeShapes.each(s => cpEnvironment.updateFunc(s as cpShape));
+                this.activeShapes.each(s => cp.updateFunc(s as cpShape));
                 this.activeShapes.reindexQuery((o1, o2) => this.collideShapes(o1 as cpShape, o2 as cpShape));
 
             } Unlock(false);
@@ -410,7 +410,7 @@ namespace ChipmunkSharp
 
                 // Prestep the arbiters and constraints.
                 var slop = this.collisionSlop;
-                var biasCoef = 1 - cpEnvironment.cpfpow(this.collisionBias, dt);
+                var biasCoef = 1 - cp.cpfpow(this.collisionBias, dt);
                 for (i = 0; i < arbiters.Count; i++)
                 {
                     arbiters[i].preStep(dt, slop, biasCoef);
@@ -425,7 +425,7 @@ namespace ChipmunkSharp
                 }
 
                 // Integrate velocities.
-                var damping = cpEnvironment.cpfpow(this.damping, dt);
+                var damping = cp.cpfpow(this.damping, dt);
                 var gravity = this.gravity;
                 for (i = 0; i < bodies.Count; i++)
                 {
@@ -504,7 +504,7 @@ namespace ChipmunkSharp
         /// Update the collision detection info for the static shapes in the space.
         public void reindexStatic()
         {
-            cpEnvironment.assertSoft(!this.isLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
+            cp.assertSoft(!this.isLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
 
             this.staticShapes.each(s =>
             {
@@ -519,7 +519,7 @@ namespace ChipmunkSharp
         /// Update the collision detection data for a specific shape in the space.
         public void reindexShape(cpShape shape)
         {
-            cpEnvironment.assertHard(!isLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
+            cp.assertHard(!isLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
 
             var body = shape.body;
             shape.update(body.Position, body.Rotation);
@@ -579,9 +579,9 @@ namespace ChipmunkSharp
             }
             else
             {
-                cpEnvironment.assertSoft(this.containsShape(shape),
+                cp.assertSoft(this.containsShape(shape),
                     "Cannot remove a shape that was not added to the space. (Removed twice maybe?)");
-                cpEnvironment.assertSpaceUnlocked(this);
+                cp.assertSpaceUnlocked(this);
 
                 body.activate();
                 body.removeShape(shape);
@@ -595,9 +595,9 @@ namespace ChipmunkSharp
         public void removeStaticShape(cpShape shape)
         {
 
-            cpEnvironment.assertSoft(this.containsShape(shape),
+            cp.assertSoft(this.containsShape(shape),
            "Cannot remove a static or sleeping shape that was not added to the space. (Removed twice maybe?)");
-            cpEnvironment.assertSpaceUnlocked(this);
+            cp.assertSpaceUnlocked(this);
 
             var body = shape.body;
             if (body.isStatic()) body.activateStatic(shape);
@@ -611,9 +611,9 @@ namespace ChipmunkSharp
         /// Remove a rigid body from the simulation.
         public void removeBody(cpBody body)
         {
-            cpEnvironment.assertSoft(this.containsBody(body),
+            cp.assertSoft(this.containsBody(body),
          "Cannot remove a body that was not added to the space. (Removed twice maybe?)");
-            cpEnvironment.assertSpaceUnlocked(this);
+            cp.assertSpaceUnlocked(this);
 
             body.activate();
             //	this.filterArbiters(body, null);
@@ -627,9 +627,9 @@ namespace ChipmunkSharp
         public void removeConstraint(cpConstraint constraint)
         {
 
-            cpEnvironment.assertSoft(this.containsConstraint(constraint),
+            cp.assertSoft(this.containsConstraint(constraint),
            "Cannot remove a constraint that was not added to the space. (Removed twice maybe?)");
-            cpEnvironment.assertSpaceUnlocked(this);
+            cp.assertSpaceUnlocked(this);
 
             constraint.a.activate();
             constraint.b.activate();
@@ -680,12 +680,12 @@ namespace ChipmunkSharp
 
 
         /// Add a rigid body to the simulation.
-        public cpBody AddBody(cpBody body)
+        public cpBody addBody(cpBody body)
         {
-            cpEnvironment.assertHard(!body.isStatic(), "Do not add static bodies to a space. Static bodies do not move and should not be simulated.");
-            cpEnvironment.assertHard(body.space != this, "You have already added this body to this space. You must not add it a second time.");
-            cpEnvironment.assertHard(body.space != null, "You have already added this body to another space. You cannot add it to a second.");
-            cpEnvironment.assertSpaceUnlocked(this);
+            cp.assertHard(!body.isStatic(), "Do not add static bodies to a space. Static bodies do not move and should not be simulated.");
+            cp.assertHard(body.space != this, "You have already added this body to this space. You must not add it a second time.");
+            cp.assertHard(body.space == null, "You have already added this body to another space. You cannot add it to a second.");
+            cp.assertSpaceUnlocked(this);
 
             bodies.Add(body);
             body.space = this;
@@ -693,13 +693,13 @@ namespace ChipmunkSharp
 
         }
         /// Add a constraint to the simulation.
-        public cpConstraint AddConstraint(cpConstraint constraint)
+        public cpConstraint addConstraint(cpConstraint constraint)
         {
 
-            cpEnvironment.assertHard(constraint.space != this, "You have already added this constraint to this space. You must not add it a second time.");
-            cpEnvironment.assertHard(constraint.space != null, "You have already added this constraint to another space. You cannot add it to a second.");
-            cpEnvironment.assertHard(constraint.a != null && constraint.b != null, "Constraint is attached to a null body.");
-            cpEnvironment.assertSpaceUnlocked(this);
+            cp.assertHard(constraint.space != this, "You have already added this constraint to this space. You must not add it a second time.");
+            cp.assertHard(constraint.space != null, "You have already added this constraint to another space. You cannot add it to a second.");
+            cp.assertHard(constraint.a != null && constraint.b != null, "Constraint is attached to a null body.");
+            cp.assertSpaceUnlocked(this);
 
             cpBody a = constraint.a, b = constraint.b;
 
@@ -727,9 +727,9 @@ namespace ChipmunkSharp
             if (shape.body.isStatic())
                 return this.addStaticShape(shape);
 
-            cpEnvironment.assertHard(shape.space != this, "You have already added this shape to this space. You must not add it a second time.");
-            cpEnvironment.assertHard(shape.space != null, "You have already added this shape to another space. You cannot add it to a second.");
-            cpEnvironment.assertSpaceUnlocked(this);
+            cp.assertHard(shape.space != this, "You have already added this shape to this space. You must not add it a second time.");
+            cp.assertHard(shape.space != null, "You have already added this shape to another space. You cannot add it to a second.");
+            cp.assertSpaceUnlocked(this);
 
             body.activate();
             body.addShape(shape);
@@ -748,7 +748,7 @@ namespace ChipmunkSharp
             // cpEnvironment.cpAssertHard(shape.space != this, "You have already added this shape to this space. You must not add it a second time.");
             // cpEnvironment.cpAssertHard(shape.space != null, "You have already added this shape to another space. You cannot add it to a second.");
             // cpEnvironment.cpAssertHard(shape.body.IsRogue(), "You are adding a static shape to a dynamic body. Did you mean to attach it to a static or rogue body? See the documentation for more information.");
-            cpEnvironment.assertSpaceUnlocked(this);
+            cp.assertSpaceUnlocked(this);
 
 
             var body = shape.body;
@@ -816,7 +816,7 @@ namespace ChipmunkSharp
         public CollisionHandler lookupHandler(string a, string b)
         {
             Leaf test;
-            if (collisionHandlers.TryGetValue(cpEnvironment.hashPair(a, b), out test))
+            if (collisionHandlers.TryGetValue(cp.hashPair(a, b), out test))
                 return (CollisionHandler)test.obj;
             else
                 return DefaultHandler;
@@ -825,8 +825,8 @@ namespace ChipmunkSharp
         /// Unset a collision handler.
         public void removeCollisionHandler(string a, string b)
         {
-            cpEnvironment.assertSpaceUnlocked(this);
-            collisionHandlers.remove(cpEnvironment.hashPair(a, b));
+            cp.assertSpaceUnlocked(this);
+            collisionHandlers.remove(cp.hashPair(a, b));
 
         }
 
@@ -836,7 +836,7 @@ namespace ChipmunkSharp
             Func<cpArbiter, cpSpace, bool> begin, Func<cpArbiter, cpSpace, bool> preSolve, Func<cpArbiter, cpSpace, bool> postSolve, Action<cpArbiter, cpSpace> separate)
         {
 
-            cpEnvironment.assertSpaceUnlocked(this);
+            cp.assertSpaceUnlocked(this);
 
             // Remove any old function so the new one will get added.
             this.removeCollisionHandler(a, b);
@@ -853,7 +853,7 @@ namespace ChipmunkSharp
             if (separate != null)
                 handler.separate = separate;
 
-            collisionHandlers.insert(cpEnvironment.hashPair(a, b), handler);
+            collisionHandlers.insert(cp.hashPair(a, b), handler);
         }
 
 
@@ -862,7 +862,7 @@ namespace ChipmunkSharp
         public void activateBody(cpBody body)
         {
 
-            cpEnvironment.assert(!body.isRogue(), "Internal error: Attempting to activate a rogue body.");
+            cp.assert(!body.isRogue(), "Internal error: Attempting to activate a rogue body.");
 
             if (this.isLocked)
             {
@@ -894,7 +894,7 @@ namespace ChipmunkSharp
 
                         // Reinsert the arbiter into the arbiter cache
                         cpShape a = arb.a, b = arb.b;
-                        cachedArbiters.insert(cpEnvironment.hashPair(a.hashid, b.hashid), arb);
+                        cachedArbiters.insert(cp.hashPair(a.hashid, b.hashid), arb);
 
                         // Update the arbiter's state
                         arb.stamp = this.stamp;
@@ -915,7 +915,7 @@ namespace ChipmunkSharp
 
         public void deactivateBody(cpBody body)
         {
-            cpEnvironment.assert(!body.isRogue(), "Internal error: Attempting to deactivate a rogue body.");
+            cp.assert(!body.isRogue(), "Internal error: Attempting to deactivate a rogue body.");
 
             this.bodies.Remove(body);
 
@@ -953,7 +953,7 @@ namespace ChipmunkSharp
 
         public void processComponents(float dt)
         {
-            var sleep = (this.sleepTimeThreshold != cpEnvironment.Infinity);
+            var sleep = (this.sleepTimeThreshold != cp.Infinity);
             var bodies = this.bodies;
 
             // These checks can be removed at some stage (if DEBUG == undefined)
@@ -961,8 +961,8 @@ namespace ChipmunkSharp
             {
                 var body = bodies[i];
 
-                cpEnvironment.assertSoft(body.nodeNext == null, "Internal Error: Dangling next pointer detected in contact graph.");
-                cpEnvironment.assertSoft(body.nodeRoot == null, "Internal Error: Dangling root pointer detected in contact graph.");
+                cp.assertSoft(body.nodeNext == null, "Internal Error: Dangling next pointer detected in contact graph.");
+                cp.assertSoft(body.nodeRoot == null, "Internal Error: Dangling root pointer detected in contact graph.");
             }
 
             // Calculate the kinetic energy of all the bodies
@@ -1016,14 +1016,14 @@ namespace ChipmunkSharp
                 {
                     var body = bodies[i];
 
-                    if (cpEnvironment.componentRoot(body) == null)
+                    if (cp.componentRoot(body) == null)
                     {
                         // Body not in a component yet. Perform a DFS to flood fill mark 
                         // the component in the contact graph using this body as the root.
-                        cpEnvironment.floodFillComponent(body, body);
+                        cp.floodFillComponent(body, body);
 
                         // Check if the component should be put to sleep.
-                        if (!cpEnvironment.componentActive(body, this.sleepTimeThreshold))
+                        if (!cp.componentActive(body, this.sleepTimeThreshold))
                         {
                             this.sleepingComponents.Add(body);
                             for (var other = body; other != null; other = other.nodeNext)
@@ -1327,7 +1327,7 @@ namespace ChipmunkSharp
             }
 
             m_debugDraw.DrawString(0, 110, "Contact points: " + contacts);
-            m_debugDraw.DrawString(0, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}", cpEnvironment.numLeaves, cpEnvironment.numNodes, cpEnvironment.numPairs));
+            m_debugDraw.DrawString(0, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}", cp.numLeaves, cp.numNodes, cp.numPairs));
             //this.ctx.fillText("Contact points: " + contacts + " (Max: " + this.maxContacts + ")", 10, 140, maxWidth);
 
 

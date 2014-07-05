@@ -30,7 +30,7 @@ namespace ChipmunkSharp
 
         public void ActivateShapesTouchingShape(cpShape shape)
         {
-            if (sleepTimeThreshold != cpEnvironment.Infinity)
+            if (sleepTimeThreshold != cp.Infinity)
             {
                 shapeQuery(shape, (s, p) =>
                 {
@@ -38,25 +38,6 @@ namespace ChipmunkSharp
                 });
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         //MARK: Sleeping Functions
