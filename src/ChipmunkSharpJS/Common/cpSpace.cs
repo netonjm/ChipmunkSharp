@@ -134,8 +134,13 @@ namespace ChipmunkSharp
 
         public List<ContactPoint> collideShapes(cpShape a, cpShape b)
         {
-            cp.assert((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode, "Collided shapes must be sorted by type");
-            return (a as ICollisionShape).collisionTable[(b as ICollisionShape).collisionCode](a, b);
+
+            // cp.assert((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode, "Collided shapes must be sorted by type");
+            if ((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode)
+                return (a as ICollisionShape).collisionTable[(b as ICollisionShape).collisionCode](a, b);
+            else
+                return (b as ICollisionShape).collisionTable[(a as ICollisionShape).collisionCode](b, a);
+
         }
 
         public cpSpace()
@@ -361,6 +366,12 @@ namespace ChipmunkSharp
 
             int i;
             int j;
+
+
+            var bodies = this.bodies;
+            var constraints = this.constraints;
+            var arbiters = this.arbiters;
+
 
             // Reset and empty the arbiter lists.
             for (i = 0; i < arbiters.Count; i++)
@@ -722,13 +733,13 @@ namespace ChipmunkSharp
         public cpShape addShape(cpShape shape)
         {
 
-            var body =shape.body ;
+            var body = shape.body;
 
             if (shape.body.isStatic())
                 return this.addStaticShape(shape);
 
             cp.assertHard(shape.space != this, "You have already added this shape to this space. You must not add it a second time.");
-            cp.assertHard(shape.space != null, "You have already added this shape to another space. You cannot add it to a second.");
+            cp.assertHard(shape.space == null, "You have already added this shape to another space. You cannot add it to a second.");
             cp.assertSpaceUnlocked(this);
 
             body.activate();
@@ -761,8 +772,6 @@ namespace ChipmunkSharp
             return shape;
 
         }
-
-
 
         /// Call @c func for each shape in the space.
         // **** Iteration

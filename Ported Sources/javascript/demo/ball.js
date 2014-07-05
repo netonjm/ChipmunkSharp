@@ -20,7 +20,7 @@ var Balls = function() {
 	shape = space.addShape(new cp.BoxShape(rock, width, height));
 	shape.setFriction(0.3);
 	shape.setElasticity(0.3);
-
+/*
 	for (var i = 1; i <= 10; i++) {
 		var radius = 20;
 		mass = 3;
@@ -30,6 +30,8 @@ var Balls = function() {
 		circle.setElasticity(0.8);
 		circle.setFriction(1);
 	}
+	
+	*/
 /*
  * atom.canvas.onmousedown = function(e) {
       radius = 10;
@@ -41,13 +43,14 @@ var Balls = function() {
       return circle.setFriction(1);
     };
 */
-
+/*
 	this.ctx.strokeStyle = "black";
 
 	var ramp = space.addShape(new cp.SegmentShape(space.staticBody, v(100, 100), v(300, 200), 10));
 	ramp.setElasticity(1);
 	ramp.setFriction(1);
 	ramp.setLayers(NOT_GRABABLE_MASK);
+	*/
 };
 
 Balls.prototype = Object.create(Demo.prototype);

@@ -301,18 +301,20 @@ namespace ChipmunkSharp
         {
 
             // var verts = this.tVerts;
-            //var len = tVerts.Count;
-            //var lastPoint = new cpVect(tVerts[len - 2].x, tVerts[len - 1].y);
+            var len = tVerts.Count();
+            var lastPoint = new cpVect(tVerts[len - 2], tVerts[len - 1]);
             ////ctx.moveTo(lastPoint.x, lastPoint.y);
 
-            //for (var i = 0; i < len; i += 2)
-            //{
-            //    var p = new cpVect(verts[i].x, verts[i + 1].y);
-            //    m_debugDraw.DrawSegment(lastPoint, p, cpColor.Red);
-            //    lastPoint = p;
-            //}
+            cpColor color = cp.GetShapeColor(this);
 
-            m_debugDraw.DrawPolygon(getVers(), getNumVerts(), cpColor.Red);
+            for (var i = 0; i < len; i += 2)
+            {
+                var p = new cpVect(tVerts[i], tVerts[i + 1]);
+                m_debugDraw.DrawSegment(lastPoint, p, color);
+                lastPoint = p;
+            }
+
+            //m_debugDraw.DrawPolygon(getVers(), getNumVerts(), cpColor.Red);
 
 
             //// convert chipmunk points to coco points

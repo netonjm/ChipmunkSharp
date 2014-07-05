@@ -1311,5 +1311,60 @@ namespace ChipmunkSharp
 
             return (m * sum1) / (6 * sum2);
         }
+
+
+        public static List<cpColor> _styles;
+
+
+        public static int randColor()
+        {
+            return new Random(DateTime.Now.Millisecond).Next(0, 255);
+        }
+
+        public static List<cpColor> styles
+        {
+            get
+            {
+
+                if (_styles == null)
+                {
+                    _styles = new List<cpColor>();
+                    for (var i = 0; i < 100; i++)
+                    {
+                        styles.Add(new cpColor(randColor(), randColor(), randColor()));
+                    }
+                }
+
+                return _styles;
+
+            }
+            set
+            {
+                _styles = value;
+            }
+        }
+
+        public static cpColor GetShapeColor(cpShape shape)
+        {
+
+            if (shape.sensor)
+                return new cpColor(255, 255, 255);
+            else
+            {
+
+                if (shape.body.isSleeping())
+                {
+                    return new cpColor(50, 50, 50);
+                }
+                else if (shape.body.nodeIdleTime > shape.space.sleepTimeThreshold)
+                {
+                    return new cpColor(170, 170, 170);
+                }
+                else
+                {
+                    return styles[int.Parse(shape.hashid) % styles.Count];
+                }
+            }
+        }
     }
 }

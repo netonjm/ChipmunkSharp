@@ -85,7 +85,10 @@ namespace ChipmunkSharp
 
         public override void Draw(cpDraw m_debugDraw)
         {
-            m_debugDraw.DrawSolidCircle(new cpVect(tc.x, tc.y), r, cpVect.ZERO, cpColor.Red);
+
+            cpColor color = cp.GetShapeColor(this);
+
+            m_debugDraw.DrawSolidCircle(new cpVect(tc.x, tc.y), r, cpVect.ZERO, color);
 
         }
 
@@ -261,8 +264,12 @@ namespace ChipmunkSharp
             //drawLine(ctx, point2canvas, this.ta, this.tb);
             //ctx.lineWidth = oldLineWidth;
 
+            cpColor color = cp.GetShapeColor(this);
+
+
+
             var lineWidth = Math.Max(1, this.r);  // take a look if we need to apply scale for radius
-            m_debugDraw.DrawSegment(ta, tb, lineWidth, cpColor.Blue);
+            m_debugDraw.DrawSegment(ta, tb, lineWidth, color);
         }
 
         public Func<object, object, List<ContactPoint>>[] collisionTable
