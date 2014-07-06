@@ -543,7 +543,7 @@ namespace ChipmunkSharp
             /// Group of this shape. Shapes in the same group don't collide.
             this.group = 0;
             // Layer bitmask for this shape. Shapes only collide if the bitwise and of their layers is non-zero.
-            this.layers = cp.CP_ALL_LAYERS;
+            this.layers = cp.ALL_LAYERS;
 
             this.space = null;
 

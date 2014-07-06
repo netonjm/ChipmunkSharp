@@ -61,8 +61,9 @@ namespace ChipmunkSharp
 
         public static int shapeIDCounter = 0;
         public static int CP_USE_CGPOINTS = 1;
-        public static int CP_NO_GROUP = 0;
-        public static int CP_ALL_LAYERS = -1;
+
+        public static int NO_GROUP = 0;
+        public static int ALL_LAYERS = ~0;
 
         public static int numApplyImpulse = 0;
         public static int numApplyContact = 0;
@@ -415,7 +416,7 @@ namespace ChipmunkSharp
 
         public static void LogWrite(string message)
         {
-            Console.WriteLine(message);
+            // Console.WriteLine(message);
         }
 
         #endregion
@@ -872,7 +873,8 @@ namespace ChipmunkSharp
         {
             for (var body = root; body != null; body = body.nodeNext)
             {
-                if (body.nodeIdleTime < threshold) return true;
+                if (body.nodeIdleTime < threshold)
+                    return true;
             }
 
             return false;
@@ -1344,6 +1346,11 @@ namespace ChipmunkSharp
             }
         }
 
+        public static cpVect canvas2point(float x, float y, float scale)
+        {
+            return new cpVect(x / scale, 480 - y / scale);
+        }
+
         public static cpColor GetShapeColor(cpShape shape)
         {
 
@@ -1365,6 +1372,105 @@ namespace ChipmunkSharp
                     return styles[int.Parse(shape.hashid) % styles.Count];
                 }
             }
+        }
+
+        public static cpVect point2canvas(cpVect point, float scale)
+        {
+            return new cpVect(point.x * scale, (480 - point.y) * scale);
+        }
+
+        public static float last_MSA_min = 0;
+
+        public static float findMSA(cpPolyShape poly, cpSplittingPlane[] planes)
+        {
+            float min_index = 0;
+            var min = poly.valueOnAxis(planes[0].n, planes[0].d);
+            if (min > 0) return -1;
+
+            for (var i = 1; i < planes.Length; i++)
+            {
+                var dist = poly.valueOnAxis(planes[i].n, planes[i].d);
+                if (dist > 0)
+                {
+                    return -1;
+                }
+                else if (dist > min)
+                {
+                    min = dist;
+                    min_index = i;
+                }
+            }
+
+            last_MSA_min = min;
+            return min_index;
+        }
+
+
+        public static List<ContactPoint> findVerts(cpPolyShape poly1, cpPolyShape poly2, cpVect n, float dist)
+        {
+            List<ContactPoint> arr = new List<ContactPoint>();
+
+            var verts1 = poly1.tVerts;
+            for (var i = 0; i < verts1.Length; i += 2)
+            {
+                var vx = verts1[i];
+                var vy = verts1[i + 1];
+                if (poly2.containsVert(vx, vy))
+                {
+                    arr.Add(new ContactPoint(new cpVect(vx, vy), n, dist, cp.hashPair(poly1.hashid, (i >> 1).ToString())));
+                }
+            }
+
+            var verts2 = poly2.tVerts;
+            for (var i = 0; i < verts2.Length; i += 2)
+            {
+                var vx = verts2[i];
+                var vy = verts2[i + 1];
+                if (poly1.containsVert(vx, vy))
+                {
+                    arr.Add(new ContactPoint(new cpVect(vx, vy), n, dist, cp.hashPair(poly2.hashid, (i >> 1).ToString())));
+                }
+            }
+
+            return (arr.Count > 0 ? arr : cp.findVertsFallback(poly1, poly2, n, dist));
+
+
+
+        }
+
+        public static List<ContactPoint> findVertsFallback(cpPolyShape poly1, cpPolyShape poly2, cpVect n, float dist)
+        {
+            List<ContactPoint> arr = new List<ContactPoint>();
+
+
+            var verts1 = poly1.tVerts;
+            for (var i = 0; i < verts1.Length; i += 2)
+            {
+                var vx = verts1[i];
+                var vy = verts1[i + 1];
+                if (poly2.containsVertPartial(vx, vy, cpVect.cpvneg(n)))
+                {
+                    arr.Add(new ContactPoint(new cpVect(vx, vy), n, dist, cp.hashPair(poly1.hashid, i.ToString())));
+                }
+            }
+
+            var verts2 = poly2.tVerts;
+            for (var i = 0; i < verts2.Length; i += 2)
+            {
+                var vx = verts2[i];
+                var vy = verts2[i + 1];
+                if (poly1.containsVertPartial(vx, vy, n))
+                {
+                    arr.Add(new ContactPoint(new cpVect(vx, vy), n, dist, cp.hashPair(poly2.hashid, i.ToString())));
+                }
+            }
+
+            return arr;
+        }
+
+        internal static cpBB bbNewForCircle(cpVect point, int maxDistance)
+        {
+            throw new NotImplementedException();
         }
     }
 }

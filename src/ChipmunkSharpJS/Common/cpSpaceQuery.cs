@@ -47,8 +47,8 @@ namespace ChipmunkSharp
             var bb = new cpBB(point.x, point.y, point.x, point.y);
             Lock();
             {
-                this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); return null; });
-                this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); return null; });
+                this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
+                this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
             } Unlock(true);
         }
 
@@ -137,8 +137,8 @@ namespace ChipmunkSharp
 
             Lock();
             {
-                this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); return null; });
-                this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); return null; });
+                this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
+                this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
             }
             Unlock(true);
 
@@ -164,8 +164,8 @@ namespace ChipmunkSharp
 
             Lock();
             {
-                this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); return null; });
-                this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); return null; });
+                this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
+                this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
             } Unlock(true);
         }
 

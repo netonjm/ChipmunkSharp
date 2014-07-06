@@ -105,7 +105,7 @@ namespace ChipmunkSharp
         public List<cpArbiter> arbiters;
         public List<ContactPoint> contactBuffersHead;
 
-        public cpBBTree cachedArbiters;
+        public Dictionary<string, cpArbiter> cachedArbiters;
         // public List<cpArbiter> pooledArbiters;
         public List<cpConstraint> constraints;
 
@@ -122,24 +122,21 @@ namespace ChipmunkSharp
         }
 
 
-        public cpBBTree collisionHandlers;
+        public Dictionary<string, CollisionHandler> collisionHandlers;
         //public cpCollisionHandler defaultHandler;
 
         public bool skipPostStep;
 
         public List<Action> postStepCallbacks;
 
-        public CollisionHandler DefaultHandler { get; set; }
+        //public CollisionHandler DefaultHandler { get; set; }
         #endregion
 
         public List<ContactPoint> collideShapes(cpShape a, cpShape b)
         {
 
-            // cp.assert((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode, "Collided shapes must be sorted by type");
-            if ((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode)
-                return (a as ICollisionShape).collisionTable[(b as ICollisionShape).collisionCode](a, b);
-            else
-                return (b as ICollisionShape).collisionTable[(a as ICollisionShape).collisionCode](b, a);
+            cp.assert((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode, "Collided shapes must be sorted by type");
+            return (a as ICollisionShape).collisionTable[(b as ICollisionShape).collisionCode](a, b);
 
         }
 
@@ -159,14 +156,14 @@ namespace ChipmunkSharp
             this.arbiters = new List<cpArbiter>();
             this.contactBuffersHead = null;
 
-            this.cachedArbiters = new cpBBTree(null);
+            this.cachedArbiters = new Dictionary<string, cpArbiter>();
             //this.pooledArbiters = [];
 
             this.constraints = new List<cpConstraint>();
 
             this.locked = 0;
 
-            this.collisionHandlers = new cpBBTree(null);
+            this.collisionHandlers = new Dictionary<string, CollisionHandler>();
 
             this.defaultHandler = cp.defaultCollisionHandler;
 
@@ -223,14 +220,17 @@ namespace ChipmunkSharp
 
         }
 
-        Action<cpShape, cpShape> collideShapeFunc;
+        Action<object, object> collideShapeFunc;
 
-        public Action<cpShape, cpShape> makeCollideShapes()
+        public Action<object, object> makeCollideShapes()
         {
             // It would be nicer to use .bind() or something, but this is faster.
             var space_ = this;
-            return new Action<cpShape, cpShape>((a, b) =>
+            return new Action<object, object>((obj1, obj2) =>
             {
+                var a = obj1 as cpShape;
+                var b = obj2 as cpShape;
+
                 var space = space_;
 
                 // Reject any of the simple cases
@@ -263,20 +263,19 @@ namespace ChipmunkSharp
                 //cpContact *contacts = cpContactBufferGetArray(space);
                 //int numContacts = cpCollideShapes(a, b, contacts);
                 var contacts = collideShapes(a, b);
-                if (contacts.Count == 0) return; // Shapes are not colliding.
+                if (contacts == null || contacts.Count == 0) return; // Shapes are not colliding.
                 //cpSpacePushContacts(space, numContacts);
 
                 // Get an arbiter from space.arbiterSet for the two shapes.
                 // This is where the persistant contact magic comes from.
                 var arbHash = cp.hashPair(a.hashid, b.hashid);
 
-                var leaf = space.cachedArbiters.Get(arbHash);
-                if (leaf == null)
+                cpArbiter arb;
+                if (!space.cachedArbiters.TryGetValue(arbHash, out arb))
                 {
-                    leaf = space.cachedArbiters.insert(arbHash, new cpArbiter(a, b));
+                    arb = new cpArbiter(a, b);
+                    space.cachedArbiters.Add(arbHash, arb);
                 }
-
-                cpArbiter arb = leaf.obj as cpArbiter;
 
                 arb.update(contacts, handler, a, b);
 
@@ -396,7 +395,7 @@ namespace ChipmunkSharp
 
                 // Find colliding pairs.
                 this.activeShapes.each(s => cp.updateFunc(s as cpShape));
-                this.activeShapes.reindexQuery((o1, o2) => this.collideShapes(o1 as cpShape, o2 as cpShape));
+                this.activeShapes.reindexQuery(collideShapeFunc);
 
             } Unlock(false);
 
@@ -408,16 +407,14 @@ namespace ChipmunkSharp
 
                 List<string> safeDelete = new List<string>();
                 // Clear out old cached arbiters and call separate callbacks
-                foreach (var hash in this.cachedArbiters.leaves)
+                foreach (var hash in this.cachedArbiters)
                 {
-                    if (!this.arbiterSetFilter(hash.Value.obj as cpArbiter))
-                    {
+                    if (!this.arbiterSetFilter(hash.Value))
                         safeDelete.Add(hash.Key);
-                    }
                 }
 
                 foreach (var item in safeDelete)
-                    cachedArbiters.remove(item);
+                    cachedArbiters.Remove(item);
 
                 // Prestep the arbiters and constraints.
                 var slop = this.collisionSlop;
@@ -480,7 +477,8 @@ namespace ChipmunkSharp
                 {
                     arbiters[i].handler.postSolve(arbiters[i], this);
                 }
-            } this.Unlock(true);
+            }
+            this.Unlock(true);
         }
 
 
@@ -555,7 +553,7 @@ namespace ChipmunkSharp
 
         public void uncacheArbiter(cpArbiter arb)
         {
-            cachedArbiters.remove(arb.Key);
+            cachedArbiters.Remove(arb.Key);
             arbiters.Remove(arb);
         }
 
@@ -650,7 +648,6 @@ namespace ChipmunkSharp
             constraint.a.removeConstraint(constraint);
             constraint.b.removeConstraint(constraint);
             constraint.space = null;
-
         }
 
 
@@ -658,9 +655,9 @@ namespace ChipmunkSharp
         {
             List<string> safeDelete = new List<string>();
 
-            foreach (var hash in this.cachedArbiters.leaves)
+            foreach (var hash in this.cachedArbiters)
             {
-                cpArbiter arb = (cpArbiter)hash.Value.obj;
+                cpArbiter arb = hash.Value;
 
                 // Match on the filter shape, or if it's null the filter body
                 if (
@@ -681,7 +678,7 @@ namespace ChipmunkSharp
 
                 foreach (var item in safeDelete)
                 {
-                    cachedArbiters.remove(item);
+                    cachedArbiters.Remove(item);
                 }
 
             }
@@ -824,25 +821,25 @@ namespace ChipmunkSharp
 
         public CollisionHandler lookupHandler(string a, string b)
         {
-            Leaf test;
+            CollisionHandler test;
             if (collisionHandlers.TryGetValue(cp.hashPair(a, b), out test))
-                return (CollisionHandler)test.obj;
+                return test;
             else
-                return DefaultHandler;
+                return defaultHandler;
         }
 
         /// Unset a collision handler.
         public void removeCollisionHandler(string a, string b)
         {
             cp.assertSpaceUnlocked(this);
-            collisionHandlers.remove(cp.hashPair(a, b));
+            collisionHandlers.Remove(cp.hashPair(a, b));
 
         }
 
         /// Set a collision handler to be used whenever the two shapes with the given collision types collide.
         /// You can pass null for any function you don't want to implement.
         public void addCollisionHandler(string a, string b,
-            Func<cpArbiter, cpSpace, bool> begin, Func<cpArbiter, cpSpace, bool> preSolve, Func<cpArbiter, cpSpace, bool> postSolve, Action<cpArbiter, cpSpace> separate)
+            Func<cpArbiter, cpSpace, bool> begin, Func<cpArbiter, cpSpace, bool> preSolve, Action<cpArbiter, cpSpace> postSolve, Action<cpArbiter, cpSpace> separate)
         {
 
             cp.assertSpaceUnlocked(this);
@@ -862,7 +859,7 @@ namespace ChipmunkSharp
             if (separate != null)
                 handler.separate = separate;
 
-            collisionHandlers.insert(cp.hashPair(a, b), handler);
+            collisionHandlers.Add(cp.hashPair(a, b), handler);
         }
 
 
@@ -903,7 +900,7 @@ namespace ChipmunkSharp
 
                         // Reinsert the arbiter into the arbiter cache
                         cpShape a = arb.a, b = arb.b;
-                        cachedArbiters.insert(cp.hashPair(a.hashid, b.hashid), arb);
+                        cachedArbiters.Add(cp.hashPair(a.hashid, b.hashid), arb);
 
                         // Update the arbiter's state
                         arb.stamp = this.stamp;
@@ -1529,6 +1526,53 @@ namespace ChipmunkSharp
         #endregion
 
 
+        public cpSegmentQueryInfo segmentQueryFirst(cpVect start, cpVect end, int p1, int p2)
+        {
+            throw new NotImplementedException();
+        }
 
+        public cpNearestPointQueryInfo nearestPointQueryNearest(cpVect point, int maxDistance, int layers, int group)
+        {
+
+            cpNearestPointQueryInfo output = null;
+
+            var helper = new Action<object, object>((o1, o2) =>
+            {
+                cpShape shape = o1 as cpShape;
+
+                if (!(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) && !shape.sensor)
+                {
+                    cpNearestPointQueryInfo info = shape.nearestPointQuery(point);
+
+                    if (info.d < maxDistance && (output == null || info.d < output.d))
+                        output = info;
+                }
+            });
+
+            cpBB bb = cp.bbNewForCircle(point, maxDistance);
+
+            this.activeShapes.query(bb, helper);
+            this.staticShapes.query(bb, helper);
+
+            return output;
+        }
+
+        public class NearestPointQueryInfo
+        {
+
+            public NearestPointQueryInfo(cpShape shape, cpVect p, float d)
+            {
+                /// The nearest shape, NULL if no shape was within range.
+                this.shape = shape;
+                /// The closest point on the shape's surface. (in world space coordinates)
+                this.p = p;
+                /// The distance to the point. The distance is negative if the point is inside the shape.
+                this.d = d;
+            }
+
+            public cpShape shape { get; set; }
+            public cpVect p { get; set; }
+            public float d { get; set; }
+        }
     }
 }

@@ -27,18 +27,29 @@ namespace ChipmunkSharp
 
 
     /// @private
-    public class CollisionHandler : IObjectBox
+    public class CollisionHandler
     {
 
 
         public string a;
         public string b;
 
+        public Func<cpArbiter, cpSpace, bool> begin;
+        public Func<cpArbiter, cpSpace, bool> preSolve;
+        public Action<cpArbiter, cpSpace> postSolve;
+        public Action<cpArbiter, cpSpace> separate;
+
 
         public CollisionHandler()
         {
             this.a = "0";
             this.b = "0";
+
+            begin = defbegin;
+            preSolve = defpreSolve;
+            postSolve = defpostSolve;
+            separate = defseparate;
+
         }
 
         public CollisionHandler Clone()
@@ -49,17 +60,26 @@ namespace ChipmunkSharp
             return copy;
         }
 
-        public Func<cpArbiter, cpSpace, bool> begin;
-        public Func<cpArbiter, cpSpace, bool> preSolve;
-        public Func<cpArbiter, cpSpace, bool> postSolve;
-        public Action<cpArbiter, cpSpace> separate;
+        public bool defbegin(cpArbiter arb, cpSpace space)
+        {
+            return true;
+        }
 
 
+        public bool defpreSolve(cpArbiter arb, cpSpace space)
+        {
+            return true;
+        }
 
-        public float bb_l { get; set; }
-        public float bb_b { get; set; }
-        public float bb_r { get; set; }
-        public float bb_t { get; set; }
+        public void defpostSolve(cpArbiter arb, cpSpace space)
+        {
+        }
+
+        public void defseparate(cpArbiter arb, cpSpace space)
+        {
+        }
+
+
 
     };
 

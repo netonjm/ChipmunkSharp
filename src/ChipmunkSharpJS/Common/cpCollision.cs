@@ -88,8 +88,8 @@ namespace ChipmunkSharp
 
         public static List<ContactPoint> circle2circle(cpCircleShape circ1, cpCircleShape circ2)
         {
-            var contact = circle2circleQuery(circ1.tc, circ2.tc, circ1.r, circ2.r);
-            return contact != null ? contact : null;
+            return circle2circleQuery(circ1.tc, circ2.tc, circ1.r, circ2.r);
+            //return contact != null ? contact : null;
         }
 
         public static List<ContactPoint> circle2circleQuery(cpVect p1, cpVect p2, float r1, float r2)
@@ -97,7 +97,9 @@ namespace ChipmunkSharp
             var mindist = r1 + r2;
             var delta = cpVect.cpvsub(p2, p1);
             var distsq = cpVect.cpvlengthsq(delta);
-            if (distsq >= mindist * mindist) return null;
+
+            if (distsq >= mindist * mindist)
+                return new List<ContactPoint>();
 
             var dist = cp.cpfsqrt(distsq);
 
@@ -144,7 +146,7 @@ namespace ChipmunkSharp
 
             }
 
-            return null;
+            return new List<ContactPoint>();
 
         }
 
@@ -159,7 +161,7 @@ namespace ChipmunkSharp
                 var dist = cpVect.cpvdot(planes[i].n, circ.tc) - planes[i].d - circ.r;
                 if (dist > 0)
                 {
-                    return null;
+                    return new List<ContactPoint>();
                 }
                 else if (dist > min)
                 {
@@ -215,17 +217,20 @@ namespace ChipmunkSharp
             var segD = cpVect.cpvdot(seg.tn, seg.ta);
             var minNorm = poly.valueOnAxis(seg.tn, segD) - seg.r;
             var minNeg = poly.valueOnAxis(cpVect.cpvneg(seg.tn), -segD) - seg.r;
-            if (minNeg > 0 || minNorm > 0) return null;
+            if (minNeg > 0 || minNorm > 0)
+                return new List<ContactPoint>();
 
             var mini = 0;
             var poly_min = cp.segValueOnAxis(seg, planes[0].n, planes[0].d);
-            if (poly_min > 0) return null;
+            if (poly_min > 0)
+                return new List<ContactPoint>();
+
             for (var i = 0; i < numVerts; i++)
             {
                 var dist = cp.segValueOnAxis(seg, planes[i].n, planes[i].d);
                 if (dist > 0)
                 {
-                    return null;
+                    return new List<ContactPoint>();
                 }
                 else if (dist > poly_min)
                 {
@@ -280,11 +285,27 @@ namespace ChipmunkSharp
 
 
 
-        public static List<ContactPoint> Poly2Poly(cpPolyShape cpPolyShape1, cpPolyShape cpPolyShape2)
+        public static List<ContactPoint> Poly2Poly(cpPolyShape poly1, cpPolyShape poly2)
         {
-            //throw new NotImplementedException();
-            return null;
+            float mini1 = cp.findMSA(poly2, poly1.tPlanes);
+            if (mini1 == -1) return new List<ContactPoint>();
+            float min1 = cp.last_MSA_min;
+
+            float mini2 = cp.findMSA(poly1, poly2.tPlanes);
+            if (mini2 == -1) return new List<ContactPoint>();
+            float min2 = cp.last_MSA_min;
+
+            // There is overlap, find the penetrating verts
+            if (min1 > min2)
+                return cp.findVerts(poly1, poly2, poly1.tPlanes[(int)mini1].n, min1);
+            else
+                return cp.findVerts(poly1, poly2, cpVect.cpvneg(poly2.tPlanes[(int)mini2].n), min2);
+
+            // return new List<ContactPoint>();
         }
+
+
+
 
         #endregion
 

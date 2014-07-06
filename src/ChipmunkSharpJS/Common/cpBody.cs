@@ -525,9 +525,9 @@ namespace ChipmunkSharp
         public float kineticEnergy()
         {
             // Need to do some fudging to avoid NaNs
-            float vsq = cpVect.cpvdot(v, v);
-            float wsq = w * w;
-            return (vsq == 0 ? vsq * m : 0.0f) + (wsq == 0 ? wsq * i : 0.0f);
+            var vsq = this.v.x * this.v.x + this.v.y * this.v.y;
+            var wsq = this.w * this.w;
+            return (vsq >0 ? vsq * this.m : 0) + (wsq>0 ? wsq * this.i : 0);
         }
 
 
