@@ -416,8 +416,12 @@ namespace ChipmunkSharp
 
         public static void LogWrite(string message)
         {
-            // Console.WriteLine(message);
+
+            throw new NotImplementedException(message);
+            // Console.WriteLine();
         }
+
+
 
         #endregion
 
@@ -1317,11 +1321,15 @@ namespace ChipmunkSharp
 
         public static List<cpColor> _styles;
 
+        public static int[] colorRanges = new int[] {
+            0,100,255
+        };
 
-        public static int randColor()
+        public static int randColor(Random rnd)
         {
-            return new Random(DateTime.Now.Millisecond).Next(0, 255);
+            return rnd.Next(0, colorRanges.Length);
         }
+
 
         public static List<cpColor> styles
         {
@@ -1330,11 +1338,15 @@ namespace ChipmunkSharp
 
                 if (_styles == null)
                 {
+
+                    var rnd = new Random(DateTime.Now.Millisecond);
+
                     _styles = new List<cpColor>();
                     for (var i = 0; i < 100; i++)
                     {
-                        styles.Add(new cpColor(randColor(), randColor(), randColor()));
+                        _styles.Add(new cpColor(colorRanges[randColor(rnd)], colorRanges[randColor(rnd)], colorRanges[randColor(rnd)]));
                     }
+
                 }
 
                 return _styles;

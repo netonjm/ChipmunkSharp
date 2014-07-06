@@ -98,7 +98,7 @@ namespace ChipmunkSharp
     } ;
 
     /// A colliding pair of shapes.
-    public class cpArbiter : IObjectBox
+    public class cpArbiter
     {
 
         public static int CP_MAX_CONTACTS_PER_ARBITER = 4;
@@ -132,12 +132,7 @@ namespace ChipmunkSharp
         public cpBody body_a { get; set; }
         public cpBody body_b { get; set; }
 
-        //private cpArbiterThread thread_a { get; set; }
-        //private cpArbiterThread thread_b { get; set; }
-
-        //private struct cpArbiterThread thread_a;
-        //private struct cpArbiterThread thread_b;
-
+       
         public List<ContactPoint> contacts { get; set; }
 
         public CollisionHandler handler { get; set; }
@@ -645,77 +640,9 @@ namespace ChipmunkSharp
 
 
 
-
-        //public cpArbiterThread ThreadForBody(cpBody body)
-        //{
-        //    return (body_a == body ? thread_a : thread_b);
-        //}
-
-
-        //// TODO make this generic so I can reuse it for constraints also.
-        //public void Unthread(cpBody body)
-        //{
-        //    cpArbiterThread thread = ThreadForBody(body);
-        //    cpArbiter prev = thread.prev;
-        //    cpArbiter next = thread.next;
-
-        //    if (prev != null)
-        //    {
-        //        prev.ThreadForBody(body).next = next;
-        //    }
-        //    else if (body.arbiterList == this)
-        //    {
-        //        // IFF prev is NULL and body->arbiterList == arb, is arb at the head of the list.
-        //        // This function may be called for an arbiter that was never in a list.
-        //        // In that case, we need to protect it from wiping out the body->arbiterList pointer.
-        //        body.arbiterList = next;
-        //    }
-
-        //    if (next != null)
-        //        next.ThreadForBody(body).prev = prev;
-
-        //    thread.prev = null;
-        //    thread.next = null;
-        //}
-
-
-
-        ///// Return the colliding shapes involved for this arbiter.
-        ///// The order of their cpSpace.collision_type values will match
-        ///// the order set when the collision handler was registered.
-        //public bool cachedArbitersFilter(arbiterFilterContext context)
-        //{
-
-        //    cpShape shape = context.shape;
-        //    cpBody body = context.body;
-
-        //    // Match on the filter shape, or if it's null the filter body
-        //    if (
-        //        (body == body_a && (shape == a || shape == null)) ||
-        //        (body == body_b && (shape == b || shape == null))
-        //    )
-        //    {
-        //        // Call separate when removing shapes.
-        //        if (shape != null && state != cpArbiterState.cpArbiterStateCached)
-        //            CallSeparate(context.space);
-
-        //        Unthread();
-
-        //        return false;
-        //    }
-
-        //    return true;
-        //}
-
-
-
         public string Key { get { return cp.hashPair(a.hashid, b.hashid); } }
 
 
-        public float bb_l { get; set; }
-        public float bb_b { get; set; }
-        public float bb_r { get; set; }
-        public float bb_t { get; set; }
     };
 
 

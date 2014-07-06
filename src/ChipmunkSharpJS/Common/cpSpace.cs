@@ -225,13 +225,10 @@ namespace ChipmunkSharp
         public Action<object, object> makeCollideShapes()
         {
             // It would be nicer to use .bind() or something, but this is faster.
-            var space_ = this;
             return new Action<object, object>((obj1, obj2) =>
             {
                 var a = obj1 as cpShape;
                 var b = obj2 as cpShape;
-
-                var space = space_;
 
                 // Reject any of the simple cases
                 if (
@@ -246,7 +243,7 @@ namespace ChipmunkSharp
                     || !(a.layers != 0 & b.layers != 0)
                 ) return;
 
-                var handler = space.lookupHandler(a.collision_type, b.collision_type);
+                var handler = lookupHandler(a.collision_type, b.collision_type);
 
                 var sensor = a.sensor || b.sensor;
                 if (sensor && handler == cp.defaultCollisionHandler) return;
@@ -271,16 +268,16 @@ namespace ChipmunkSharp
                 var arbHash = cp.hashPair(a.hashid, b.hashid);
 
                 cpArbiter arb;
-                if (!space.cachedArbiters.TryGetValue(arbHash, out arb))
+                if (!cachedArbiters.TryGetValue(arbHash, out arb))
                 {
                     arb = new cpArbiter(a, b);
-                    space.cachedArbiters.Add(arbHash, arb);
+                    cachedArbiters.Add(arbHash, arb);
                 }
 
                 arb.update(contacts, handler, a, b);
 
                 // Call the begin function first if it's the first step
-                if (arb.state == cpArbiterState.FirstColl && !handler.begin(arb, space))
+                if (arb.state == cpArbiterState.FirstColl && !handler.begin(arb, this))
                 {
                     arb.ignore(); // permanently ignore the collision until separation
                 }
@@ -289,12 +286,12 @@ namespace ChipmunkSharp
                     // Ignore the arbiter if it has been flagged
                     (arb.state != cpArbiterState.Ignore) &&
                     // Call preSolve
-                    handler.preSolve(arb, space) &&
+                    handler.preSolve(arb, this) &&
                     // Process, but don't add collisions for sensors.
                     !sensor
                 )
                 {
-                    space.arbiters.Add(arb);
+                    this.arbiters.Add(arb);
                 }
                 else
                 {
@@ -308,7 +305,7 @@ namespace ChipmunkSharp
                 }
 
                 // Time stamp the arbiter so we know it was used recently.
-                arb.stamp = space.stamp;
+                arb.stamp = this.stamp;
             });
         }
 
@@ -891,12 +888,6 @@ namespace ChipmunkSharp
                     var bodyA = arb.body_a;
                     if (body == bodyA || bodyA.isStatic())
                     {
-                        //var contacts = arb.contacts;
-
-                        // Restore contact values back to the space's contact buffer memory
-                        //arb.contacts = cpContactBufferGetArray(this);
-                        //memcpy(arb.contacts, contacts, numContacts*sizeof(cpContact));
-                        //cpSpacePushContacts(this, numContacts);
 
                         // Reinsert the arbiter into the arbiter cache
                         cpShape a = arb.a, b = arb.b;
@@ -988,8 +979,8 @@ namespace ChipmunkSharp
             }
 
             // Awaken any sleeping bodies found and then push arbiters to the bodies' lists.
-            var arbiters = this.arbiters;
-            for (int i = 0, count = arbiters.Count; i < count; i++)
+            List<cpArbiter> arbiters = this.arbiters;
+            for (int i = 0; i < arbiters.Count; i++)
             {
                 cpArbiter arb = arbiters[i];
                 cpBody a = arb.body_a, b = arb.body_b;

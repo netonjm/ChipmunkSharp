@@ -302,10 +302,14 @@ namespace ChipmunkSharp
 
             // var verts = this.tVerts;
             var len = tVerts.Count();
+
+            List<cpVect> vertices = new List<cpVect>();
+
             var lastPoint = new cpVect(tVerts[len - 2], tVerts[len - 1]);
             ////ctx.moveTo(lastPoint.x, lastPoint.y);
 
-            cpColor color = cp.GetShapeColor(this);
+            cpColor color = cp.styles[60];  //cp.GetShapeColor(this);
+            //cpColor color = new cpColor(255, 0, 100);
 
             for (var i = 0; i < len; i += 2)
             {
@@ -313,7 +317,6 @@ namespace ChipmunkSharp
                 m_debugDraw.DrawSegment(lastPoint, p, color);
                 lastPoint = p;
             }
-
             //m_debugDraw.DrawPolygon(getVers(), getNumVerts(), cpColor.Red);
 
 
