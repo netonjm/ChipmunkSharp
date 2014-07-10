@@ -69,15 +69,15 @@ namespace ChipmunkSharp.Constraints
             this.anchr1 = anchr1;
             this.anchr2 = anchr2;
 
-            this.r1 = this.r2 = cpVect.ZERO;
+            this.r1 = this.r2 = cpVect.Zero;
 
-            this.k1 = cpVect.ZERO;
-            this.k2 = cpVect.ZERO;
+            this.k1 = cpVect.Zero;
+            this.k2 = cpVect.Zero;
 
-            this.jAcc = cpVect.ZERO;
+            this.jAcc = cpVect.Zero;
 
             this.jMaxLen = 0.0f;
-            this.bias = cpVect.ZERO;
+            this.bias = cpVect.Zero;
         }
 
         public override void PreStep(float dt)

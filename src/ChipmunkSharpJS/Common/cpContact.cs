@@ -58,7 +58,7 @@ namespace ChipmunkSharp
             this.n = n;
             this.dist = dist;
 
-            this.r1 = this.r2 = cpVect.ZERO;
+            this.r1 = this.r2 = cpVect.Zero;
             this.nMass = this.tMass = this.bounce = this.bias = 0;
 
             this.jnAcc = this.jtAcc = this.jBias = 0;

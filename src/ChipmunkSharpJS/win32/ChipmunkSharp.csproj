@@ -40,14 +40,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Common\Common\cp.cs">
+      <Link>Common\cp.cs</Link>
+    </Compile>
     <Compile Include="..\Common\Common\cpColor.cs">
       <Link>Common\cpColor.cs</Link>
     </Compile>
-    <Compile Include="..\Common\Common\cpDraw.cs">
-      <Link>Debug\cpDraw.cs</Link>
-    </Compile>
-    <Compile Include="..\Common\Common\cpEnvironment.cs">
-      <Link>Common\cpEnvironment.cs</Link>
+    <Compile Include="..\Common\Common\cpDebugDraw.cs">
+      <Link>Debug\cpDebugDraw.cs</Link>
     </Compile>
     <Compile Include="..\Common\Constraints\cpConstraint.cs">
       <Link>Constraints\cpConstraint.cs</Link>

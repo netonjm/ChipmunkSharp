@@ -103,7 +103,7 @@ namespace ChipmunkSharp.Constraints
             }
             else
             {
-                this.n = cpVect.ZERO;
+                this.n = cpVect.Zero;
                 this.jnAcc = 0;
             }
 

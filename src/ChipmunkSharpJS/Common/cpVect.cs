@@ -27,7 +27,7 @@ namespace ChipmunkSharp
     public class cpVect
     {
 
-        public static cpVect ZERO
+        public static cpVect Zero
         {
             get
             {
@@ -395,7 +395,7 @@ namespace ChipmunkSharp
                     );
             }
 
-            return ZERO;
+            return Zero;
         }
 
         /** Converts radians to a normalized vector.
@@ -862,7 +862,7 @@ namespace ChipmunkSharp
 
         public static cpVect cpvnormalize_safe(cpVect v)
         {
-            return (v.x == 0.0f && v.y == 0.0f ? cpVect.ZERO : cpvnormalize(v));
+            return (v.x == 0.0f && v.y == 0.0f ? cpVect.Zero : cpvnormalize(v));
         }
 
 
@@ -888,7 +888,7 @@ namespace ChipmunkSharp
         /// Returns a normalized copy of v or vzero if v was already vzero. Protects against divide by zero errors.
         public static cpVect vnormalize_safe(cpVect v)
         {
-            return (v.x == 0 && v.y == 0 ? cpVect.ZERO : v.Normalize());
+            return (v.x == 0 && v.y == 0 ? cpVect.Zero : v.Normalize());
         }
 
         /// Clamp v to length len.

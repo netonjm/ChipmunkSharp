@@ -417,8 +417,8 @@ namespace ChipmunkSharp
         public static void LogWrite(string message)
         {
 
-            throw new NotImplementedException(message);
-            // Console.WriteLine();
+            //throw new NotImplementedException(message);
+			Console.WriteLine(message);
         }
 
 
@@ -1021,7 +1021,7 @@ namespace ChipmunkSharp
 		box.r, box.t,
 		box.r, box.b};
 
-            return new cpPolyShape(body, verts, cpVect.ZERO);
+            return new cpPolyShape(body, verts, cpVect.Zero);
         }
 
 

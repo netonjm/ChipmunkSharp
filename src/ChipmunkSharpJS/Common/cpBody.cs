@@ -190,11 +190,11 @@ namespace ChipmunkSharp
             //this.i_inv;
 
             /// Position of the rigid body's center of gravity.
-            this.p = cpVect.ZERO;
+            this.p = cpVect.Zero;
             /// Velocity of the rigid body's center of gravity.
-            this.v = cpVect.ZERO;
+            this.v = cpVect.Zero;
             /// Force acting on the rigid body's center of gravity.
-            this.f = cpVect.ZERO;
+            this.f = cpVect.Zero;
 
             /// Rotation of the body around it's center of gravity in radians.
             /// Must agree with cpBody.rot! Use cpBodySetAngle() when changing the angle for this reason.
@@ -214,7 +214,7 @@ namespace ChipmunkSharp
             this.w_limit = cp.Infinity;
 
             // This stuff is all private.
-            this.v_bias = cpVect.ZERO; //x = this.v_biasy = 0;
+            this.v_bias = cpVect.Zero; //x = this.v_biasy = 0;
             this.w_bias = 0;
 
             this.space = null;
@@ -237,7 +237,7 @@ namespace ChipmunkSharp
             this.setMoment(i);
 
             // Set this.a and this.rot
-            this.rot = cpVect.ZERO;
+            this.rot = cpVect.Zero;
             this.setAngle(0);
 
 
@@ -422,7 +422,7 @@ namespace ChipmunkSharp
         public void resetForces()
         {
             this.activate();
-            f = cpVect.ZERO;
+            f = cpVect.Zero;
             t = 0.0f;
         }
 

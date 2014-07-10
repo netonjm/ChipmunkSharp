@@ -70,10 +70,10 @@ namespace ChipmunkSharp.Constraints
             this.clamp = 0.0f;
             this.r1 = this.r2 = null;
 
-            this.k1 = cpVect.ZERO;// new cpVect(0, 0);
-            this.k2 = cpVect.ZERO;// new Vect(0, 0);
+            this.k1 = cpVect.Zero;// new cpVect(0, 0);
+            this.k2 = cpVect.Zero;// new Vect(0, 0);
 
-            this.jAcc = cpVect.ZERO;
+            this.jAcc = cpVect.Zero;
             this.jMaxLen = 0.0f;
             this.bias = null;
 

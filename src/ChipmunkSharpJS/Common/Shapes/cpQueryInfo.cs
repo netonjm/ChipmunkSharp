@@ -104,7 +104,7 @@ namespace ChipmunkSharp.Shapes
 
         public static cpSegmentQueryInfo CreateBlanck()
         {
-            return new cpSegmentQueryInfo(null, 1.0f, cpVect.ZERO);
+            return new cpSegmentQueryInfo(null, 1.0f, cpVect.Zero);
         }
 
         public cpVect hitPoint(cpVect start, cpVect end)
@@ -138,7 +138,7 @@ namespace ChipmunkSharp.Shapes
             /// The closest point on the shape's surface. (in world space coordinates)
             this.d = cp.Infinity;
             /// The distance to the point. The distance is negative if the point is inside the shape.
-            this.n = cpVect.ZERO;
+            this.n = cpVect.Zero;
         }
 
     }

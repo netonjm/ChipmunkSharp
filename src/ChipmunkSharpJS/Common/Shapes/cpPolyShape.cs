@@ -71,7 +71,7 @@ namespace ChipmunkSharp
             : base(body)
         {
             this.setVerts(verts, offset);
-            this.shapeType = cpShapeType.POLY_SHAPE;
+            this.shapeType = cpShapeType.Polygon;
             //Shape.call(this, body);
         }
 
@@ -177,7 +177,7 @@ namespace ChipmunkSharp
             var v0x = verts[verts.Length - 2];
             var v0y = verts[verts.Length - 1];
             var minDist = cp.Infinity;
-            var closestPoint = cpVect.ZERO;
+            var closestPoint = cpVect.Zero;
             var outside = false;
 
             for (var i = 0; i < planes.Length; i++)
@@ -297,7 +297,7 @@ namespace ChipmunkSharp
             return dev;
         }
 
-        public override void Draw(cpDraw m_debugDraw)
+        public override void Draw(cpDebugDraw m_debugDraw)
         {
 
             // var verts = this.tVerts;

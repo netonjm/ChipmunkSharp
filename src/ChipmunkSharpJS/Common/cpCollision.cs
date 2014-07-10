@@ -125,7 +125,7 @@ namespace ChipmunkSharp
             var closest = cpVect.cpvadd(seg_a, cpVect.cpvmult(seg_delta, closest_t));
 
             var contact = circle2circleQuery(center, closest, circleShape.r, segmentShape.r);
-            if (contact != null)
+            if (contact != null && contact.Count>0)
             {
                 List<ContactPoint> dev = new List<ContactPoint>();
 
@@ -134,11 +134,14 @@ namespace ChipmunkSharp
                     var n = item.n;
 
                     // Reject endcap collisions if tangents are provided.
-                    if ((closest_t == 0 && cpVect.cpvdot(n, segmentShape.a_tangent) < 0) ||
-                        (closest_t == 1 && cpVect.cpvdot(n, segmentShape.b_tangent) < 0))
-                    { }
-                    else
-                        dev.Add(item);
+					if ((closest_t == 0 && cpVect.cpvdot(n, segmentShape.a_tangent) < 0) ||
+						(closest_t == 1 && cpVect.cpvdot(n, segmentShape.b_tangent) < 0))
+					{ }
+					else
+					{
+						dev.Add(item);
+						return dev;
+					}
                 }
 
                 if (dev.Count > 0)
