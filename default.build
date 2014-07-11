@@ -60,8 +60,8 @@
 
   <target name="buildwindows" description="Build Windows" depends="clean">
     <if test="${os == 'Win32NT'}">
-      <exec program="msbuild " commandline="src\ChipmunkSharp\ChipmunkSharp.Windows.sln /t:Clean /p:Configuration=Release" />
-      <exec program="msbuild " commandline="src\ChipmunkSharp\ChipmunkSharp.Windows.sln /t:Build /p:Configuration=Release" />
+      <exec program="msbuild " commandline="src\ChipmunkSharpJS\ChipmunkSharp.Windows.sln /t:Clean /p:Configuration=Release" />
+      <exec program="msbuild " commandline="src\ChipmunkSharpJS\ChipmunkSharp.Windows.sln /t:Build /p:Configuration=Release" />
    
     </if>
     <if test="${os == 'Unix'}">

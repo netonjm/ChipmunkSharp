@@ -4774,7 +4774,8 @@ Space.prototype.makeCollideShapes = function()
 		//cpContact *contacts = cpContactBufferGetArray(space);
 		//int numContacts = cpCollideShapes(a, b, contacts);
 		var contacts = collideShapes(a, b);
-		if(contacts.length === 0) return; // Shapes are not colliding.
+		if(contacts.length === 0) 
+			return; // Shapes are not colliding.
 		//cpSpacePushContacts(space, numContacts);
 
 		// Get an arbiter from space.arbiterSet for the two shapes.
