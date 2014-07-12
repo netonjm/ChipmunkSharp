@@ -32,20 +32,23 @@ namespace ChipmunkExample
 
 
 
-    public class DebugDraw : cpDraw
+    public class cpDebugDrawMG : cpDebugDraw
     {
+
+
         PrimitiveBatch primitiveBatch;
         SpriteFont spriteFont;
         List<StringData> stringData;
 
         static BasicEffect m_defaultEffect;
         //StringBuilder stringBuilder;
-        public DebugDraw()
+        public cpDebugDrawMG(cpSpace space)
+            : base(space)
         {
-            _stringData = new List<StringData>();
+
         }
 
-    
+
 
         //public override void DrawTransform(ref Transform xf)
         //{

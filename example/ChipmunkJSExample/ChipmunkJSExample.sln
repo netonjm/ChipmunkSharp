@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipmunkJSExample", "win32\ChipmunkJSExample.csproj", "{B6CF2485-2888-4F8E-A94D-7901B7733E27}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipmunkJSExampleMonoGame", "win32\ChipmunkJSExampleMonoGame.csproj", "{B6CF2485-2888-4F8E-A94D-7901B7733E27}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipmunkSharp", "..\..\src\ChipmunkSharpJS\win32\ChipmunkSharp.csproj", "{FD50437F-B756-4BD8-99BE-B723F6E1EB45}"
 EndProject

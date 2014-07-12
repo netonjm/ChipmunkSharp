@@ -59,10 +59,14 @@ namespace ChipmunkExample
     // users, in a similar way to SpriteBatch. PrimitiveBatch can render lines, points,
     // and triangles to the screen. In this sample, it is used to draw a spacewars
     // retro scene.
-    public class PrimitiveBatch : cpDraw, IDisposable
+    public class PrimitiveBatch : cpDebugDraw, IDisposable
     {
 
 
+        public void DrawString(int x, int y, string s, params object[] args)
+        {
+            _stringData.Add(new StringData(x, y, s, args, TextColor));
+        }
 
         #region Constants and Fields
 
@@ -777,10 +781,10 @@ namespace ChipmunkExample
         }
 #endif
 
-        static cpVect startPoint = cpVect.ZERO;
-        static cpVect destinationPoint = cpVect.ZERO;
-        static cpVect controlPoint1 = cpVect.ZERO;
-        static cpVect controlPoint2 = cpVect.ZERO;
+        static cpVect startPoint = cpVect.Zero;
+        static cpVect destinationPoint = cpVect.Zero;
+        static cpVect controlPoint1 = cpVect.Zero;
+        static cpVect controlPoint2 = cpVect.Zero;
 
 
         /*
@@ -962,45 +966,6 @@ namespace ChipmunkExample
         }
 
 
-
-        //public override void DrawSolidCircle(cpVect center, float radius, cpVect axis, cpColor color)
-        //{
-
-        //    var actualColor = color.ToColor();
-        //    var actualCenter = center.ToVector2();
-
-
-        //    int segments = 16;
-        //    double increment = Math.PI * 2.0 / (double)segments;
-        //    double theta = 0.0;
-
-        //    Color colorFill = actualColor * 0.5f;
-
-        //    Vector2 v0 = actualCenter + radius * new Vector2((float)Math.Cos(theta), (float)Math.Sin(theta));
-        //    theta += increment;
-
-        //    for (int i = 1; i < segments - 1; i++)
-        //    {
-        //        Vector2 v1 = actualCenter + radius * new Vector2((float)Math.Cos(theta), (float)Math.Sin(theta));
-        //        Vector2 v2 = actualCenter + radius * new Vector2((float)Math.Cos(theta + increment), (float)Math.Sin(theta + increment));
-
-        //        _vertsFill[_fillCount * 3].Position = new Vector3(v0, 0.0f);
-        //        _vertsFill[_fillCount * 3].Color = colorFill;
-
-        //        _vertsFill[_fillCount * 3 + 1].Position = new Vector3(v1, 0.0f);
-        //        _vertsFill[_fillCount * 3 + 1].Color = colorFill;
-
-        //        _vertsFill[_fillCount * 3 + 2].Position = new Vector3(v2, 0.0f);
-        //        _vertsFill[_fillCount * 3 + 2].Color = colorFill;
-
-        //        _fillCount++;
-
-        //        theta += increment;
-        //    }
-        //    DrawCircle(center, radius, color);
-
-        //    DrawSegment(center, (actualCenter.ToCpVect() + axis) * radius, color);
-        //}
 
         public override void DrawSegment(cpVect p1, cpVect p2, cpColor color)
         {
