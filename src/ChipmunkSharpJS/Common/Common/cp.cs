@@ -366,30 +366,30 @@ namespace ChipmunkSharp
 
 		public static void assert(string p2)
 		{
-			LogWrite(string.Format("Assert:{0}", p2));
+			Error(string.Format("Assert:{0}", p2));
 		}
 
 		public static void assert(bool p1, string p2)
 		{
 			if (!p1)
-				LogWrite(string.Format("Assert:{0} Value:{1}", p2, p1));
+				Error(string.Format("Assert:{0} Value:{1}", p2, p1));
 		}
 
 		public static void assertHard(bool p1, string p2)
 		{
 			if (!p1)
-				LogWrite(string.Format("AssertHard:{0} Value:{1}", p2, p1));
+				Error(string.Format("AssertHard:{0} Value:{1}", p2, p1));
 		}
 
 		public static void assertHard(string p)
 		{
-			LogWrite(string.Format("AssertHard:{0} Value:{1}", p, ""));
+			Error(string.Format("AssertHard:{0} Value:{1}", p, ""));
 		}
 
 		public static void assertSoft(bool p1, string p2)
 		{
 			if (!p1)
-				LogWrite(string.Format("cpAssertSoft:{0} Value:{1}", p2, p1));
+				Trace(string.Format("cpAssertSoft:{0} Value:{1}", p2, p1));
 		}
 
 		public static void assertSpaceUnlocked(cpSpace space)
@@ -400,28 +400,29 @@ namespace ChipmunkSharp
 		public static void assertWarn(bool p1, string p2)
 		{
 			if (!p1)
-				LogWrite(string.Format("AssertWarn:{0} Value:{1}", p2, p1));
+				Trace(string.Format("AssertWarn:{0} Value:{1}", p2, p1));
 		}
 
 		public static void assertWarn(string p)
 		{
-			LogWrite(string.Format("AssertWarn:{0}", p));
+			Trace(string.Format("AssertWarn:{0}", p));
 		}
 
 		public static void assertWarn(bool p)
 		{
 			if (!p)
-				LogWrite(string.Format("AssertWarn: ERROR DETECTED"));
+				Trace(string.Format("AssertWarn: ERROR DETECTED"));
 		}
 
-		public static void LogWrite(string message)
+		public static void Trace(string message)
 		{
-
-			throw new NotImplementedException(message);
-			Console.WriteLine(message);
+			Console.WriteLine("ASSERTION FAILED: " + message);
 		}
 
-
+		public static void Error(string message)
+		{
+			throw new Exception(message);
+		}
 
 		#endregion
 
@@ -712,7 +713,7 @@ namespace ChipmunkSharp
 				str += " ";
 			}
 
-			LogWrite(str + node.bb_b + " " + node.bb_t);
+			Trace(str + node.bb_b + " " + node.bb_t);
 		}
 
 		public static Node SubtreeRemove(Node subtree, Leaf leaf, cpBBTree tree)
