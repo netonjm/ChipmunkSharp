@@ -23,20 +23,19 @@
     </delete>
   </target>
 
-  <target name="build" description="Build MonoGame Release" depends="monogame">
+  <target name="build" description="Build ChipmunkSharp Release">
 
-    <call target="buildPCL"/>
+    <!--call target="buildPCL"/-->
     <call target="buildwindows"/>
-    <call target="buildwindowsphone8"/>
-    <call target="buildwindows8"/>
-    <call target="buildios"/>
+    <!--call target="buildwindowsphone8"/-->
+    <!--call target="buildwindows8"/-->
+    <!--call target="buildios"/-->
     <call target="buildmac"/>
-    <call target="buildandroid"/>
-    <call target="buildouya"/>
+    <!--call target="buildandroid"/-->
+    <!--call target="buildouya"/-->
 
     <call target="buildnugets"/>
 
-    <call target="buildtemplates"/>
   </target>
 
   <target name="monogame" description="Build MonoGame Release" depends="checkos">
