@@ -302,7 +302,7 @@ namespace ChipmunkSharp
 			var lastPoint = new cpVect(tVerts[len - 2], tVerts[len - 1]);
 			////ctx.moveTo(lastPoint.x, lastPoint.y);
 
-			cpColor color = cp.styles[60];  //cp.GetShapeColor(this);
+			cpColor color = cp.GetShapeColor(this);
 			//cpColor color = new cpColor(255, 0, 100);
 
 			for (var i = 0; i < len; i += 2)
