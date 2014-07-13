@@ -635,9 +635,12 @@ namespace ChipmunkSharp
             {
                 //remove elements adds more functionality than simple array
                 leaves.Remove(key);
-                if (root != null)
-                    this.root = cp.SubtreeRemove(this.root, leaf, this);
-                leaf.clearPairs(this);
+
+                //if (root != null)
+                   
+				this.root = cp.SubtreeRemove(this.root, leaf, this);
+                
+				leaf.clearPairs(this);
                 leaf.recycle(this);
             }
         }

@@ -187,7 +187,7 @@ namespace ChipmunkExample
                  input.IsNewMouseButtonRelease(MouseButtons.LeftButton)) &&
                 _fixedMouseJoint != null)
             {
-                World.re RemoveJoint(_fixedMouseJoint);
+                World.RemoveJoint(_fixedMouseJoint);
                 _fixedMouseJoint = null;
             }
 

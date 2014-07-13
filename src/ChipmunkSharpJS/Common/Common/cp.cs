@@ -417,7 +417,7 @@ namespace ChipmunkSharp
 		public static void LogWrite(string message)
 		{
 
-			//throw new NotImplementedException(message);
+			throw new NotImplementedException(message);
 			Console.WriteLine(message);
 		}
 

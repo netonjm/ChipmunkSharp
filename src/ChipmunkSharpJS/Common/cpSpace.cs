@@ -389,6 +389,7 @@ namespace ChipmunkSharp
 
 			Lock();
 			{
+
 				// Integrate positions
 				for (i = 0; i < bodies.Count; i++)
 				{
@@ -984,21 +985,29 @@ namespace ChipmunkSharp
 			}
 
 			// Awaken any sleeping bodies found and then push arbiters to the bodies' lists.
-			List<cpArbiter> arbiters = this.arbiters;
-			for (int i = 0; i < arbiters.Count; i++)
+
+			var count = arbiters.Count; //FIX: we cannot read the count values of the array because it changes inside
+
+			for (int i = 0; i < count; i++)
 			{
 				cpArbiter arb = arbiters[i];
 				cpBody a = arb.body_a, b = arb.body_b;
 
 				if (sleep)
 				{
-					if ((b.isRogue() && !b.isStatic()) || a.isSleeping()) a.activate();
-					if ((a.isRogue() && !a.isStatic()) || b.isSleeping()) b.activate();
+
+					if ((b.isRogue() && !b.isStatic()) || a.isSleeping())
+						a.activate();
+
+					if ((a.isRogue() && !a.isStatic()) || b.isSleeping())
+						b.activate();
 				}
 
 				a.pushArbiter(arb);
 				b.pushArbiter(arb);
 			}
+
+
 
 			if (sleep)
 			{
@@ -1009,8 +1018,11 @@ namespace ChipmunkSharp
 					cpConstraint constraint = constraints[i];
 					cpBody a = constraint.a, b = constraint.b;
 
-					if (b.isRogue() && !b.isStatic()) a.activate();
-					if (a.isRogue() && !a.isStatic()) b.activate();
+					if (b.isRogue() && !b.isStatic())
+						a.activate();
+
+					if (a.isRogue() && !a.isStatic())
+						b.activate();
 				}
 
 				// Generate components and deactivate sleeping ones
