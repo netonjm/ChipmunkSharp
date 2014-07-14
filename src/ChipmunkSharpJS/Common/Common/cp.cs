@@ -54,7 +54,6 @@ namespace ChipmunkSharp
 
 		public static string cpVersionString = string.Format("{0}.{1}.{2}", CP_VERSION_MAJOR, CP_VERSION_MINOR, CP_VERSION_RELEASE);
 
-
 		public static int numLeaves { get; set; }
 		public static int numNodes { get; set; }
 		public static int numPairs { get; set; }
@@ -81,6 +80,7 @@ namespace ChipmunkSharp
 				return BitConverter.ToSingle(INFINITY, 0);
 			}
 		}
+
 		public static void resetShapeIdCounter()
 		{
 			shapeIDCounter = 0;
@@ -91,25 +91,12 @@ namespace ChipmunkSharp
 			return Convert.ToInt32(a) < Convert.ToInt32(b) ? a + " " + b : b + " " + a;
 		}
 
-		//public static int CP_HASH_PAIR(cpPolyShape poly, int B)
-		//{
-		//    return poly.hashid ^ B;
-		//}
-		//public static int CP_HASH_PAIR(cpSegmentShape seg, int B)
-		//{
-		//    return seg.hashid ^ B;
-		//}
-
 		//===========================================================
 
 		/** Clamp a value between from and to.
 		   @since v0.99.1
 	   */
 		#region Mathemathical Operations and variables
-
-		//public static double INFINITY2 = 1e1000;
-		//public static float M_PI = 3.14159265358979323846264338327950288f;
-		//public static float M_E = 2.71828182845904523536028747135266250f;
 
 		public static float cpfceil(float a)
 		{
@@ -215,17 +202,6 @@ namespace ChipmunkSharp
 			return f1 + cpfclamp(f2 - f1, -d, d);
 		}
 
-		/// Return the min of two cpFloats.
-		//static float cpfmin(float a, float b)
-		//{
-		//    return (a < b) ? a : b;
-		//}
-
-		//static float cpfmax(float a, float b)
-		//{
-		//    return (a > b) ? a : b;
-		//}
-
 		#endregion
 
 		public static float k_scalar_body(cpBody body, cpVect r, cpVect n)
@@ -259,8 +235,6 @@ namespace ChipmunkSharp
 			return cpVect.cpvdot(relative_velocity(a, b, r1, r2), n);
 		}
 
-
-
 		public static void apply_impulse(cpBody body, cpVect j, cpVect r)
 		{
 			body.v = cpVect.cpvadd(body.v, cpVect.cpvmult(j, body.m_inv));
@@ -272,7 +246,6 @@ namespace ChipmunkSharp
 			apply_impulse(a, vec.Neg(), r1);
 			apply_impulse(b, vec, r2);
 		}
-
 
 		public static void apply_impulses(cpBody a, cpBody b, cpVect r1, cpVect r2, float jx, float jy)
 		{
@@ -300,14 +273,6 @@ namespace ChipmunkSharp
 			body.v_bias = cpVect.cpvadd(body.v_bias, cpVect.cpvmult(j, body.m_inv));
 			body.w_bias += body.i_inv * cpVect.cpvcross(r, j);
 		}
-
-		/*
-		var apply_bias_impulses = function(a, b, r1, r2, j)
-		{
-			apply_bias_impulse(a, vneg(j), r1);
-			apply_bias_impulse(b, j, r2);
-		};*/
-
 
 		// k1 and k2 are modified by the function to contain the outputs.
 		public static void k_tensor(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect k1, cpVect k2)
@@ -340,11 +305,7 @@ namespace ChipmunkSharp
 			// invert
 			var determinant = k11 * k22 - k12 * k21;
 
-			//assertSoft(determinant !== 0, "Unsolvable constraint.");
-			if (determinant == 0)
-			{
-				throw new NotImplementedException("Unsolvable constraint.");
-			}
+			assertSoft(determinant != 0, "Unsolvable constraint.");
 
 			var det_inv = 1 / determinant;
 
@@ -357,12 +318,9 @@ namespace ChipmunkSharp
 			return 1.0f - (float)Math.Pow(errorBias, dt);
 		}
 
-
 		#endregion
 
 		#region ASSERTS
-
-
 
 		public static void assert(string p2)
 		{
@@ -421,8 +379,8 @@ namespace ChipmunkSharp
 
 		public static void Error(string message)
 		{
-			//throw new Exception(message);
-			Console.WriteLine("ASSERTION FAILED: " + message);
+			throw new Exception(message);
+			//Console.WriteLine("ASSERTION FAILED: " + message);
 		}
 
 		#endregion
@@ -457,7 +415,6 @@ namespace ChipmunkSharp
 		{
 			float sum1 = 0;
 			float sum2 = 0;
-			//var len = ;
 			for (var i = 0; i < verts.Count; i += 2)
 			{
 				var v1x = verts[i] + offset.x;
@@ -524,25 +481,11 @@ namespace ChipmunkSharp
 			// TODO NaN when offset is 0 and m is INFINITY	
 			return momentForBox(m, width, height) + m * offset.LengthSQ;
 		}
+
 		public static float momentForBox(float m, float width, float height)
 		{
 			return m * (width * width + height * height) / 12;
 		}
-
-		//public static float momentForBox2(float m, cpBB box)
-		//{
-		//    var width = box.r - box.l;
-		//    var height = box.t - box.b;
-		//    var offset = new cpVect(box.l + box.r, box.b + box.t).Multiply(0.5f);
-
-		//    // TODO NaN when offset is 0 and m is INFINITY	
-		//    return momentForBox(m, width, height) + m * offset.LengthSQ;
-		//}
-
-		//public static float momentForBox(float m, float width, float height)
-		//{
-		//    return m * (width * width + height * height) / 12;
-		//}
 
 		#endregion
 
@@ -640,7 +583,6 @@ namespace ChipmunkSharp
 			}
 
 			//TODO: ¿?
-
 
 			float split = (bounds[count - 1] + bounds[count]) * 0.5f; // use the median as the split
 
@@ -837,7 +779,6 @@ namespace ChipmunkSharp
 			space.sleepingComponents.Remove(root);
 		}
 
-
 		public static void floodFillComponent(cpBody root, cpBody body)
 		{
 			// Rogue bodies cannot be put to sleep and prevent bodies they are touching from sleeping anyway.
@@ -894,11 +835,7 @@ namespace ChipmunkSharp
 			shape.update(body.Position, body.Rotation);
 		}
 
-
-
 		//// **** All Important cpSpaceStep() Function
-
-
 		/// Returns true if @c a and @c b intersect.
 
 		public static bool bbIntersects(cpBB a, cpBB b)
@@ -920,9 +857,7 @@ namespace ChipmunkSharp
 		public static float bbTreeMergedArea(Node a, Node b)
 		{
 			return (Math.Max(a.bb_r, b.bb_r) - Math.Min(a.bb_l, b.bb_l)) * (Math.Max(a.bb_t, b.bb_t) - Math.Min(a.bb_b, b.bb_b));
-			//return (Math.Max(a.bb.r, b.bb.r) - Math.Min(a.bb.l, b.bb.l)) * (Math.Max(a.bb.t, b.bb.t) - Math.Min(a.bb.b, b.bb.b));
 		}
-
 
 		public static bool bbTreeIntersectsNode(Node a, Node b)
 		{
@@ -930,12 +865,8 @@ namespace ChipmunkSharp
 			//return (a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t);
 		}
 
-
 		public static Node subtreeInsert(Node subtree, Leaf leaf, cpBBTree tree)
 		{
-			//	var s = new Error().stack;
-			//	traces[s] = traces[s] ? traces[s]+1 : 1;
-
 			if (subtree == null)
 			{
 				return leaf;
@@ -998,7 +929,6 @@ namespace ChipmunkSharp
 			return true;
 		}
 
-
 		internal static cpVect closestPointOnSegment2(float px, float py, float ax, float ay, float bx, float by)
 		{
 			var deltax = ax - bx;
@@ -1007,7 +937,6 @@ namespace ChipmunkSharp
 			return new cpVect(bx + deltax * t, by + deltay * t);
 		}
 
-
 		public static cpPolyShape BoxShape(cpBody body, float width, float height)
 		{
 			var hw = width / 2;
@@ -1015,6 +944,7 @@ namespace ChipmunkSharp
 
 			return BoxShape2(body, new cpBB(-hw, -hh, hw, hh));
 		}
+
 		public static cpPolyShape BoxShape2(cpBody body, cpBB box)
 		{
 			float[] verts = new float[] {
@@ -1025,10 +955,6 @@ namespace ChipmunkSharp
 
 			return new cpPolyShape(body, verts, cpVect.Zero);
 		}
-
-
-
-
 
 		internal static cpSegmentQueryInfo circleSegmentQuery(cpShape shape, cpVect center, float r, cpVect a, cpVect b)
 		{
@@ -1092,51 +1018,8 @@ namespace ChipmunkSharp
 		}
 
 		public static int GRABABLE_MASK_BIT { get { return (1 << 31); } }
+
 		public static int NOT_GRABABLE_MASK { get { return ~GRABABLE_MASK_BIT; } }
-
-		//public static Node SubtreeInsert(Node subtree, Leaf leaf, cpBBTree tree)
-		//{
-		//    //	var s = new Error().stack;
-		//    //	traces[s] = traces[s] ? traces[s]+1 : 1;
-
-		//    if (subtree == null)
-		//    {
-		//        return leaf;
-		//    }
-		//    else if (subtree.isLeaf)
-		//    {
-		//        return tree.makeNode(leaf, subtree);
-		//    }
-		//    else
-		//    {
-		//        var cost_a = subtree.B.bbArea() + bbTreeMergedArea(subtree.A, leaf);
-		//        var cost_b = subtree.A.bbArea() + bbTreeMergedArea(subtree.B, leaf);
-
-		//        if (cost_a == cost_b)
-		//        {
-		//            cost_a = bbProximity(subtree.A, leaf);
-		//            cost_b = bbProximity(subtree.B, leaf);
-		//        }
-
-		//        if (cost_b < cost_a)
-		//        {
-		//            subtree.setB(subtreeInsert(subtree.B, leaf, tree));
-		//        }
-		//        else
-		//        {
-		//            subtree.setA(subtreeInsert(subtree.A, leaf, tree));
-		//        }
-
-		//        //		subtree.bb = bbMerge(subtree.bb, leaf.bb);
-		//        subtree.bb_l = Math.Min(subtree.bb_l, leaf.bb_l);
-		//        subtree.bb_b = Math.Min(subtree.bb_b, leaf.bb_b);
-		//        subtree.bb_r = Math.Max(subtree.bb_r, leaf.bb_r);
-		//        subtree.bb_t = Math.Max(subtree.bb_t, leaf.bb_t);
-
-		//        return subtree;
-		//    }
-		//}
-
 
 		public static float[] convexHull(float[] verts, float[] result, float tolerance)
 		{
@@ -1320,7 +1203,6 @@ namespace ChipmunkSharp
 			return (m * sum1) / (6 * sum2);
 		}
 
-
 		public static List<cpColor> _styles;
 
 		public static int[] colorRanges = new int[] {
@@ -1331,7 +1213,6 @@ namespace ChipmunkSharp
 		{
 			return rnd.Next(0, colorRanges.Length);
 		}
-
 
 		public static List<cpColor> styles
 		{
@@ -1419,7 +1300,6 @@ namespace ChipmunkSharp
 			return min_index;
 		}
 
-
 		public static List<ContactPoint> findVerts(cpPolyShape poly1, cpPolyShape poly2, cpVect n, float dist)
 		{
 			List<ContactPoint> arr = new List<ContactPoint>();
@@ -1506,5 +1386,7 @@ namespace ChipmunkSharp
 			}
 			return dev;
 		}
+
 	}
+
 }
