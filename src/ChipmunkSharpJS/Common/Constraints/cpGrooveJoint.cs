@@ -173,6 +173,17 @@ namespace ChipmunkSharp.Constraints
 			this.activateBodies();
 		}
 
+		public override void Draw(cpDebugDraw m_debugDraw)
+		{
+			var a = this.a.local2World(this.grv_a);
+			var b = this.a.local2World(this.grv_b);
+			var c = this.b.local2World(this.anchr2);
+
+			m_debugDraw.DrawSegment(a, b, cpColor.Grey);
+			m_debugDraw.DrawCircle(c, 3f, cpColor.Grey);
+		}
+
+
 	}
 
 

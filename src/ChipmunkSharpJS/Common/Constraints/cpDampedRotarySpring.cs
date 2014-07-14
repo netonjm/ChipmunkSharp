@@ -126,6 +126,20 @@ namespace ChipmunkSharp.Constraints
 			b.w -= j_damp * b.i_inv;
 		}
 
+
+		public override void Draw(cpDebugDraw m_debugDraw)
+		{
+			//base.Draw(m_debugDraw);
+			//var a = this.a.local2World(this.anchr1);
+			//var b = this.b.local2World(this.anchr2);
+
+			//ctx.strokeStyle = "grey";
+			//drawSpring(ctx, scale, point2canvas, a, b);
+
+
+		}
+
+
 		//public static cpConstraint cpDampedRotarySpringNew(cpBody cpBody1, cpBody cpBody2, float p, float stiffness, float damping)
 		//{
 		//    throw new NotImplementedException();

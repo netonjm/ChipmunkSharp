@@ -1085,118 +1085,31 @@ namespace ChipmunkSharp
 
 			m_debugDraw.DrawString(0, 110, "Contact points: " + contacts);
 			m_debugDraw.DrawString(0, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}", cp.numLeaves, cp.numNodes, cp.numPairs));
-			//this.ctx.fillText("Contact points: " + contacts + " (Max: " + this.maxContacts + ")", 10, 140, maxWidth);
-
 
 			cpDrawFlags flags = m_debugDraw.Flags;
 
 			if ((flags & cpDrawFlags.Shape) != 0)
 			{
-				Type actualType;
-				cpShape shape;
-				foreach (var item in activeShapes.leaves)
-				{
-					shape = (cpShape)item.Value.obj;
-					shape.Draw(m_debugDraw);
-					//Console.WriteLine("dsadasdsa");
-				}
-
-				foreach (var item in staticShapes.leaves)
-				{
-					shape = (cpShape)item.Value.obj;
-					shape.Draw(m_debugDraw);
-					//Console.WriteLine("dsadasdsa");
-				}
-				//for (b2Body b = m_bodyList; b != null; b = b.Next)
-				//{
-				//    for (b2Fixture f = b.FixtureList; f != null; f = f.Next)
-				//    {
-				//        if (b.IsActive() == false)
-				//        {
-				//            DrawShape(f, ref b.Transform, new b2Color(0.5f, 0.5f, 0.3f));
-				//        }
-				//        else if (b.BodyType == b2BodyType.b2_staticBody)
-				//        {
-				//            DrawShape(f, ref b.Transform, new b2Color(0.5f, 0.9f, 0.5f));
-				//        }
-				//        else if (b.BodyType == b2BodyType.b2_kinematicBody)
-				//        {
-				//            DrawShape(f, ref b.Transform, new b2Color(0.5f, 0.5f, 0.9f));
-				//        }
-				//        else if (b.IsAwake() == false)
-				//        {
-				//            DrawShape(f, ref b.Transform, new b2Color(0.6f, 0.6f, 0.6f));
-				//        }
-				//        else
-				//        {
-				//            DrawShape(f, ref b.Transform, new b2Color(0.9f, 0.7f, 0.7f));
-				//        }
-				//    }
-				//}
+				eachShape(s => s.Draw(m_debugDraw));
 			}
 
 			if ((flags & cpDrawFlags.Joint) != 0)
 			{
-				//for (b2Joint j = m_jointList; j != null; j = j.GetNext())
-				//{
-				//    DrawJoint(j);
-				//}
+				eachConstraint(c => c.Draw(m_debugDraw));
 			}
 
 			if ((flags & cpDrawFlags.Pair) != 0)
 			{
-				//b2Color color = new b2Color(0.3f, 0.9f, 0.9f);
-				//for (b2Contact c = m_contactManager.ContactList; c != null; c = c.Next)
-				//{
-				//b2Fixture fixtureA = c.FixtureA;
-				//b2Fixture fixtureB = c.FixtureB;
 
-				//b2Vec2 cA = fixtureA.GetAABB().Center;
-				//b2Vec2 cB = fixtureB.GetAABB().Center;
-
-				//m_debugDraw.DrawSegment(cA, cB, color);
-				//}
 			}
 
 			if ((flags & cpDrawFlags.AABB) != 0)
 			{
-				//b2Color color = new b2Color(0.9f, 0.3f, 0.9f);
-				//b2BroadPhase bp = m_contactManager.BroadPhase;
-
-				//for (b2Body b = m_bodyList; b != null; b = b.Next)
-				//{
-				//    if (b.IsActive() == false)
-				//    {
-				//        continue;
-				//    }
-
-				//    for (b2Fixture f = b.FixtureList; f != null; f = f.Next)
-				//    {
-				//        for (int i = 0; i < f.ProxyCount; ++i)
-				//        {
-				//            b2FixtureProxy proxy = f.Proxies[i];
-				//            b2AABB aabb;
-				//            bp.GetFatAABB(proxy.proxyId, out aabb);
-				//            b2Vec2[] vs = new b2Vec2[4];
-				//            vs[0].Set(aabb.LowerBound.x, aabb.LowerBound.y);
-				//            vs[1].Set(aabb.UpperBound.x, aabb.LowerBound.y);
-				//            vs[2].Set(aabb.UpperBound.x, aabb.UpperBound.y);
-				//            vs[3].Set(aabb.LowerBound.x, aabb.UpperBound.y);
-
-				//            m_debugDraw.DrawPolygon(vs, 4, color);
-				//        }
-				//    }
-				//}
 			}
 
 			if ((flags & cpDrawFlags.CenterOfMass) != 0)
 			{
-				//for (b2Body b = m_bodyList; b != null; b = b.Next)
-				//{
-				//    b2Transform xf = b.Transform;
-				//    xf.p = b.WorldCenter;
-				//    m_debugDraw.DrawTransform(xf);
-				//}
+
 			}
 
 		}

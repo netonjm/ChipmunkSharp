@@ -185,6 +185,17 @@ namespace ChipmunkSharp.Constraints
 			return 0;
 		}
 
+		public override void Draw(cpDebugDraw m_debugDraw)
+		{
+			var a = this.a.local2World(this.anchr1);
+			var b = this.a.local2World(this.anchr2);
+
+			m_debugDraw.DrawSpring(a, b, cpColor.Grey);
+		}
+
+
+
+
 	}
 
 }

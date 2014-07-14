@@ -95,7 +95,7 @@ namespace ChipmunkSharp
 
 		public cpDebugDraw()
 		{
-		//	this.space = space;
+			//	this.space = space;
 		}
 
 		public cpDebugDraw(int ptm)
@@ -154,9 +154,8 @@ namespace ChipmunkSharp
 
 		public abstract void DrawString(int x, int y, string format, params object[] objects);
 
-		/// Draw a transform. Choose your own length scale.
-		/// @param xf a transform.
-		//public abstract void DrawTransform(b2Transform xf);
+		public abstract void DrawSpring(cpVect a, cpVect b, cpColor cpColor);
+
 	}
 
 

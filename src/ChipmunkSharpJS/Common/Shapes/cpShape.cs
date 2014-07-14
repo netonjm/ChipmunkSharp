@@ -90,6 +90,9 @@ namespace ChipmunkSharp
 
 			m_debugDraw.DrawSolidCircle(new cpVect(tc.x, tc.y), r, cpVect.Zero, color);
 
+			// And draw a little radian so you can see the circle roll.
+			m_debugDraw.DrawSegment(tc, cpVect.Multiply(body.Rotation, this.r).Add(this.tc), color);
+
 		}
 
 		public Func<object, object, List<ContactPoint>>[] collisionTable
@@ -629,12 +632,6 @@ namespace ChipmunkSharp
 			throw new NotImplementedException();
 		}
 
-		//public static cpBB update(cpShape shape, cpVect pos, cpVect rot)
-		//{
-		//    return (shape.bb = shape.klass.cacheData(shape, pos, rot));
-		//}
-
-
 		/// Test if a point lies within a shape.
 		public virtual cpNearestPointQueryInfo pointQuery(cpVect p)
 		{
@@ -647,116 +644,6 @@ namespace ChipmunkSharp
 		{
 			return new cpBB(this.bb_l, this.bb_b, this.bb_r, this.bb_t);
 		}
-
-		//public static void SegmentQuery(cpShape shape, cpVect center, float r, cpVect a, cpVect b, cpSegmentQueryInfo info)
-		//{
-		//    cpVect da = cpVect.cpvsub(a, center);
-		//    cpVect db = cpVect.cpvsub(b, center);
-
-		//    float qa = cpVect.cpvdot(da, da) - 2.0f * cpVect.cpvdot(da, db) + cpVect.cpvdot(db, db);
-		//    float qb = -2.0f * cpVect.cpvdot(da, da) + 2.0f * cpVect.cpvdot(da, db);
-		//    float qc = cpVect.cpvdot(da, da) - r * r;
-
-		//    float det = qb * qb - 4.0f * qa * qc;
-
-		//    if (det >= 0.0f)
-		//    {
-		//        float t = (-qb - cpEnvironment.cpfsqrt(det)) / (2.0f * qa);
-		//        if (0.0f <= t && t <= 1.0f)
-		//        {
-		//            info.shape = shape;
-		//            info.t = t;
-		//            info.n = cpVect.cpvnormalize(cpVect.cpvlerp(da, db, t));
-		//        }
-		//    }
-		//}
-
-		//public static void cpResetShapeIdCounter()
-		//{
-		//    IDCounter = 0;
-		//}
-
-		//public void PointQueryFirst(ref cpShape outShape)
-		//{
-		//    if (!sensor) outShape = this;
-		//}
-
-
-
-		///// Destroy a shape.
-		//public void Destroy()
-		//{
-		//    if (klass.destroy != null) klass.destroy(this);
-		//}
-		///// Destroy and Free a shape.
-		//public void Free()
-		//{
-
-		//    Destroy();
-		//    // cpfree(shape);
-
-		//}
-
-
-		///// Update, cache and return the bounding box of a shape based on the body it's attached to.
-		//public cpBB CacheBB()
-		//{
-		//    return update(body.Position, body.Rotation);
-		//}
-
-
-
-
-
-		///// Perform a nearest point query. It finds the closest point on the surface of shape to a specific point.
-		///// The value returned is the distance between the points. A negative distance means the point is inside the shape.
-		//public float NearestPointQuery(cpVect p, cpNearestPointQueryInfo info)
-		//{
-		//    klass.nearestPointQuery(this, p, info);
-		//    return info.d;
-		//}
-
-		///// Perform a segment query against a shape. @c info must be a pointer to a valid cpSegmentQueryInfo structure.
-		//public bool cpShapeSegmentQuery(cpVect a, cpVect b, cpSegmentQueryInfo info)
-		//{
-
-		//    cpNearestPointQueryInfo nearest = cpNearestPointQueryInfo.CreateEmpty();
-		//    klass.nearestPointQuery(this, a, nearest);
-
-		//    if (nearest.d <= 0.0)
-		//    {
-		//        info.shape = this;
-		//        info.t = 0.0f;
-		//        info.n = cpVect.cpvnormalize(cpVect.cpvsub(a, nearest.p));
-		//    }
-		//    else
-		//    {
-		//        klass.segmentQuery(this, a, b, info);
-		//    }
-
-		//    return (info.shape != null);
-		//}
-
-		///// Get the hit point for a segment query.
-		//public static cpVect cpSegmentQueryHitPoint(cpVect start, cpVect end, cpSegmentQueryInfo info)
-		//{
-		//    return cpVect.cpvlerp(start, end, info.t);
-		//}
-
-		///// Get the hit distance for a segment query.
-		//public static float cpSegmentQueryHitDist(cpVect start, cpVect end, cpSegmentQueryInfo info)
-		//{
-		//    return cpVect.cpvdist(start, end) * info.t;
-		//}
-
-
-
-		/// When initializing a shape, it's hash value comes from a counter.
-		/// Because the hash value may affect iteration order, you can reset the shape ID counter
-		/// when recreating a space. This will make the simulation be deterministic.
-		//#define CP_DeclareShapeGetter(struct, type, name) type struct##Get##name(const cpShape *shape)
-
-
 
 		public virtual void Draw(cpDebugDraw m_debugDraw)
 		{

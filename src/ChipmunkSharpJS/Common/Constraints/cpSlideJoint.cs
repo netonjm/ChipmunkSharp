@@ -153,6 +153,16 @@ namespace ChipmunkSharp.Constraints
 			return Math.Abs(jAcc);
 		}
 
+		public override void Draw(cpDebugDraw m_debugDraw)
+		{
+			var a = this.a.local2World(this.anchr1);
+			var b = this.b.local2World(this.anchr2);
+			var midpoint = cpVect.cpvadd(a, cpVect.cpvclamp(cpVect.cpvsub(b, a), this.min));
+
+			m_debugDraw.DrawSegment(a, b, cpColor.Grey);
+			m_debugDraw.DrawSegment(a, midpoint, cpColor.Grey);
+
+		}
 
 	}
 

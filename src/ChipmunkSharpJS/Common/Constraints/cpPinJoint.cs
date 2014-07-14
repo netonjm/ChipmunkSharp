@@ -119,6 +119,15 @@ namespace ChipmunkSharp.Constraints
 			return Math.Abs(this.jnAcc);
 		}
 
+		public override void Draw(cpDebugDraw m_debugDraw)
+		{
+			var a = this.a.local2World(this.anchr1);
+			var b = this.b.local2World(this.anchr2);
+			m_debugDraw.DrawSegment(a, b, cpColor.Grey);
+
+		}
+
+
 	}
 
 }

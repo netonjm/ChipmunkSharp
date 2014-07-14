@@ -123,7 +123,14 @@ namespace ChipmunkSharp.Constraints
 			return jAcc.Length;  //cpvlength(this.jAcc);
 		}
 
+		public override void Draw(cpDebugDraw m_debugDraw)
+		{
+			var a = this.a.local2World(this.anchr1);
+			var b = this.b.local2World(this.anchr2);
+			m_debugDraw.DrawCircle(a, 2, cpColor.Grey);
+			m_debugDraw.DrawCircle(b, 2, cpColor.Grey);
 
+		}
 
 
 	}

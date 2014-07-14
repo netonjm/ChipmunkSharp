@@ -26,33 +26,36 @@ using System.Text;
 
 namespace ChipmunkSharp
 {
-    public struct cpColor
-    {
+	public struct cpColor
+	{
 
-        /*public b2Color() { _r = 0f; _g = 0f; _b = 0f; }*/
-        public cpColor(float xr, float xg, float xb) { r = xr; g = xg; b = xb; }
-        public void Set(float ri, float gi, float bi) { r = ri; g = gi; b = bi; }
+		/*public b2Color() { _r = 0f; _g = 0f; _b = 0f; }*/
+		public cpColor(float xr, float xg, float xb) { r = xr; g = xg; b = xb; }
+		public void Set(float ri, float gi, float bi) { r = ri; g = gi; b = bi; }
 
-        public float r, g, b;
+		public float r, g, b;
 
-        public static cpColor Red { get { return new cpColor(255, 0, 0); } }
-        public static cpColor Green { get { return new cpColor(0, 255, 0); } }
-        public static cpColor Blue { get { return new cpColor(0, 0, 255); } }
+		public static cpColor Red { get { return new cpColor(255, 0, 0); } }
+		public static cpColor Green { get { return new cpColor(0, 255, 0); } }
+		public static cpColor Blue { get { return new cpColor(0, 0, 255); } }
 
-        //public static bool operator !=(cpColor p1, cpColor p2);
-        //public static cpColor operator *(cpColor p1, cpColor p2);
-        //public static cpColor operator *(cpColor p1, float scale);
-        //public static cpColor operator *(float scale, cpColor p1);
-        //public static cpColor operator /(cpColor p1, float div);
-        //public static bool operator ==(cpColor p1, cpColor p2);
-        // public static implicit operator Color(cpColor point);
+		public static cpColor Grey { get { return new cpColor(84, 84, 84); } }
 
-        //public bool Equals(cpColor other);
-        //public override bool Equals(object obj);
-        //public override int GetHashCode();
-        //public static cpColor Lerp(cpColor value1, cpColor value2, float amount);
-        //public static cpColor Parse(string s);
-        //public override string ToString();
 
-    }
+		//public static bool operator !=(cpColor p1, cpColor p2);
+		//public static cpColor operator *(cpColor p1, cpColor p2);
+		//public static cpColor operator *(cpColor p1, float scale);
+		//public static cpColor operator *(float scale, cpColor p1);
+		//public static cpColor operator /(cpColor p1, float div);
+		//public static bool operator ==(cpColor p1, cpColor p2);
+		// public static implicit operator Color(cpColor point);
+
+		//public bool Equals(cpColor other);
+		//public override bool Equals(object obj);
+		//public override int GetHashCode();
+		//public static cpColor Lerp(cpColor value1, cpColor value2, float amount);
+		//public static cpColor Parse(string s);
+		//public override string ToString();
+
+	}
 }
