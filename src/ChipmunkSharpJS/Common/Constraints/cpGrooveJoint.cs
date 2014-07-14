@@ -22,164 +22,158 @@ using System;
 namespace ChipmunkSharp.Constraints
 {
 
-    public class cpGrooveJoint : cpConstraint
-    {
+	public class cpGrooveJoint : cpConstraint
+	{
 
-        #region PUBLIC PROPS
+		#region PUBLIC PROPS
 
-        public cpVect grv_a { get; set; }
+		public cpVect grv_a { get; set; }
 
-        public cpVect grv_b { get; set; }
+		public cpVect grv_b { get; set; }
 
-        public cpVect grv_n { get; set; }
+		public cpVect grv_n { get; set; }
 
-        public cpVect anchr2 { get; set; }
+		public cpVect anchr2 { get; set; }
 
-        public float clamp { get; set; }
+		public float clamp { get; set; }
 
-        public cpVect grv_tn { get; set; }
+		public cpVect grv_tn { get; set; }
 
-        public float jMaxLen { get; set; }
+		public float jMaxLen { get; set; }
 
-        public cpVect k1 { get; set; }
+		public cpVect k1 { get; set; }
 
-        public cpVect k2 { get; set; }
+		public cpVect k2 { get; set; }
 
-        public cpVect jAcc { get; set; }
+		public cpVect jAcc { get; set; }
 
-        public cpVect r2 { get; set; }
+		public cpVect r2 { get; set; }
 
-        public cpVect r1 { get; set; }
+		public cpVect r1 { get; set; }
 
-        public cpVect bias { get; set; }
-
-
-        #endregion
-
-        public cpGrooveJoint(cpBody a, cpBody b, cpVect groove_a, cpVect groove_b, cpVect anchr2)
-            : base(a, b)
-        {
+		public cpVect bias { get; set; }
 
 
-            this.grv_a = groove_a;
-            this.grv_b = groove_b;
-            this.grv_n = groove_b.Sub(groove_a).Normalize().Perp();// vperp(vnormalize(vsub(groove_b, groove_a)));
-            this.anchr2 = anchr2;
+		#endregion
 
-            this.grv_tn = null;
-            this.clamp = 0.0f;
-            this.r1 = this.r2 = null;
-
-            this.k1 = cpVect.Zero;// new cpVect(0, 0);
-            this.k2 = cpVect.Zero;// new Vect(0, 0);
-
-            this.jAcc = cpVect.Zero;
-            this.jMaxLen = 0.0f;
-            this.bias = null;
-
-        }
-
-        public override void PreStep(float dt)
-        {
-
-            // calculate endpoints in worldspace
-            var ta = a.local2World(this.grv_a);
-            var tb = a.local2World(this.grv_b);
-
-            // calculate axis
-            var n = this.grv_n.Rotate(a.Rotation); // vrotate(, a.rot);
-            var d = ta.Dot(n); // vdot(ta, n);
-
-            this.grv_tn = n;
-            this.r2 = this.anchr2.Rotate(b.Rotation);// vrotate(this.anchr2, b.rot);
-
-            // calculate tangential distance along the axis of r2
-            var td = b.Position.Add(this.r2).CrossProduct(n);// vcross(vadd(b.p, this.r2), n);
-            // calculate clamping factor and r2
-            if (td <= ta.CrossProduct(n))// vcross(ta, n))
-            {
-                this.clamp = 1;
-                this.r1 = ta.Sub(a.Position);// vsub(ta, a.p);
-            }
-            else if (td >= tb.CrossProduct(n)) // vcross(tb, n))
-            {
-                this.clamp = -1;
-                this.r1 = tb.Sub(a.Position); // vsub(tb, a.p);
-            }
-            else
-            {
-                this.clamp = 0;
-                this.r1 = n.Perp().Multiply(-td).Add(n.Multiply(d)).Sub(a.Position);
-
-            }
-
-            // Calculate mass tensor
-            cp.k_tensor(a, b, this.r1, this.r2, this.k1, this.k2);
-
-            // compute max impulse
-            this.jMaxLen = this.maxForce * dt;
-
-            // calculate bias velocity
-            var delta = b.Position.Add(this.r2).Sub(a.Position.Add(this.r1)); //  vsub(vadd(b.p, this.r2), vadd(a.p, this.r1));
-
-            this.bias = delta.Multiply(-cp.bias_coef(this.errorBias, dt) / dt).Clamp(this.maxBias);
-            //this.bias = vclamp(vmult(delta, -bias_coef(this.errorBias, dt) / dt), this.maxBias);
-        }
-
-        public override void ApplyCachedImpulse(float dt_coef)
-        {
-            cp.apply_impulses(this.a, this.b, this.r1, this.r2, this.jAcc.x * dt_coef, this.jAcc.y * dt_coef);
-        }
-
-        public cpVect grooveConstrain(cpVect j)
-        {
-            var n = this.grv_tn;
-            var jClamp = (this.clamp * j.CrossProduct(n) > 0) ? j : j.Project(n);
-            return jClamp.Clamp(this.jMaxLen); // vclamp(jClamp, this.jMaxLen);
-        }
-
-        public override void ApplyImpulse(float dt)
-        {
-
-            // compute impulse
-            var vr = cp.relative_velocity(a, b, r1, r2);
-
-            var j = cpVect.mult_k(this.bias.Sub(vr), this.k1, this.k2);
-            var jOld = this.jAcc;
-            this.jAcc = this.grooveConstrain(jOld.Add(j));
-
-            // apply impulse
-            cp.apply_impulses(a, b, this.r1, this.r2, this.jAcc.x - jOld.x, this.jAcc.y - jOld.y);
-        }
-
-        public override float GetImpulse()
-        {
-            return this.jAcc.Length;
-            //return vlength(this.jAcc);
-        }
-
-        public void SetGrooveA(cpVect value)
-        {
-            this.grv_a = value;
-            this.grv_n = this.grv_b.Sub(value).Normalize().Perp(); //vperp(vnormalize(vsub( , value)));
-
-            this.activateBodies();
-        }
-        public void SetGrooveB(cpVect value)
-        {
-            this.grv_b = value;
-            this.grv_n = this.grv_a.Sub(value).Normalize().Perp(); //vperp(vnormalize(vsub( , value)));
-
-            this.activateBodies();
-        }
+		public cpGrooveJoint(cpBody a, cpBody b, cpVect groove_a, cpVect groove_b, cpVect anchr2)
+			: base(a, b)
+		{
 
 
+			this.grv_a = groove_a;
+			this.grv_b = groove_b;
+			this.grv_n = groove_b.Sub(groove_a).Normalize().Perp();// vperp(vnormalize(vsub(groove_b, groove_a)));
+			this.anchr2 = anchr2;
 
-        public static cpConstraint cpGrooveJointNew(cpBody cpBody1, cpBody cpBody2, cpVect grooveA, cpVect grooveB, cpVect anchr)
-        {
-            throw new NotImplementedException();
-        }
-    }
+			this.grv_tn = null;
+			this.clamp = 0.0f;
+			this.r1 = this.r2 = null;
+
+			this.k1 = cpVect.Zero;// new cpVect(0, 0);
+			this.k2 = cpVect.Zero;// new Vect(0, 0);
+
+			this.jAcc = cpVect.Zero;
+			this.jMaxLen = 0.0f;
+			this.bias = null;
+
+		}
+
+		public override void PreStep(float dt)
+		{
+
+			// calculate endpoints in worldspace
+			var ta = a.local2World(this.grv_a);
+			var tb = a.local2World(this.grv_b);
+
+			// calculate axis
+			var n = cpVect.cpvrotate(this.grv_n, a.Rotation);
+			var d = cpVect.cpvdot(ta, n);
+
+			this.grv_tn = n;
+			this.r2 = cpVect.cpvrotate(this.anchr2, b.Rotation);// vrotate(this.anchr2, b.rot);
+
+			// calculate tangential distance along the axis of r2
+			var td = cpVect.cpvcross(cpVect.cpvadd(b.Position, this.r2), n);
+			// calculate clamping factor and r2
+			if (td <= cpVect.cpvcross(ta, n))// vcross(ta, n))
+			{
+				this.clamp = 1;
+				this.r1 = cpVect.cpvsub(ta, a.Position);
+			}
+			else if (td >= cpVect.cpvcross(tb, n))
+			{
+				this.clamp = -1;
+				this.r1 = cpVect.cpvsub(tb, a.Position);
+			}
+			else
+			{
+				this.clamp = 0;
+				this.r1 = cpVect.cpvsub(cpVect.cpvadd(cpVect.cpvmult(cpVect.cpvperp(n), -td), cpVect.cpvmult(n, d)), a.Position);  //n.Perp().Multiply(-td).Add(n.Multiply(d)).Sub(a.Position);
+
+			}
+
+			// Calculate mass tensor
+			cp.k_tensor(a, b, this.r1, this.r2, this.k1, this.k2);
+
+			// compute max impulse
+			this.jMaxLen = this.maxForce * dt;
+
+			// calculate bias velocity
+			var delta = cpVect.cpvsub(cpVect.cpvadd(b.Position, this.r2), cpVect.cpvadd(a.Position, this.r1));
+
+			//this.bias = delta.Multiply(-cp.bias_coef(this.errorBias, dt) / dt).Clamp(this.maxBias);
+			this.bias = cpVect.cpvclamp(cpVect.cpvmult(delta, -cp.bias_coef(this.errorBias, dt) / dt), this.maxBias);
+		}
+
+		public override void ApplyCachedImpulse(float dt_coef)
+		{
+			cp.apply_impulses(this.a, this.b, this.r1, this.r2, this.jAcc.x * dt_coef, this.jAcc.y * dt_coef);
+		}
+
+		public cpVect grooveConstrain(cpVect j)
+		{
+			var n = this.grv_tn;
+			var jClamp = (this.clamp * cpVect.cpvcross(j, n) > 0) ? j : cpVect.cpvproject(j, n);
+			return cpVect.cpvclamp(jClamp, this.jMaxLen);
+		}
+
+		public override void ApplyImpulse(float dt)
+		{
+
+			// compute impulse
+			var vr = cp.relative_velocity(a, b, r1, r2);
+
+			var j = cpVect.mult_k(cpVect.cpvsub(this.bias, vr), this.k1, this.k2);
+			var jOld = this.jAcc;
+			this.jAcc = this.grooveConstrain(cpVect.cpvadd(jOld, j));
+
+			// apply impulse
+			cp.apply_impulses(a, b, this.r1, this.r2, this.jAcc.x - jOld.x, this.jAcc.y - jOld.y);
+		}
+
+		public override float GetImpulse()
+		{
+			//return this.jAcc.Length;
+			return cpVect.cpvlength(this.jAcc);
+		}
+
+		public void SetGrooveA(cpVect value)
+		{
+			this.grv_a = value;
+			this.grv_n = cpVect.cpvperp(cpVect.cpvnormalize(cpVect.cpvsub(this.grv_b, value)));
+
+			this.activateBodies();
+		}
+		public void SetGrooveB(cpVect value)
+		{
+			this.grv_b = value;
+			this.grv_n = cpVect.cpvperp(cpVect.cpvnormalize(cpVect.cpvsub(value, this.grv_a)));
+
+			this.activateBodies();
+		}
+
+	}
 
 
 

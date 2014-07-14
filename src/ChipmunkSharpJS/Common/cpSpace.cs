@@ -707,9 +707,9 @@ namespace ChipmunkSharp
 		public cpConstraint addConstraint(cpConstraint constraint)
 		{
 
-			cp.assertHard(constraint.space != this, "You have already added this constraint to this space. You must not add it a second time.");
-			cp.assertHard(constraint.space != null, "You have already added this constraint to another space. You cannot add it to a second.");
-			cp.assertHard(constraint.a != null && constraint.b != null, "Constraint is attached to a null body.");
+			//cp.assertHard(constraint.space != this, "You have already added this constraint to this space. You must not add it a second time.");
+			cp.assertHard(constraint.space == null, "You have already added this constraint to another space. You cannot add it to a second.");
+			//cp.assertHard(constraint.a != null && constraint.b != null, "Constraint is attached to a null body.");
 			cp.assertSpaceUnlocked(this);
 
 			cpBody a = constraint.a, b = constraint.b;

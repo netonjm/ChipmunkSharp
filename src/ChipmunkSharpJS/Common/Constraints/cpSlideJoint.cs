@@ -22,137 +22,139 @@ using System;
 
 namespace ChipmunkSharp.Constraints
 {
-    public class cpSlideJoint : cpConstraint
-    {
+	public class cpSlideJoint : cpConstraint
+	{
 
-        #region PUBLIC PROPS
+		#region PUBLIC PROPS
 
-        public cpVect r1 { get; set; }
+		public cpVect r1 { get; set; }
 
-        public cpVect r2 { get; set; }
-        public cpVect n { get; set; }
+		public cpVect r2 { get; set; }
+		public cpVect n { get; set; }
 
-        public float min { get; set; }
+		public float min { get; set; }
 
-        public float max { get; set; }
+		public float max { get; set; }
 
-        public float nMass { get; set; }
+		public float nMass { get; set; }
 
-        public float jnMax { get; set; }
+		public float jnMax { get; set; }
 
-        public float bias { get; set; }
+		public float bias { get; set; }
 
-        public float jnAcc { get; set; }
+		public float jnAcc { get; set; }
 
-        public float iSum { get; set; }
+		public float iSum { get; set; }
 
-        public float jMax { get; set; }
+		public float jMax { get; set; }
 
-        public float jAcc { get; set; }
+		public float jAcc { get; set; }
 
-        public float rate { get; set; }
+		public float rate { get; set; }
 
-        #endregion
+		#endregion
 
-        #region PRIVATE PROPS
-
-
-        public cpVect anchr1 { get; set; }
-
-        public cpVect anchr2 { get; set; }
-
-        #endregion
+		#region PRIVATE PROPS
 
 
-        public cpSlideJoint(cpBody a, cpBody b, cpVect anchr1, cpVect anchr2, float min, float max)
-            : base(a, b)
-        {
+		public cpVect anchr1 { get; set; }
 
-            this.anchr1 = anchr1;
-            this.anchr2 = anchr2;
-            this.min = min;
-            this.max = max;
+		public cpVect anchr2 { get; set; }
 
-            this.r1 = this.r2 = this.n = null;
-            this.nMass = 0.0f;
-
-            this.jnAcc = this.jnMax = 0;
-            this.bias = 0.0f;
-        }
-
-        public override void PreStep(float dt)
-        {
+		#endregion
 
 
-            this.r1 = anchr1.Rotate(a.Rotation); // cpvrotate(this.anchr1, a.rot);
-            this.r2 = anchr2.Rotate(b.Rotation); // cpvrotate(this.anchr2, b.rot);
+		public cpSlideJoint(cpBody a, cpBody b, cpVect anchr1, cpVect anchr2, float min, float max)
+			: base(a, b)
+		{
 
-            cpVect delta = b.Position.Add(r2).Sub(a.Position.Add(r1)); // cpvsub(cpvadd(b.p, this.r2), cpvadd(a.p, this.r1));
+			this.anchr1 = anchr1;
+			this.anchr2 = anchr2;
+			this.min = min;
+			this.max = max;
 
-            float dist = delta.Length; // cpvlength(delta);
-            float pdist = 0.0f;
-            if (dist > this.max)
-            {
-                pdist = dist - this.max;
-                this.n = delta.NormalizeSafe(); // cpEnvironment.vnormalize_safe(delta);
-            }
-            else if (dist < this.min)
-            {
-                pdist = this.min - dist;
-                this.n = delta.NormalizeSafe().Neg(); // vnormalize_safe(delta).Neg();
-            }
-            else
-            {
-                this.n = cpVect.Zero;
-                this.jnAcc = 0;
-            }
+			this.r1 = null;
+			this.r2 = null;
+			this.n = null;
+			this.nMass = 0.0f;
 
-            // calculate mass normal
-            this.nMass = 1 / cp.k_scalar(a, b, this.r1, this.r2, this.n);
+			this.jnAcc = this.jnMax = 0;
+			this.bias = 0.0f;
+		}
+
+		public override void PreStep(float dt)
+		{
 
 
-            // calculate bias velocity
-            this.bias = cp.cpclamp(-cp.bias_coef(this.errorBias, dt) * pdist / dt, -maxBias, maxBias);
+			this.r1 = anchr1.Rotate(a.Rotation); // cpvrotate(this.anchr1, a.rot);
+			this.r2 = anchr2.Rotate(b.Rotation); // cpvrotate(this.anchr2, b.rot);
 
-            // compute max impulse
-            this.jnMax = this.maxForce * dt;
-        }
+			cpVect delta = b.Position.Add(r2).Sub(a.Position.Add(r1)); // cpvsub(cpvadd(b.p, this.r2), cpvadd(a.p, this.r1));
 
-        public override void ApplyCachedImpulse(float dt_coef)
-        {
-            var jn = this.jnAcc * dt_coef;
-            cp.apply_impulses(this.a, this.b, this.r1, this.r2, this.n.x * jn, this.n.y * jn);
-        }
+			float dist = delta.Length; // cpvlength(delta);
+			float pdist = 0.0f;
+			if (dist > this.max)
+			{
+				pdist = dist - this.max;
+				this.n = cpVect.vnormalize_safe(delta); // cpEnvironment.vnormalize_safe(delta);
+			}
+			else if (dist < this.min)
+			{
+				pdist = this.min - dist;
+				this.n = cpVect.cpvneg(cpVect.vnormalize_safe(delta)); // vnormalize_safe(delta).Neg();
+			}
+			else
+			{
+				this.n = cpVect.Zero;
+				this.jnAcc = 0;
+			}
 
-
-        public override void ApplyImpulse(float dt)
-        {
-
-            if (this.n.x == 0 && this.n.y == 0) return;  // early exit
-
-
-            // compute relative velocity
-            var vr = cp.relative_velocity(a, b, r1, r2);
-            var vrn = vr.Dot(n); // cpvdot(vr, n);
-
-            // compute normal impulse
-            var jn = (this.bias - vrn) * this.nMass;
-            var jnOld = this.jnAcc;
-            this.jnAcc = cp.cpclamp(jnOld + jn, -this.jnMax, 0f);
-            jn = this.jnAcc - jnOld;
-
-            // apply impulse
-            cp.apply_impulses(a, b, this.r1, this.r2, n.x * jn, n.y * jn);
-
-        }
-
-        public override float GetImpulse()
-        {
-            return Math.Abs(jAcc);
-        }
+			// calculate mass normal
+			this.nMass = 1 / cp.k_scalar(a, b, this.r1, this.r2, this.n);
 
 
-    }
+			// calculate bias velocity
+			this.bias = cp.cpclamp(-cp.bias_coef(this.errorBias, dt) * pdist / dt, -maxBias, maxBias);
+
+			// compute max impulse
+			this.jnMax = this.maxForce * dt;
+		}
+
+		public override void ApplyCachedImpulse(float dt_coef)
+		{
+			var jn = this.jnAcc * dt_coef;
+			cp.apply_impulses(this.a, this.b, this.r1, this.r2, this.n.x * jn, this.n.y * jn);
+		}
+
+
+		public override void ApplyImpulse(float dt)
+		{
+
+			if (this.n.x == 0 && this.n.y == 0) return;  // early exit
+
+
+			// compute relative velocity
+			var vr = cp.relative_velocity(a, b, r1, r2);
+			var vrn = vr.Dot(n); // cpvdot(vr, n);
+
+			// compute normal impulse
+			var jn = (this.bias - vrn) * this.nMass;
+			var jnOld = this.jnAcc;
+			this.jnAcc = cp.cpclamp(jnOld + jn, -this.jnMax, 0f);
+			jn = this.jnAcc - jnOld;
+
+			// apply impulse
+			cp.apply_impulses(a, b, this.r1, this.r2, n.x * jn, n.y * jn);
+
+		}
+
+		public override float GetImpulse()
+		{
+			return Math.Abs(jAcc);
+		}
+
+
+	}
 
 }
 

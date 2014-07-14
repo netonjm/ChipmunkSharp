@@ -88,10 +88,7 @@ namespace ChipmunkSharp.Constraints
 
         public float rate { get; set; }
 
-        public static cpConstraint cpSimpleMotorNew(cpBody cpBody1, cpBody cpBody2, float rate)
-        {
-            throw new NotImplementedException();
-        }
+    
     }
 
 

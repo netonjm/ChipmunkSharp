@@ -22,92 +22,88 @@ using System;
 namespace ChipmunkSharp.Constraints
 {
 
-    public class cpGearJoint : cpConstraint
-    {
+	public class cpGearJoint : cpConstraint
+	{
 
-        #region PUBLIC PROPS
+		#region PUBLIC PROPS
 
-        public float phase { get; set; }
-        public float ratio { get; set; }
-        public float ratio_inv { get; set; }
-        public float jAcc { get; set; }
-        public float jMax { get; set; }
-        public float bias { get; set; }
-        public float iSum { get; set; }
+		public float phase { get; set; }
+		public float ratio { get; set; }
+		public float ratio_inv { get; set; }
+		public float jAcc { get; set; }
+		public float jMax { get; set; }
+		public float bias { get; set; }
+		public float iSum { get; set; }
 
-        #endregion
+		#endregion
 
-        public cpGearJoint(cpBody a, cpBody b, float phase, float ratio)
-            : base(a, b)
-        {
+		public cpGearJoint(cpBody a, cpBody b, float phase, float ratio)
+			: base(a, b)
+		{
 
-            this.phase = phase;
-            this.ratio = ratio;
-            this.ratio_inv = 1 / ratio;
+			this.phase = phase;
+			this.ratio = ratio;
+			this.ratio_inv = 1 / ratio;
 
-            this.jAcc = 0.0f;
+			this.jAcc = 0.0f;
 
-            this.iSum = this.bias = this.jMax = 0.0f;
-        }
+			this.iSum = this.bias = this.jMax = 0.0f;
+		}
 
-        public override void PreStep(float dt)
-        {
-            // calculate moment of inertia coefficient.
-            this.iSum = 1 / (a.i_inv * this.ratio_inv + this.ratio * b.i_inv);
+		public override void PreStep(float dt)
+		{
+			// calculate moment of inertia coefficient.
+			this.iSum = 1 / (a.i_inv * this.ratio_inv + this.ratio * b.i_inv);
 
-            // calculate bias velocity
-            this.bias = cp.cpfclamp(-cp.bias_coef(this.errorBias, dt) * (b.Angle * this.ratio - a.Angle - this.phase) / dt, -maxBias, maxBias);
+			// calculate bias velocity
+			this.bias = cp.cpfclamp(-cp.bias_coef(this.errorBias, dt) * (b.a * this.ratio - a.a - this.phase) / dt, -maxBias, maxBias);
 
-            // compute max impulse
-            this.jMax = this.maxForce * dt;
-        }
+			// compute max impulse
+			this.jMax = this.maxForce * dt;
+		}
 
-        public override void ApplyCachedImpulse(float dt_coef)
-        {
+		public override void ApplyCachedImpulse(float dt_coef)
+		{
 
-            var j = this.jAcc * dt_coef;
-            a.w -= j * a.i_inv * this.ratio_inv;
-            b.w += j * b.i_inv;
-        }
+			var j = this.jAcc * dt_coef;
+			a.w -= j * a.i_inv * this.ratio_inv;
+			b.w += j * b.i_inv;
+		}
 
-        public override void ApplyImpulse(float dt)
-        {
+		public override void ApplyImpulse(float dt)
+		{
 
-            // compute relative rotational velocity
-            var wr = b.w * this.ratio - a.w;
+			// compute relative rotational velocity
+			var wr = b.w * this.ratio - a.w;
 
-            // compute normal impulse	
-            var j = (this.bias - wr) * this.iSum;
-            var jOld = this.jAcc;
-            this.jAcc = cp.cpfclamp(jOld + j, -this.jMax, this.jMax);
+			// compute normal impulse	
+			var j = (this.bias - wr) * this.iSum;
+			var jOld = this.jAcc;
+			this.jAcc = cp.cpfclamp(jOld + j, -this.jMax, this.jMax);
 
-            j = this.jAcc - jOld;
+			j = this.jAcc - jOld;
 
-            // apply impulse
-            a.w -= j * a.i_inv * this.ratio_inv;
-            b.w += j * b.i_inv;
-        }
-
-
-        public override float GetImpulse()
-        {
-            return Math.Abs(this.jAcc);
-        }
+			// apply impulse
+			a.w -= j * a.i_inv * this.ratio_inv;
+			b.w += j * b.i_inv;
+		}
 
 
-        public void setRatio(float value)
-        {
-            this.ratio = value;
-            this.ratio_inv = 1 / value;
-            this.activateBodies();
-        }
+		public override float GetImpulse()
+		{
+			return Math.Abs(this.jAcc);
+		}
 
 
-        public static cpConstraint cpGearJointNew(cpBody cpBody1, cpBody cpBody2, float phase, float ratio)
-        {
-            throw new NotImplementedException();
-        }
-    }
+		public override void setRatio(float value)
+		{
+			this.ratio = value;
+			this.ratio_inv = 1 / value;
+			this.activateBodies();
+		}
+
+
+	}
 
 }
 

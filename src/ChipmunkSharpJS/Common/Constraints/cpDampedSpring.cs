@@ -22,166 +22,170 @@ using System;
 namespace ChipmunkSharp.Constraints
 {
 
-    public class cpDampedSpring : cpConstraint
-    {
+	public class cpDampedSpring : cpConstraint
+	{
 
-        #region PUBLIC PROPS
-        public cpVect r1 { get; set; }
-        public cpVect r2 { get; set; }
-        public cpVect n { get; set; }
-        public float v_coef { get; set; }
-        public float target_vrn { get; set; }
-        public float nMass { get; set; }
-        #endregion
+		public float defaultSpringForce(cpDampedSpring spring, float relativeAngle)
+		{
+			return (spring.restLength - dist) * spring.stiffness;
+		}
 
-        #region PRIVATE PROPS
-        float dist { get; set; }
-        cpVect anchr1 { get; set; }
-        cpVect anchr2 { get; set; }
-        float restLength { get; set; }
-        float damping { get; set; }
-        float stiffness { get; set; }
 
-        #endregion
+		public Func<cpDampedSpring, float, float> springForceFunc;
 
-        #region PROPS OVERIDE
+		#region PUBLIC PROPS
+		public cpVect r1 { get; set; }
+		public cpVect r2 { get; set; }
+		public cpVect n { get; set; }
+		public float v_coef { get; set; }
+		public float target_vrn { get; set; }
+		public float nMass { get; set; }
+		#endregion
 
-        public override float getDist()
-        {
-            return dist;
-        }
-        public override void setDist(float distance)
-        {
-            dist = distance;
-        }
-        public override void setStiffness(float stiffness)
-        {
-            this.stiffness = stiffness;
-        }
+		#region PRIVATE PROPS
+		float dist { get; set; }
+		cpVect anchr1 { get; set; }
+		cpVect anchr2 { get; set; }
+		float restLength { get; set; }
+		float damping { get; set; }
+		float stiffness { get; set; }
 
-        public override float getStiffness()
-        {
-            return base.getStiffness();
-        }
+		#endregion
 
-        public override void setAnchr1(cpVect anchr1)
-        {
-            this.anchr1 = anchr1;
-        }
+		#region PROPS OVERIDE
 
-        public override cpVect getAnchr1()
-        {
-            return this.anchr1;
-        }
+		public override float getDist()
+		{
+			return dist;
+		}
+		public override void setDist(float distance)
+		{
+			dist = distance;
+		}
+		public override void setStiffness(float stiffness)
+		{
+			this.stiffness = stiffness;
+		}
 
-        public override void setAnchr2(cpVect anchr2)
-        {
-            this.anchr2 = anchr2;
-        }
+		public override float getStiffness()
+		{
+			return base.getStiffness();
+		}
 
-        public override cpVect getAnchr2()
-        {
-            return anchr2;
-        }
+		public override void setAnchr1(cpVect anchr1)
+		{
+			this.anchr1 = anchr1;
+		}
 
-        public override void setRestLength(float restLength)
-        {
-            this.restLength = restLength;
-        }
+		public override cpVect getAnchr1()
+		{
+			return this.anchr1;
+		}
 
-        public override float getRestLength()
-        {
-            return restLength;
-        }
+		public override void setAnchr2(cpVect anchr2)
+		{
+			this.anchr2 = anchr2;
+		}
 
-        public override float getDamping()
-        {
-            return damping;
-        }
+		public override cpVect getAnchr2()
+		{
+			return anchr2;
+		}
 
-        public override void setDamping(float damping)
-        {
-            this.damping = damping;
-        }
+		public override void setRestLength(float restLength)
+		{
+			this.restLength = restLength;
+		}
 
-        #endregion
+		public override float getRestLength()
+		{
+			return restLength;
+		}
 
-        public cpDampedSpring(cpBody a, cpBody b, cpVect anchr1, cpVect anchr2, float restLength, float stiffness, float damping)
-            : base(a, b)
-        {
+		public override float getDamping()
+		{
+			return damping;
+		}
 
-            this.anchr1 = anchr1;
-            this.anchr2 = anchr2;
+		public override void setDamping(float damping)
+		{
+			this.damping = damping;
+		}
 
-            this.restLength = restLength;
+		#endregion
 
-            this.stiffness = stiffness;
-            this.damping = damping;
+		public cpDampedSpring(cpBody a, cpBody b, cpVect anchr1, cpVect anchr2, float restLength, float stiffness, float damping)
+			: base(a, b)
+		{
 
-            this.target_vrn = this.v_coef = 0;
+			this.anchr1 = anchr1;
+			this.anchr2 = anchr2;
 
-            this.r1 = this.r2 = null;
-            this.nMass = 0;
-            this.n = null;
+			this.restLength = restLength;
 
-        }
+			this.stiffness = stiffness;
+			this.damping = damping;
 
-        public float springForceFunc(cpDampedSpring spring, float relativeAngle)
-        {
-            return (spring.restLength - dist) * spring.stiffness;
-        }
+			this.target_vrn = this.v_coef = 0;
 
-        public override void PreStep(float dt)
-        {
+			this.r1 = this.r2 = null;
+			this.nMass = 0;
+			this.n = null;
 
-            this.r1 = anchr1.Rotate(a.Rotation); // vrotate(this.anchr1, a.rot);
-            this.r2 = anchr2.Rotate(b.Rotation); // vrotate(this.anchr2, b.rot);
+			this.springForceFunc = defaultSpringForce;
 
-            var delta = b.Position.Add(r2).Sub(a.Position.Add(r1)); //  vsub(vadd(b.p, this.r2), vadd(a.p, this.r1));
-            var dist = delta.Length; // vlength(delta);
-            this.n = delta.Multiply(1 / (dist > 0 ? dist : cp.Infinity));
+		}
 
-            var k = cp.k_scalar(a, b, this.r1, this.r2, this.n);
 
-            //assertSoft(k !== 0, "Unsolvable this.");
-            if (k == 0)
-                throw new NotImplementedException("Unsolvable this.");
 
-            this.nMass = 1 / k;
+		public override void PreStep(float dt)
+		{
 
-            this.target_vrn = 0;
-            this.v_coef = 1 - (float)Math.Exp(-this.damping * dt * k);
+			this.r1 = cpVect.cpvrotate(this.anchr1, a.Rotation);
+			this.r2 = cpVect.cpvrotate(this.anchr2, b.Rotation);
 
-            // apply this force
-            var f_spring = this.springForceFunc(this, dist);
+			var delta = cpVect.cpvsub(cpVect.cpvadd(b.Position, this.r2), cpVect.cpvadd(a.Position, this.r1));
+			var dist = cpVect.cpvlength(delta);
+			this.n = cpVect.cpvmult(delta, 1 / (dist > 0 ? dist : cp.Infinity));
 
-            cp.apply_impulses(a, b, this.r1, this.r2, this.n.x * f_spring * dt, this.n.y * f_spring * dt);
-        }
+			var k = cp.k_scalar(a, b, this.r1, this.r2, this.n);
 
-        public override void ApplyCachedImpulse(float coef)
-        {
-            //base.ApplyCachedImpulse(coef);
-        }
+			cp.assertSoft(k != 0, "Unsolvable this.");
 
-        public override void ApplyImpulse(float dt)
-        {
-            // compute relative velocity
-            var vrn = cp.normal_relative_velocity(a, b, r1, r2, n);
+			this.nMass = 1 / k;
 
-            // compute velocity loss from drag
-            var v_damp = (this.target_vrn - vrn) * this.v_coef;
-            this.target_vrn = vrn + v_damp;
+			this.target_vrn = 0;
+			this.v_coef = 1 - (float)Math.Exp(-this.damping * dt * k);
 
-            v_damp *= this.nMass;
-            cp.apply_impulses(a, b, this.r1, this.r2, this.n.x * v_damp, this.n.y * v_damp);
-        }
+			// apply this force
+			var f_spring = this.springForceFunc(this, dist);
 
-        public override float GetImpulse()
-        {
-            return 0;
-        }
+			cp.apply_impulses(a, b, this.r1, this.r2, this.n.x * f_spring * dt, this.n.y * f_spring * dt);
+		}
 
-    }
+		public override void ApplyCachedImpulse(float coef)
+		{
+		}
+
+		public override void ApplyImpulse(float dt)
+		{
+			// compute relative velocity
+			var vrn = cp.normal_relative_velocity(a, b, r1, r2, n);
+
+			// compute velocity loss from drag
+			var v_damp = (this.target_vrn - vrn) * this.v_coef;
+			this.target_vrn = vrn + v_damp;
+
+			v_damp *= this.nMass;
+			cp.apply_impulses(a, b, this.r1, this.r2, this.n.x * v_damp, this.n.y * v_damp);
+		}
+
+		public override float GetImpulse()
+		{
+			return 0;
+		}
+
+	}
 
 }
 

@@ -421,7 +421,8 @@ namespace ChipmunkSharp
 
 		public static void Error(string message)
 		{
-			throw new Exception(message);
+			//throw new Exception(message);
+			Console.WriteLine("ASSERTION FAILED: " + message);
 		}
 
 		#endregion
