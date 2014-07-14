@@ -37,7 +37,7 @@ namespace ChipmunkSharp
             var helper = new Action<cpShape>(shape =>
             {
                 if (
-                    !(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) && shape.pointQuery(point) != null
+                    !(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) && shape.pointQuery(point) != null
                 )
                 {
                     func(shape);

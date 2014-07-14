@@ -1051,7 +1051,7 @@ namespace ChipmunkSharp
 				}
 
 			}
-			return cpSegmentQueryInfo.CreateBlanck();
+			return null;
 		}
 
 		public static cpVect closestPointOnSegment(cpVect p, cpVect a, cpVect b)
