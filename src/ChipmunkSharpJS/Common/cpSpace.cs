@@ -119,7 +119,7 @@ namespace ChipmunkSharp
 		/// returns true from inside a callback and objects cannot be added/removed.
 		public bool isLocked
 		{
-			get { return (locked > 0); }
+			get { return (locked != 0); }
 		}
 
 
@@ -972,14 +972,14 @@ namespace ChipmunkSharp
 			if (sleep)
 			{
 				var dv = this.idleSpeedThreshold;
-				var dvsq = (dv > 0 ? dv * dv : cpVect.cpvlengthsq(this.gravity) * dt * dt);
+				var dvsq = (dv != 0 ? dv * dv : cpVect.cpvlengthsq(this.gravity) * dt * dt);
 
 				for (var i = 0; i < bodies.Count; i++)
 				{
 					//var body = ;
 
 					// Need to deal with infinite mass objects
-					var keThreshold = (dvsq > 0 ? bodies[i].Mass * dvsq : 0);
+					var keThreshold = (dvsq != 0 ? bodies[i].Mass * dvsq : 0);
 					bodies[i].nodeIdleTime = (bodies[i].kineticEnergy() > keThreshold ? 0 : bodies[i].nodeIdleTime + dt);
 				}
 			}
@@ -1198,11 +1198,12 @@ namespace ChipmunkSharp
 			{
 				cpShape shape = o1 as cpShape;
 
-				cpSegmentQueryInfo info;
+				cpSegmentQueryInfo info = shape.segmentQuery(start, end);
+
 
 				if (
-					!(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) &&
-					!shape.sensor && ((info = shape.segmentQuery(start, end)) != null) &&
+					!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) &&
+					!shape.sensor && info != null &&
 					(output == null || info.t < output.t)
 				)
 				{
@@ -1228,7 +1229,7 @@ namespace ChipmunkSharp
 			{
 				cpShape shape = o1 as cpShape;
 
-				if (!(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) && !shape.sensor)
+				if (!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) && !shape.sensor)
 				{
 					cpNearestPointQueryInfo info = shape.nearestPointQuery(point);
 

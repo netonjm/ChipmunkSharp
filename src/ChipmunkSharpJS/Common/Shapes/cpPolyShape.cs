@@ -226,7 +226,7 @@ namespace ChipmunkSharp
 					return new cpSegmentQueryInfo(this, t, n);
 				}
 			}
-			return cpSegmentQueryInfo.CreateBlanck();
+			return null;
 		}
 
 		public float valueOnAxis(cpVect n, float d)
