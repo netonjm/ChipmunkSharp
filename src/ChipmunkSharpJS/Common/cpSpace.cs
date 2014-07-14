@@ -1060,263 +1060,6 @@ namespace ChipmunkSharp
 			}
 		}
 
-
-
-
-
-		//        //MARK: Contact Set Helpers
-		//        // Equal function for arbiterSet.
-		//        public static bool ArbiterSetEql(List<cpShape> shapes, cpArbiter arb)
-		//        {
-		//            cpShape a = shapes[0];
-		//            cpShape b = shapes[1];
-
-		//            return ((a == arb.a && b == arb.b) || (b == arb.a && a == arb.b));
-		//        }
-
-
-		//        public static bool HandlerSetEql(cpCollisionHandler check, cpCollisionHandler pair)
-		//        {
-		//            return ((check.a == pair.a && check.b == pair.b) || (check.b == pair.a && check.a == pair.b));
-		//        }
-
-
-		//        // Transformation function for collisionHandlers.
-		//        public static cpCollisionHandler HandlerSetTrans(cpCollisionHandler handler, object unused)
-		//        {
-		//            // (cpCollisionHandler)cpcalloc(1, sizeof(cpCollisionHandler));
-		//            return handler.Clone();
-		//        }
-
-
-		//        //MARK: Misc Helper Funcs
-
-		//        // Default collision functions.
-		//        static bool AlwaysCollide(cpArbiter arb, cpSpace space, object data) { return true; }
-		//        static void Nothing(cpArbiter arb, cpSpace space, object data) { }
-
-		//        // function to get the estimated velocity of a shape for the cpBBTree.
-		//        static cpVect ShapeVelocityFunc(cpShape shape) { return shape.body.v; }
-
-		//        /// Initialize a cpSpace.
-		//        public cpSpace Init()
-		//        {
-		//#if DEBUG
-		//            bool done = false;
-		//            if (!done)
-		//            {
-		//                Console.WriteLine("Initializing cpSpace - Chipmunk v%s (Debug Enabled)\n", cpEnvironment.cpVersionString);
-		//                Console.WriteLine("Compile with -DNDEBUG defined to disable debug mode and runtime assertion checks\n");
-		//                done = true;
-		//            }
-		//#endif
-
-		//            iterations = 10;
-
-		//            gravity = cpVect.ZERO;
-		//            damping = 1.0f;
-
-		//            collisionSlop = 0.1f;
-		//            collisionBias = cpEnvironment.cpfpow(1.0f - 0.1f, 60.0f);
-		//            collisionPersistence = 3;
-
-		//            locked = false;
-		//            stamp = 0;
-
-
-		//            staticShapes = new cpBBTree(null); // cpBBTree.cpBBTreeNew((cpSpatialIndexBBFunc)cpShapeGetBB, null);
-		//            activeShapes = new cpBBTree(staticShapes);// cpBBTree.cpBBTreeNew((cpSpatialIndexBBFunc)cpShapeGetBB, space.staticShapes);
-
-		//            bodies = new List<cpBody>();
-		//            sleepingComponents = new List<cpBody>(); // cpArrayNew(0);
-		//            rousedBodies = new List<cpBody>();// cpArrayNew(0);
-
-		//            sleepTimeThreshold = cpEnvironment.Infinity;// INFINITY;
-		//            idleSpeedThreshold = 0.0f;
-		//            enableContactGraph = false;
-
-		//            arbiters = new List<cpArbiter>(); // cpArrayNew(0);
-		//            //pooledArbiters = new List<cpArbiter>();// cpArrayNew(0);
-
-		//            contactBuffersHead = new List<ContactPoint>();
-		//            cachedArbiters = new cpBBTree(null); //new Dictionary<int, cpArbiter>();    // cpHashSetNew(0, (cpHashSetEqlFunc)arbiterSetEql);
-
-		//            constraints = new List<cpConstraint>(); // cpArrayNew(0);
-
-		//            DefaultHandler = DefaultCollisionHandler;
-
-		//            collisionHandlers = new cpBBTree(null);  //new cpBBTree(null); // cpHashSetNew(0, (cpHashSetEqlFunc)handlerSetEql);
-		//            //collisionHandlers.SetDefaultValue(DefaultCollisionHandler);
-
-		//            PostStepCallbacks = new List<cpPostStepCallback>();
-		//            skipPostStep = false;
-		//            staticBody = new cpBody();
-
-		//            return this;
-		//        }
-
-		//        /// Destroy a cpSpace.
-		//        public void Destroy()
-		//        {
-		//            //TODO: 
-		//            //cpSpaceEachBody(space, (cpSpaceBodyIteratorFunc)cpBodyActivate, null);
-
-		//            //cpSpatialIndexFree(space.staticShapes);
-		//            //cpSpatialIndexFree(space.activeShapes);
-
-
-		//            //cpArrayFree(space.bodies);
-		//            //cpArrayFree(space.sleepingComponents);
-		//            //cpArrayFree(space.rousedBodies);
-
-		//            //cpArrayFree(space.constraints);
-
-		//            //cpHashSetFree(space.cachedArbiters);
-
-		//            //cpArrayFree(space.arbiters);
-		//            //cpArrayFree(space.pooledArbiters);
-
-		//            //if (space.allocatedBuffers)
-		//            //{
-		//            //    cpArrayFreeEach(space.allocatedBuffers, cpfree);
-		//            //    cpArrayFree(space.allocatedBuffers);
-		//            //}
-
-		//            //if (space.postStepCallbacks)
-		//            //{
-		//            //    cpArrayFreeEach(space.postStepCallbacks, cpfree);
-		//            //    cpArrayFree(space.postStepCallbacks);
-		//            //}
-
-		//            //if (space.collisionHandlers) cpHashSetEach(space.collisionHandlers, freeWrap, null);
-		//            //cpHashSetFree(space.collisionHandlers);
-		//        }
-
-		//        /// Destroy and free a cpSpace.
-		//        public void Free()
-		//        {
-		//            Destroy();
-		//        }
-
-		//        //#define CP_DefineSpaceStructGetter(type, member, name) \
-		//        //static  type cpSpaceGet##name(const cpSpace space){return space.member;}
-
-		//        //#define CP_DefineSpaceStructSetter(type, member, name) \
-		//        //static  void cpSpaceSet##name(cpSpace space, type value){space.member = value;}
-
-		//        //#define CP_DefineSpaceStructProperty(type, member, name) \
-		//        //CP_DefineSpaceStructGetter(type, member, name) \
-		//        //CP_DefineSpaceStructSetter(type, member, name)
-
-		//        //CP_DefineSpaceStructProperty(int, iterations, Iterations)
-		//        //CP_DefineSpaceStructProperty(cpVect, gravity, Gravity)
-		//        //CP_DefineSpaceStructProperty(float, damping, Damping)
-		//        //CP_DefineSpaceStructProperty(float, idleSpeedThreshold, IdleSpeedThreshold)
-		//        //CP_DefineSpaceStructProperty(float, sleepTimeThreshold, SleepTimeThreshold)
-		//        //CP_DefineSpaceStructProperty(float, collisionSlop, CollisionSlop)
-		//        //CP_DefineSpaceStructProperty(float, collisionBias, CollisionBias)
-		//        //CP_DefineSpaceStructProperty(cpTimestamp, collisionPersistence, CollisionPersistence)
-		//        //CP_DefineSpaceStructProperty(bool, enableContactGraph, EnableContactGraph)
-		//        //CP_DefineSpaceStructProperty(cpDataPointer, data, UserData)
-		//        //CP_DefineSpaceStructGetter(cpBody, staticBody, StaticBody)
-		//        //CP_DefineSpaceStructGetter(float, CP_PRIVATE(curr_dt), CurrentTimeStep)
-
-		//        public void AssertSpaceUnlocked()
-		//        {
-		//            cpEnvironment.AssertHard(locked, "This operation cannot be done safely during a call to cpSpaceStep() or during a query. Put these calls into a post-step callback.");
-		//        }
-
-		//        /// returns true from inside a callback and objects cannot be added/removed.
-		//        public bool IsLocked()
-		//        {
-		//            return locked;
-		//        }
-
-		//        /// Set a default collision handler for this space.
-		//        /// The default collision handler is invoked for each colliding pair of shapes
-		//        /// that isn't explicitly handled by a specific collision handler.
-		//        /// You can pass null for any function you don't want to implement.
-
-
-
-
-		//        /// Convert a dynamic rogue body to a static one.
-		//        /// If the body is active, you must remove it from the space first.
-		//        public void ConvertBodyToStatic(cpBody body)
-		//        {
-
-		//            cpEnvironment.AssertHard(!body.isStatic(), "Body is already static.");
-		//            cpEnvironment.AssertHard(body.isRogue(), "Remove the body from the space before calling this function.");
-		//            AssertSpaceUnlocked();
-
-		//            body.setMass(cpEnvironment.Infinity); // cpBodySetMass(body, INFINITY);
-		//            body.setMoment(cpEnvironment.Infinity);  //cpBodySetMoment(body, INFINITY);
-
-		//            body.Vel = cpVect.ZERO;
-		//            body.AngVel = 0.0f;
-
-
-		//            body.node.idleTime = cpEnvironment.Infinity;
-		//            body.eachShape((s) =>
-		//            {
-		//                activeShapes.Remove(s.hashid);
-		//                staticShapes.Insert(s.hashid, s);
-
-		//            });
-
-		//            //CP_BODY_FOREACH_SHAPE(body, shape){
-
-		//        }
-
-		//        public static void PostStepDoNothing(cpSpace space, object obj, object data) { }
-
-		//        /// Convert a body to a dynamic rogue body.
-		//        /// If you want the body to be active after the transition, you must add it to the space also.
-		//        public void ConvertBodyToDynamic(cpBody body, float mass, float moment)
-		//        {
-
-		//            cpEnvironment.AssertHard(body.isStatic(), "Body is already dynamic.");
-		//            AssertSpaceUnlocked();
-
-		//            body.ActivateStatic(null);
-		//            body.setMass(mass);
-
-		//            //cpBodySetMass(body, m);
-		//            body.setMoment(moment);
-
-		//            body.node.idleTime = 0.0f;
-
-		//            body.eachShape((cpShape s) =>
-		//            {
-		//                this.staticShapes.Remove(s.hashid);
-		//                this.activeShapes.Insert(s.hashid, s);
-
-		//            });
-
-		//        }
-
-		//        public cpPostStepCallback? GetPostStepCallback(int key)
-		//        {
-		//            foreach (var callback in this.PostStepCallbacks)
-		//                if (callback.key == key) return callback;
-
-		//            return null;
-
-		//        }
-
-		//        //MARK: Spatial Index Management
-
-		//        public static void UpdateBBCache(cpShape shape, object unused)
-		//        {
-		//            cpBody body = shape.body;
-		//            shape.Update(body.Position, body.Rotation);
-		//        }
-
-		//        public void SetGravity(cpVect gravity)
-		//        {
-		//            this.gravity = gravity;
-		//        }
-
 		#region DEBUG DRAW
 
 		public void SetDebugDraw(cpDebugDraw debug)
@@ -1534,9 +1277,33 @@ namespace ChipmunkSharp
 		#endregion
 
 
-		public cpSegmentQueryInfo segmentQueryFirst(cpVect start, cpVect end, int p1, int p2)
+		public cpSegmentQueryInfo segmentQueryFirst(cpVect start, cpVect end, int layers, int group)
 		{
-			throw new NotImplementedException();
+			cpSegmentQueryInfo output = null;
+
+			var helper = new Func<object, float>(o1 =>
+			{
+				cpShape shape = o1 as cpShape;
+
+				cpSegmentQueryInfo info;
+
+				if (
+					!(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) &&
+					!shape.sensor && ((info = shape.segmentQuery(start, end)) != null) &&
+					(output == null || info.t < output.t)
+				)
+				{
+					output = info;
+				}
+
+				return output != null ? output.t : 1;
+			}
+				);
+
+			this.staticShapes.SegmentQuery(start, end, 1f, helper);
+			this.activeShapes.SegmentQuery(start, end, output != null ? output.t : 1, helper);
+
+			return output;
 		}
 
 		public cpNearestPointQueryInfo nearestPointQueryNearest(cpVect point, int maxDistance, int layers, int group)

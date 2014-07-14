@@ -1482,9 +1482,14 @@ namespace ChipmunkSharp
 			return arr;
 		}
 
-		internal static cpBB bbNewForCircle(cpVect point, int maxDistance)
+		internal static cpBB bbNewForCircle(cpVect p, int r)
 		{
-			throw new NotImplementedException();
+			return new cpBB(
+			p.x - r,
+			p.y - r,
+			p.x + r,
+			p.y + r
+		);
 		}
 
 		public static float[] ConvertToFloatArray(List<cpVect> vec)
