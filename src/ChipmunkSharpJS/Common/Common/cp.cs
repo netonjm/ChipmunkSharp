@@ -81,6 +81,8 @@ namespace ChipmunkSharp
 			}
 		}
 
+		public static float PHYSICS_INFINITY { get { return Infinity; } }
+
 		public static void resetShapeIdCounter()
 		{
 			shapeIDCounter = 0;
@@ -384,8 +386,6 @@ namespace ChipmunkSharp
 		}
 
 		#endregion
-
-		public static float PHYSICS_INFINITY { get { return Infinity; } }
 
 		#region MOMENTS
 
@@ -1362,7 +1362,7 @@ namespace ChipmunkSharp
 			return arr;
 		}
 
-		internal static cpBB bbNewForCircle(cpVect p, int r)
+		internal static cpBB bbNewForCircle(cpVect p, float r)
 		{
 			return new cpBB(
 			p.x - r,

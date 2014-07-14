@@ -27,151 +27,197 @@ using System.Text;
 namespace ChipmunkSharp
 {
 
-    public partial class cpSpace
-    {
+	public partial class cpSpace
+	{
+
+		/// Query the space at a point and call @c func for each shape found.
+		public void pointQuery(cpVect point, int layers, int group, Action<cpShape> func)
+		{
+			var helper = new Action<cpShape>(shape =>
+			{
+				if (
+					!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) && shape.pointQuery(point) != null
+				)
+				{
+					func(shape);
+				}
+			});
+
+			var bb = new cpBB(point.x, point.y, point.x, point.y);
+			Lock();
+			{
+				this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
+				this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
+			} Unlock(true);
+		}
+
+		/// Query the space at a point and return the first shape found. Returns null if no shapes were found.
+		public cpShape pointQueryFirst(cpVect point, int layers, int group, Action<cpShape> func)
+		{
+			cpShape outShape = null;
+			this.pointQuery(point, layers, group, new Action<cpShape>(shape =>
+			{
+				if (!shape.sensor)
+					outShape = shape;
+			}));
+			return outShape;
+		}
+
+		/// Query a space for any shapes overlapping the given shape and call @c func for each shape found.
+		public bool shapeQuery(cpShape shape, Action<cpShape, List<ContactPoint>> func)
+		{
+
+			cpBody body = shape.body;
+
+			//var bb = (body ? shape.update(body.p, body.rot) : shape.bb);
+			if (body != null)
+			{
+				shape.update(body.Position, body.Rotation);
+			}
+
+			var bb = new cpBB(shape.bb_l, shape.bb_b, shape.bb_r, shape.bb_t);
+
+			//shapeQueryContext context = {func, data, false};
+			bool anyCollision = false;
+
+			Action<cpShape> helper = (b) =>
+			{
+
+				var a = shape;
+				// Reject any of the simple cases
+				if (
+					(a.group != 0 && a.group == b.group) ||
+					(a.layers & b.layers) == 0 ||
+					a == b
+				) return;
 
 
-        /// Query the space at a point and call @c func for each shape found.
-        public void pointQuery(cpVect point, int layers, int group, Action<cpShape> func)
-        {
-            var helper = new Action<cpShape>(shape =>
-            {
-                if (
-                    !(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) && shape.pointQuery(point) != null
-                )
-                {
-                    func(shape);
-                }
-            });
+				List<ContactPoint> contacts = new List<ContactPoint>();
 
-            var bb = new cpBB(point.x, point.y, point.x, point.y);
-            Lock();
-            {
-                this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
-                this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
-            } Unlock(true);
-        }
+				// Shape 'a' should have the lower shape type. (required by collideShapes() )
+				if ((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode)
+				{
+					contacts = collideShapes(a, b);
+				}
+				else
+				{
+					contacts = collideShapes(b, a);
+					List<ContactPoint> contactsModified = new List<ContactPoint>();
+					for (var i = 0; i < contacts.Count; i++)
+					{
+						ContactPoint contacto = contacts[i];
+						contacto.n = cpVect.cpvneg(contacto.n);
+						contactsModified.Add(contacto);
+					}
+					contacts = contactsModified;
+				}
 
+				if (contacts.Count > 0)
+				{
+					anyCollision = !(a.sensor || b.sensor);
 
-        /// Query the space at a point and return the first shape found. Returns null if no shapes were found.
-        public cpShape pointQueryFirst(cpVect point, int layers, int group, Action<cpShape> func)
-        {
-            cpShape outShape = null;
-            this.pointQuery(point, layers, group, new Action<cpShape>(shape =>
-            {
-                if (!shape.sensor)
-                    outShape = shape;
-            }));
-            return outShape;
-        }
+					if (func != null)
+					{
+						//List<ContactPoint> set = new List<ContactPoint>();
+						//ContactPoint tmp;
+						//for (var i = 0; i < contacts.Count; i++)
+						//{
+						//    tmp = new ContactPoint(contacts[i].p, contacts[i].n, contacts[i].dist, 0); // contacts[i].p, contacts[i].n, contacts[i].dist);
+						//    set.Add(tmp);
+						//}
 
-        /// Query a space for any shapes overlapping the given shape and call @c func for each shape found.
-        public bool shapeQuery(cpShape shape, Action<cpShape, List<ContactPoint>> func)
-        {
-
-            cpBody body = shape.body;
-
-            //var bb = (body ? shape.update(body.p, body.rot) : shape.bb);
-            if (body != null)
-            {
-                shape.update(body.Position, body.Rotation);
-            }
-
-            var bb = new cpBB(shape.bb_l, shape.bb_b, shape.bb_r, shape.bb_t);
-
-            //shapeQueryContext context = {func, data, false};
-            bool anyCollision = false;
-
-            Action<cpShape> helper = (b) =>
-            {
-
-                var a = shape;
-                // Reject any of the simple cases
-                if (
-                    (a.group != 0 && a.group == b.group) ||
-                    (a.layers & b.layers) == 0 ||
-                    a == b
-                ) return;
+						func(b, contacts);
+					}
+				}
 
 
-                List<ContactPoint> contacts = new List<ContactPoint>();
+			};
 
-                // Shape 'a' should have the lower shape type. (required by collideShapes() )
-                if ((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode)
-                {
-                    contacts = collideShapes(a, b);
-                }
-                else
-                {
-                    contacts = collideShapes(b, a);
-                    List<ContactPoint> contactsModified = new List<ContactPoint>();
-                    for (var i = 0; i < contacts.Count; i++)
-                    {
-                        ContactPoint contacto = contacts[i];
-                        contacto.n = cpVect.cpvneg(contacto.n);
-                        contactsModified.Add(contacto);
-                    }
-                    contacts = contactsModified;
-                }
+			Lock();
+			{
+				this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
+				this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
+			}
+			Unlock(true);
 
-                if (contacts.Count > 0)
-                {
-                    anyCollision = !(a.sensor || b.sensor);
+			return anyCollision;
+		}
 
-                    if (func != null)
-                    {
-                        //List<ContactPoint> set = new List<ContactPoint>();
-                        //ContactPoint tmp;
-                        //for (var i = 0; i < contacts.Count; i++)
-                        //{
-                        //    tmp = new ContactPoint(contacts[i].p, contacts[i].n, contacts[i].dist, 0); // contacts[i].p, contacts[i].n, contacts[i].dist);
-                        //    set.Add(tmp);
-                        //}
+		public void segmentQuery(cpVect start, cpVect end, int layers, int group, Action<cpShape, float, cpVect> func)
+		{
+			var helper = new Func<object, float>(obj1 =>
+		{
 
-                        func(b, contacts);
-                    }
-                }
+			cpShape shape = obj1 as cpShape;
 
+			var info = shape.segmentQuery(start, end);
 
-            };
+			if (
+				!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) &&
+				info != null
+			)
+			{
+				func(shape, info.t, info.n);
+			}
+			return 1;
 
-            Lock();
-            {
-                this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
-                this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
-            }
-            Unlock(true);
+		});
 
-            return anyCollision;
-        }
+			this.Lock();
+			{
+				this.staticShapes.SegmentQuery(start, end, 1, helper);
+				this.activeShapes.SegmentQuery(start, end, 1, helper);
+			} this.Unlock(true);
+		}
 
-
-        /// Perform a fast rectangle query on the space calling @c func for each shape found.
-        /// Only the shape's bounding boxes are checked for overlap, not their full shape.
-        public void bbQuery(cpBB bb, int layers, int group, Action<cpShape> func)
-        {
-            var helper = new Action<cpShape>(shape =>
-            {
-                if (
-                    !(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) &&
-                     cp.bbIntersects2(bb, shape.bb_l, shape.bb_b, shape.bb_r, shape.bb_t)
-                )
-                {
-                    func(shape);
-                }
-            });
+		/// Perform a fast rectangle query on the space calling @c func for each shape found.
+		/// Only the shape's bounding boxes are checked for overlap, not their full shape.
+		public void bbQuery(cpBB bb, int layers, int group, Action<cpShape> func)
+		{
+			var helper = new Action<cpShape>(shape =>
+			{
+				if (
+					!(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) &&
+					 cp.bbIntersects2(bb, shape.bb_l, shape.bb_b, shape.bb_r, shape.bb_t)
+				)
+				{
+					func(shape);
+				}
+			});
 
 
-            Lock();
-            {
-                this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
-                this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
-            } Unlock(true);
-        }
+			Lock();
+			{
+				this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
+				this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
+			} Unlock(true);
+		}
+		//point, layers, group
+		public void pointQueryFirst(cpVect point, float maxDistance, int layers, int group, Action<cpShape, float, cpVect> func)
+		{
+			var helper = new Action<object, object>((o1, o2) =>
+			{
+				var shape = o1 as cpShape;
+				if (!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0))
+				{
+					var info = shape.nearestPointQuery(point);
+
+					if (info.d < maxDistance) func(shape, info.d, info.p);
+				}
+			});
+
+			var bb = cp.bbNewForCircle(point, maxDistance);
+
+			this.Lock();
+			{
+				this.activeShapes.query(bb, (o1, o2) => helper(o1, o2));
+				this.staticShapes.query(bb, (o1, o2) => helper(o1, o2));
+			} this.Unlock(true);
+
+		}
+		//nearestPointQuery
 
 
 
-
-
-    }
+	}
 }

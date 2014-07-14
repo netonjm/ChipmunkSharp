@@ -1220,31 +1220,74 @@ namespace ChipmunkSharp
 			return output;
 		}
 
-		public cpNearestPointQueryInfo nearestPointQueryNearest(cpVect point, int maxDistance, int layers, int group)
+
+		//		Space.prototype.nearestPointQuery = function(point, maxDistance, layers, group, func)
+		//{
+		//	var helper = function(shape){
+		//		if(!(shape.group && group === shape.group) && (layers & shape.layers)){
+		//			var info = shape.nearestPointQuery(point);
+
+		//			if(info.d < maxDistance) func(shape, info.d, info.p);
+		//		}
+		//	};
+
+		//	var bb = bbNewForCircle(point, maxDistance);
+
+		//	this.lock(); {
+		//		this.activeShapes.query(bb, helper);
+		//		this.staticShapes.query(bb, helper);
+		//	} this.unlock(true);
+		//};
+
+		public void NearestPointQuery(cpVect point, int maxDistance, int layers, int group, Action<cpShape, float, cpVect> func)
 		{
-
-			cpNearestPointQueryInfo output = null;
-
 			var helper = new Action<object, object>((o1, o2) =>
 			{
 				cpShape shape = o1 as cpShape;
 
-				if (!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) && !shape.sensor)
+				if (!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0))
 				{
 					cpNearestPointQueryInfo info = shape.nearestPointQuery(point);
 
-					if (info.d < maxDistance && (output == null || info.d < output.d))
-						output = info;
+					if (info.d < maxDistance)
+						func(shape, info.d, info.p);
+
 				}
 			});
 
 			cpBB bb = cp.bbNewForCircle(point, maxDistance);
-
-			this.activeShapes.query(bb, helper);
-			this.staticShapes.query(bb, helper);
-
-			return output;
+			this.Lock();
+			{
+				this.activeShapes.query(bb, helper);
+				this.staticShapes.query(bb, helper);
+			} this.Unlock(true);
 		}
+
+		//public cpNearestPointQueryInfo NearestPointQuery(cpVect point, int maxDistance, int layers, int group)
+		//{
+
+		//	cpNearestPointQueryInfo output = null;
+
+		//	var helper = new Action<object, object>((o1, o2) =>
+		//	{
+		//		cpShape shape = o1 as cpShape;
+
+		//		if (!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) && !shape.sensor)
+		//		{
+		//			cpNearestPointQueryInfo info = shape.nearestPointQuery(point);
+
+		//			if (info.d < maxDistance && (output == null || info.d < output.d))
+		//				output = info;
+		//		}
+		//	});
+
+		//	cpBB bb = cp.bbNewForCircle(point, maxDistance);
+
+		//	this.activeShapes.query(bb, helper);
+		//	this.staticShapes.query(bb, helper);
+
+		//	return output;
+		//}
 
 		public class NearestPointQueryInfo
 		{
