@@ -678,12 +678,11 @@ namespace ChipmunkSharp
 					safeDelete.Add(hash.Key);
 				}
 
+			}
 
-				foreach (var item in safeDelete)
-				{
-					cachedArbiters.Remove(item);
-				}
-
+			foreach (var item in safeDelete)
+			{
+				cachedArbiters.Remove(item);
 			}
 
 		}
@@ -1098,19 +1097,19 @@ namespace ChipmunkSharp
 				eachConstraint(c => c.Draw(m_debugDraw));
 			}
 
-			if ((flags & cpDrawFlags.Pair) != 0)
-			{
+			//if ((flags & cpDrawFlags.Pair) != 0)
+			//{
 
-			}
+			//}
 
-			if ((flags & cpDrawFlags.AABB) != 0)
-			{
-			}
+			//if ((flags & cpDrawFlags.AABB) != 0)
+			//{
+			//}
 
-			if ((flags & cpDrawFlags.CenterOfMass) != 0)
-			{
+			//if ((flags & cpDrawFlags.CenterOfMass) != 0)
+			//{
 
-			}
+			//}
 
 		}
 
@@ -1305,6 +1304,32 @@ namespace ChipmunkSharp
 			public cpShape shape { get; set; }
 			public cpVect p { get; set; }
 			public float d { get; set; }
+		}
+
+		public cpNearestPointQueryInfo NearestPointQuery(cpVect point, int maxDistance, int layers, int group)
+		{
+
+			cpNearestPointQueryInfo output = null;
+
+			var helper = new Action<object, object>((o1, o2) =>
+			{
+				cpShape shape = o1 as cpShape;
+
+				if (!(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) && !shape.sensor)
+				{
+					cpNearestPointQueryInfo info = shape.nearestPointQuery(point);
+
+					if (info.d < maxDistance && (output == null || info.d < output.d))
+						output = info;
+				}
+			});
+
+			cpBB bb = cp.bbNewForCircle(point, maxDistance);
+
+			this.activeShapes.query(bb, helper);
+			this.staticShapes.query(bb, helper);
+
+			return output;
 		}
 	}
 }
