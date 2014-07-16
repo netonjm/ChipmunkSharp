@@ -381,8 +381,8 @@ namespace ChipmunkSharp
 
 		public static void Error(string message)
 		{
-			throw new Exception(message);
-			//Console.WriteLine("ASSERTION FAILED: " + message);
+			//throw new Exception(message);
+			Console.WriteLine("ASSERTION FAILED: " + message);
 		}
 
 		#endregion
@@ -1387,6 +1387,19 @@ namespace ChipmunkSharp
 			return dev;
 		}
 
+		public static cpVect frand_unit_circle()
+		{
+			cpVect v = new cpVect(frand() * 2.0f - 1.0f, frand() * 2.0f - 1.0f);
+			return (cpVect.cpvlengthsq(v) < 1.0f ? v : frand_unit_circle());
+		}
+
+		public static float frand()
+		{
+
+			//double tmp = ((rand.NextDouble() *  f) / ((double) (/*(uint)~0*/ 0xFFFFFFFF /*or is it -1 :P */)));
+			//return tmp < 0 ? (-tmp) : tmp;
+			return RandomHelper.frand(1);
+		}
 	}
 
 }

@@ -115,6 +115,9 @@
     <Compile Include="..\Common\cpVect.cs">
       <Link>cpVect.cs</Link>
     </Compile>
+    <Compile Include="..\Common\Helpers\RandomHelper.cs">
+      <Link>Helpers\RandomHelper.cs</Link>
+    </Compile>
     <Compile Include="..\Common\Shapes\cpPolyShape.cs">
       <Link>Shapes\cpPolyShape.cs</Link>
     </Compile>

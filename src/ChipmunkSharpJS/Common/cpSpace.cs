@@ -1072,6 +1072,7 @@ namespace ChipmunkSharp
 			{
 				return;
 			}
+
 			m_debugDraw.DrawString(0, 15, string.Format("Step: {0}", stamp));
 			m_debugDraw.DrawString(0, 50, string.Format("Bodies : {0}/{1}", bodies.Count, bodies.Capacity));
 			m_debugDraw.DrawString(0, 80, string.Format("Arbiters: {0}/{1}", arbiters.Count, arbiters.Capacity));
@@ -1085,31 +1086,17 @@ namespace ChipmunkSharp
 			m_debugDraw.DrawString(0, 110, "Contact points: " + contacts);
 			m_debugDraw.DrawString(0, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}", cp.numLeaves, cp.numNodes, cp.numPairs));
 
-			cpDrawFlags flags = m_debugDraw.Flags;
+			//cpDrawFlags flags = m_debugDraw.Flags;
 
-			if ((flags & cpDrawFlags.Shape) != 0)
+			if (m_debugDraw.Flags == cpDrawFlags.ALL || m_debugDraw.Flags == cpDrawFlags.Shape)
 			{
 				eachShape(s => s.Draw(m_debugDraw));
 			}
 
-			if ((flags & cpDrawFlags.Joint) != 0)
+			if (m_debugDraw.Flags == cpDrawFlags.ALL || m_debugDraw.Flags == cpDrawFlags.Joint)
 			{
 				eachConstraint(c => c.Draw(m_debugDraw));
 			}
-
-			//if ((flags & cpDrawFlags.Pair) != 0)
-			//{
-
-			//}
-
-			//if ((flags & cpDrawFlags.AABB) != 0)
-			//{
-			//}
-
-			//if ((flags & cpDrawFlags.CenterOfMass) != 0)
-			//{
-
-			//}
 
 		}
 
@@ -1330,6 +1317,42 @@ namespace ChipmunkSharp
 			this.staticShapes.query(bb, helper);
 
 			return output;
+		}
+
+		public void clear()
+		{
+			List<object> safeList = new List<object>();
+			eachBody((b) => safeList.Add(b));
+			foreach (var item in safeList)
+				removeBody(item as cpBody);
+
+			safeList.Clear();
+			eachShape((b) => safeList.Add(b));
+			foreach (var item in safeList)
+				removeShape(item as cpShape);
+
+			safeList.Clear();
+
+			eachConstraint((b) => safeList.Add(b));
+			foreach (var item in safeList)
+				removeConstraint(item as cpConstraint);
+
+			activeShapes.leaves.Clear();
+			staticShapes.leaves.Clear();
+
+			constraints.Clear();
+			collisionHandlers.Clear();
+			bodies.Clear();
+			cachedArbiters.Clear();
+			arbiters.Clear();
+
+			cp.step = 0;
+			stamp = 0;
+			cp.numLeaves = 0; cp.numNodes = 0; cp.numPairs = 0;
+
+			//foreach (var item in space.collisionHandlers)
+			//	space.removeCollisionHandler(item.Value.a, item.Value.b);
+
 		}
 	}
 }
