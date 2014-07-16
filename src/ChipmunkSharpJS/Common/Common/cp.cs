@@ -1205,14 +1205,15 @@ namespace ChipmunkSharp
 
 		public static List<cpColor> _styles;
 
-		public static int[] colorRanges = new int[] {
-            0,100,255
-        };
+		public static float[] colorRanges = new float[] {
+			//0.2f,0.4f,0.5f,0.7f,0.8f,1f
+						178,1,255
+		};
 
-		public static int randColor(Random rnd)
-		{
-			return rnd.Next(0, colorRanges.Length);
-		}
+		//public static float randColor(Random rnd)
+		//{
+		//	return (float)colorRanges[rnd.Next(0, colorRanges.Length - 1)];
+		//}
 
 		public static List<cpColor> styles
 		{
@@ -1225,9 +1226,10 @@ namespace ChipmunkSharp
 					var rnd = new Random(DateTime.Now.Millisecond);
 
 					_styles = new List<cpColor>();
-					for (var i = 0; i < 100; i++)
+
+					for (var i = 200; i >= 0; i-=10)
 					{
-						_styles.Add(new cpColor(colorRanges[randColor(rnd)], colorRanges[randColor(rnd)], colorRanges[randColor(rnd)]));
+						_styles.Add(new cpColor(rnd.Next(100, 255), rnd.Next(160, 255), rnd.Next(160, 255)));
 					}
 
 				}

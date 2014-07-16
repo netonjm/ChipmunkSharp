@@ -33,6 +33,10 @@ namespace ChipmunkSharp
 		/// Query the space at a point and call @c func for each shape found.
 		public void pointQuery(cpVect point, int layers, int group, Action<cpShape> func)
 		{
+
+			if (point == null)
+				return;
+
 			var helper = new Action<cpShape>(shape =>
 			{
 				if (
@@ -55,6 +59,7 @@ namespace ChipmunkSharp
 		public cpShape pointQueryFirst(cpVect point, int layers, int group, Action<cpShape> func)
 		{
 			cpShape outShape = null;
+
 			this.pointQuery(point, layers, group, new Action<cpShape>(shape =>
 			{
 				if (!shape.sensor)
