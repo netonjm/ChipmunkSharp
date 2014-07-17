@@ -22,74 +22,88 @@ using System;
 namespace ChipmunkSharp.Constraints
 {
 
-    public class cpSimpleMotor : cpConstraint
-    {
+	public class cpSimpleMotor : cpConstraint
+	{
 
-        public cpSimpleMotor(cpBody a, cpBody b, float rate)
-            : base(a, b)
-        {
+		public cpSimpleMotor(cpBody a, cpBody b, float rate)
+			: base(a, b)
+		{
 
-            this.rate = rate;
+			this.rate = rate;
 
-            this.jAcc = 0.0f;
+			this.jAcc = 0.0f;
 
-            this.iSum = this.jMax = 0.0f;
-        }
+			this.iSum = this.jMax = 0.0f;
+		}
 
-        public override void PreStep(float dt)
-        {
+		public override void PreStep(float dt)
+		{
 
-            // calculate moment of inertia coefficient.
-            this.iSum = 1 / (this.a.i_inv + this.b.i_inv);
+			// calculate moment of inertia coefficient.
+			this.iSum = 1 / (this.a.i_inv + this.b.i_inv);
 
-            // compute max impulse
-            this.jMax = this.maxForce * dt;
-        }
+			// compute max impulse
+			this.jMax = this.maxForce * dt;
+		}
 
-        public override void ApplyCachedImpulse(float dt_coef)
-        {
+		public override void ApplyCachedImpulse(float dt_coef)
+		{
 
-            var j = this.jAcc * dt_coef;
-            a.w -= j * a.i_inv;
-            b.w += j * b.i_inv;
-        }
-
-
-        public override void ApplyImpulse(float dt)
-        {
+			var j = this.jAcc * dt_coef;
+			a.w -= j * a.i_inv;
+			b.w += j * b.i_inv;
+		}
 
 
-            // compute relative rotational velocity
-            var wr = b.w - a.w + this.rate;
-
-            // compute normal impulse	
-            var j = -wr * this.iSum;
-            var jOld = this.jAcc;
-            this.jAcc = cp.cpclamp(jOld + j, -this.jMax, this.jMax);
-            j = this.jAcc - jOld;
-
-            // apply impulse
-            a.w -= j * a.i_inv;
-            b.w += j * b.i_inv;
-
-        }
-
-        public override float GetImpulse()
-        {
-            return Math.Abs(jAcc);
-        }
+		public override void ApplyImpulse(float dt)
+		{
 
 
-        public float jMax { get; set; }
+			// compute relative rotational velocity
+			var wr = b.w - a.w + this.rate;
 
-        public float iSum { get; set; }
+			// compute normal impulse	
+			var j = -wr * this.iSum;
+			var jOld = this.jAcc;
+			this.jAcc = cp.cpclamp(jOld + j, -this.jMax, this.jMax);
+			j = this.jAcc - jOld;
 
-        public float jAcc { get; set; }
+			// apply impulse
+			a.w -= j * a.i_inv;
+			b.w += j * b.i_inv;
 
-        public float rate { get; set; }
+		}
 
-    
-    }
+		public override float GetImpulse()
+		{
+			return Math.Abs(jAcc);
+		}
+
+
+		public float jMax { get; set; }
+
+		public float iSum { get; set; }
+
+		public float jAcc { get; set; }
+
+		public float rate { get; set; }
+
+
+		public override void setRate(float rate)
+		{
+			this.rate = rate;
+
+		}
+
+
+		public override float getRate()
+		{
+			return rate;
+		}
+
+
+
+	}
 
 
 }

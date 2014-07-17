@@ -64,6 +64,27 @@ namespace ChipmunkSharp.Constraints
 		#endregion
 
 
+		public override float getMin()
+		{
+			return this.min;
+		}
+
+		public override void setMin(float min)
+		{
+			this.min = min;
+		}
+
+		public override void setMax(float max)
+		{
+			this.max = max;
+		}
+
+
+		public override float getMax()
+		{
+			return this.max;
+		}
+
 		public cpSlideJoint(cpBody a, cpBody b, cpVect anchr1, cpVect anchr2, float min, float max)
 			: base(a, b)
 		{

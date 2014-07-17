@@ -47,6 +47,27 @@ namespace ChipmunkSharp.Constraints
 
 		#endregion
 
+		public override void setAnchr1(cpVect anchr1)
+		{
+			this.anchr1 = anchr1;
+		}
+
+		public override cpVect getAnchr1()
+		{
+			return anchr1;
+		}
+
+		public override void setAnchr2(cpVect anchr2)
+		{
+			this.anchr2 = anchr2;
+		}
+
+		public override cpVect getAnchr2()
+		{
+			return anchr2;
+		}
+
+
 		public cpPivotJoint(cpBody a, cpBody b, cpVect pivot)
 			: this(a, b, (a != null ? a.world2Local(pivot) : pivot), (b != null ? b.world2Local(pivot) : pivot))
 		{

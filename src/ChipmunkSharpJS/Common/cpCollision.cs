@@ -30,110 +30,110 @@ namespace ChipmunkSharp
 
 
 
-    //public delegate int CollisionFunc(cpShape a, cpShape b, int id, List<ContactPoint> arr);
+	//public delegate int CollisionFunc(cpShape a, cpShape b, int id, List<ContactPoint> arr);
 
-    public class cpCollision
-    {
-        #region CONSTANTS
+	public class cpCollision
+	{
+		#region CONSTANTS
 
-        public const int DRAW_ALL = 0;
-        public const int ENABLE_CACHING = 1;
+		public const int DRAW_ALL = 0;
+		public const int ENABLE_CACHING = 1;
 
-        public const int DRAW_GJK = (0 | DRAW_ALL);
-        public const int DRAW_EPA = (0 | DRAW_ALL);
-        public const int DRAW_CLOSEST = (0 | DRAW_ALL);
-        public const int DRAW_CLIP = (0 | DRAW_ALL);
+		public const int DRAW_GJK = (0 | DRAW_ALL);
+		public const int DRAW_EPA = (0 | DRAW_ALL);
+		public const int DRAW_CLOSEST = (0 | DRAW_ALL);
+		public const int DRAW_CLIP = (0 | DRAW_ALL);
 
-        public const int MAX_GJK_ITERATIONS = 30;
-        public const int MAX_EPA_ITERATIONS = 30;
-        public const int WARN_GJK_ITERATIONS = 20;
-        public const int WARN_EPA_ITERATIONS = 20;
+		public const int MAX_GJK_ITERATIONS = 30;
+		public const int MAX_EPA_ITERATIONS = 30;
+		public const int WARN_GJK_ITERATIONS = 20;
+		public const int WARN_EPA_ITERATIONS = 20;
 
-        #endregion
+		#endregion
 
-        #region PROPERTIES
+		#region PROPERTIES
 
-        public int a;
+		public int a;
 
-        int numContacts = 0;
+		int numContacts = 0;
 
-        public cpVect r2 { get; set; }
+		public cpVect r2 { get; set; }
 
-        public cpVect r1 { get; set; }
+		public cpVect r1 { get; set; }
 
-        public float bias { get; set; }
+		public float bias { get; set; }
 
-        public float bounce { get; set; }
+		public float bounce { get; set; }
 
-        public float tMass { get; set; }
+		public float tMass { get; set; }
 
-        public float nMass { get; set; }
+		public float nMass { get; set; }
 
-        public object hash { get; set; }
+		public object hash { get; set; }
 
-        public float jBias { get; set; }
+		public float jBias { get; set; }
 
-        public float jtAcc { get; set; }
+		public float jtAcc { get; set; }
 
-        public float jnAcc { get; set; }
+		public float jnAcc { get; set; }
 
-        #endregion
-
-
-
-        //MARK: Collision Functions
+		#endregion
 
 
-        #region  Collision Functions
 
-        public static List<ContactPoint> circle2circle(cpCircleShape circ1, cpCircleShape circ2)
-        {
-            return circle2circleQuery(circ1.tc, circ2.tc, circ1.r, circ2.r);
-            //return contact != null ? contact : null;
-        }
+		//MARK: Collision Functions
 
-        public static List<ContactPoint> circle2circleQuery(cpVect p1, cpVect p2, float r1, float r2)
-        {
-            var mindist = r1 + r2;
-            var delta = cpVect.cpvsub(p2, p1);
-            var distsq = cpVect.cpvlengthsq(delta);
 
-            if (distsq >= mindist * mindist)
-                return new List<ContactPoint>();
+		#region  Collision Functions
 
-            var dist = cp.cpfsqrt(distsq);
+		public static List<ContactPoint> circle2circle(cpCircleShape circ1, cpCircleShape circ2)
+		{
+			return circle2circleQuery(circ1.tc, circ2.tc, circ1.r, circ2.r);
+			//return contact != null ? contact : null;
+		}
 
-            // Allocate and initialize the contact.
-            return new List<ContactPoint>() {  new ContactPoint(
+		public static List<ContactPoint> circle2circleQuery(cpVect p1, cpVect p2, float r1, float r2)
+		{
+			var mindist = r1 + r2;
+			var delta = cpVect.cpvsub(p2, p1);
+			var distsq = cpVect.cpvlengthsq(delta);
+
+			if (distsq >= mindist * mindist)
+				return new List<ContactPoint>();
+
+			var dist = cp.cpfsqrt(distsq);
+
+			// Allocate and initialize the contact.
+			return new List<ContactPoint>() {  new ContactPoint(
                  cpVect.cpvadd(p1, cpVect.cpvmult(delta, 0.5f + (r1 - 0.5f * mindist) / (dist > 0 ? dist : cp.Infinity))),
                 (dist > 0 ? cpVect.cpvmult(delta, 1 / dist) : new cpVect(1, 0)),
                 dist - mindist,
                 "0"
             )};
 
-        }
+		}
 
-        public static List<ContactPoint> circle2segment(cpCircleShape circleShape, cpSegmentShape segmentShape)
-        {
+		public static List<ContactPoint> circle2segment(cpCircleShape circleShape, cpSegmentShape segmentShape)
+		{
 
-            var seg_a = segmentShape.ta;
-            var seg_b = segmentShape.tb;
-            var center = circleShape.tc;
+			var seg_a = segmentShape.ta;
+			var seg_b = segmentShape.tb;
+			var center = circleShape.tc;
 
-            var seg_delta = cpVect.cpvsub(seg_b, seg_a);
-            var closest_t = cp.cpfclamp01(cpVect.cpvdot(seg_delta, cpVect.cpvsub(center, seg_a)) / cpVect.cpvlengthsq(seg_delta));
-            var closest = cpVect.cpvadd(seg_a, cpVect.cpvmult(seg_delta, closest_t));
+			var seg_delta = cpVect.cpvsub(seg_b, seg_a);
+			var closest_t = cp.cpfclamp01(cpVect.cpvdot(seg_delta, cpVect.cpvsub(center, seg_a)) / cpVect.cpvlengthsq(seg_delta));
+			var closest = cpVect.cpvadd(seg_a, cpVect.cpvmult(seg_delta, closest_t));
 
-            var contact = circle2circleQuery(center, closest, circleShape.r, segmentShape.r);
-            if (contact != null && contact.Count>0)
-            {
-                List<ContactPoint> dev = new List<ContactPoint>();
+			var contact = circle2circleQuery(center, closest, circleShape.r, segmentShape.r);
+			if (contact != null && contact.Count > 0)
+			{
+				List<ContactPoint> dev = new List<ContactPoint>();
 
-                foreach (var item in contact)
-                {
-                    var n = item.n;
+				foreach (var item in contact)
+				{
+					var n = item.n;
 
-                    // Reject endcap collisions if tangents are provided.
+					// Reject endcap collisions if tangents are provided.
 					if ((closest_t == 0 && cpVect.cpvdot(n, segmentShape.a_tangent) < 0) ||
 						(closest_t == 1 && cpVect.cpvdot(n, segmentShape.b_tangent) < 0))
 					{ }
@@ -142,177 +142,192 @@ namespace ChipmunkSharp
 						dev.Add(item);
 						return dev;
 					}
-                }
+				}
 
-                if (dev.Count > 0)
-                    return dev;
+				if (dev.Count > 0)
+					return dev;
 
-            }
+			}
 
-            return new List<ContactPoint>();
+			return new List<ContactPoint>();
 
-        }
+		}
 
-        public static List<ContactPoint> circle2poly(cpCircleShape circ, cpPolyShape poly)
-        {
-            var planes = poly.tPlanes;
+		public static List<ContactPoint> circle2poly(cpCircleShape circ, cpPolyShape poly)
+		{
+			var planes = poly.tPlanes;
 
-            var mini = 0;
-            var min = cpVect.cpvdot(planes[0].n, circ.tc) - planes[0].d - circ.r;
-            for (var i = 0; i < planes.Length; i++)
-            {
-                var dist = cpVect.cpvdot(planes[i].n, circ.tc) - planes[i].d - circ.r;
-                if (dist > 0)
-                {
-                    return new List<ContactPoint>();
-                }
-                else if (dist > min)
-                {
-                    min = dist;
-                    mini = i;
-                }
-            }
+			var mini = 0;
+			var min = cpVect.cpvdot(planes[0].n, circ.tc) - planes[0].d - circ.r;
+			for (var i = 0; i < planes.Length; i++)
+			{
+				var dist = cpVect.cpvdot(planes[i].n, circ.tc) - planes[i].d - circ.r;
+				if (dist > 0)
+				{
+					return new List<ContactPoint>();
+				}
+				else if (dist > min)
+				{
+					min = dist;
+					mini = i;
+				}
+			}
 
-            var n = planes[mini].n;
+			var n = planes[mini].n;
 
-            var verts = poly.tVerts;
-            var len = verts.Length;
-            var mini2 = mini << 1;
+			var verts = poly.tVerts;
+			var len = verts.Length;
+			var mini2 = mini << 1;
 
-            //var a = poly.tVerts[mini];
-            //var b = poly.tVerts[(mini + 1)%poly.tVerts.length];
-            var ax = verts[mini2];
-            var ay = verts[mini2 + 1];
-            var bx = verts[(mini2 + 2) % len];
-            var by = verts[(mini2 + 3) % len];
+			//var a = poly.tVerts[mini];
+			//var b = poly.tVerts[(mini + 1)%poly.tVerts.length];
+			var ax = verts[mini2];
+			var ay = verts[mini2 + 1];
+			var bx = verts[(mini2 + 2) % len];
+			var by = verts[(mini2 + 3) % len];
 
-            var dta = cpVect.cpvcross2(n.x, n.y, ax, ay);
-            var dtb = cpVect.cpvcross2(n.x, n.y, bx, by);
-            var dt = cpVect.cpvcross(n, circ.tc);
+			var dta = cpVect.cpvcross2(n.x, n.y, ax, ay);
+			var dtb = cpVect.cpvcross2(n.x, n.y, bx, by);
+			var dt = cpVect.cpvcross(n, circ.tc);
 
-            if (dt < dtb)
-            {
-                return circle2circleQuery(circ.tc, new cpVect(bx, by), circ.r, 0);
-            }
-            else if (dt < dta)
-            {
-                return new List<ContactPoint>() {  new ContactPoint(
+			if (dt < dtb)
+			{
+				return circle2circleQuery(circ.tc, new cpVect(bx, by), circ.r, 0);
+			}
+			else if (dt < dta)
+			{
+				return new List<ContactPoint>() {  new ContactPoint(
 			cpVect.cpvsub(circ.tc, cpVect.cpvmult(n, circ.r + min/2)),
 			cpVect.cpvneg(n),
 			min,
 			"0"
 		)};
-            }
-            else
-            {
-                return circle2circleQuery(circ.tc, new cpVect(ax, ay), circ.r, 0);
-            }
-        }
+			}
+			else
+			{
+				return circle2circleQuery(circ.tc, new cpVect(ax, ay), circ.r, 0);
+			}
+		}
 
-        public static List<ContactPoint> seg2poly(cpSegmentShape seg, cpPolyShape poly)
-        {
+		public static List<ContactPoint> seg2poly(cpSegmentShape seg, cpPolyShape poly)
+		{
 
-            var arr = new List<ContactPoint>();
+			var arr = new List<ContactPoint>();
 
-            var planes = poly.tPlanes;
-            var numVerts = planes.Length;
+			var planes = poly.tPlanes;
+			var numVerts = planes.Length;
 
-            var segD = cpVect.cpvdot(seg.tn, seg.ta);
-            var minNorm = poly.valueOnAxis(seg.tn, segD) - seg.r;
-            var minNeg = poly.valueOnAxis(cpVect.cpvneg(seg.tn), -segD) - seg.r;
-            if (minNeg > 0 || minNorm > 0)
-                return new List<ContactPoint>();
+			var segD = cpVect.cpvdot(seg.tn, seg.ta);
+			var minNorm = poly.valueOnAxis(seg.tn, segD) - seg.r;
+			var minNeg = poly.valueOnAxis(cpVect.cpvneg(seg.tn), -segD) - seg.r;
+			if (minNeg > 0 || minNorm > 0)
+				return new List<ContactPoint>();
 
-            var mini = 0;
-            var poly_min = cp.segValueOnAxis(seg, planes[0].n, planes[0].d);
-            if (poly_min > 0)
-                return new List<ContactPoint>();
+			var mini = 0;
+			var poly_min = cp.segValueOnAxis(seg, planes[0].n, planes[0].d);
+			if (poly_min > 0)
+				return new List<ContactPoint>();
 
-            for (var i = 0; i < numVerts; i++)
-            {
-                var dist = cp.segValueOnAxis(seg, planes[i].n, planes[i].d);
-                if (dist > 0)
-                {
-                    return new List<ContactPoint>();
-                }
-                else if (dist > poly_min)
-                {
-                    poly_min = dist;
-                    mini = i;
-                }
-            }
+			for (var i = 0; i < numVerts; i++)
+			{
+				var dist = cp.segValueOnAxis(seg, planes[i].n, planes[i].d);
+				if (dist > 0)
+				{
+					return new List<ContactPoint>();
+				}
+				else if (dist > poly_min)
+				{
+					poly_min = dist;
+					mini = i;
+				}
+			}
 
-            var poly_n = cpVect.cpvneg(planes[mini].n);
+			var poly_n = cpVect.cpvneg(planes[mini].n);
 
-            var va = cpVect.cpvadd(seg.ta, cpVect.cpvmult(poly_n, seg.r));
-            var vb = cpVect.cpvadd(seg.tb, cpVect.cpvmult(poly_n, seg.r));
-            if (poly.containsVert(va.x, va.y))
-                arr.Add(new ContactPoint(va, poly_n, poly_min, cp.hashPair(seg.hashid, "0")));
-            if (poly.containsVert(vb.x, vb.y))
-                arr.Add(new ContactPoint(vb, poly_n, poly_min, cp.hashPair(seg.hashid, "1")));
+			var va = cpVect.cpvadd(seg.ta, cpVect.cpvmult(poly_n, seg.r));
+			var vb = cpVect.cpvadd(seg.tb, cpVect.cpvmult(poly_n, seg.r));
+			if (poly.containsVert(va.x, va.y))
+				arr.Add(new ContactPoint(va, poly_n, poly_min, cp.hashPair(seg.hashid, "0")));
+			if (poly.containsVert(vb.x, vb.y))
+				arr.Add(new ContactPoint(vb, poly_n, poly_min, cp.hashPair(seg.hashid, "1")));
 
-            // Floating point precision problems here.
-            // This will have to do for now.
-            //	poly_min -= cp_collision_slop; // TODO is this needed anymore?
+			// Floating point precision problems here.
+			// This will have to do for now.
+			//	poly_min -= cp_collision_slop; // TODO is this needed anymore?
 
-            if (minNorm >= poly_min || minNeg >= poly_min)
-            {
-                if (minNorm > minNeg)
-                    cp.findPointsBehindSeg(arr, seg, poly, minNorm, 1);
-                else
-                    cp.findPointsBehindSeg(arr, seg, poly, minNeg, -1);
-            }
+			if (minNorm >= poly_min || minNeg >= poly_min)
+			{
+				if (minNorm > minNeg)
+					cp.findPointsBehindSeg(arr, seg, poly, minNorm, 1);
+				else
+					cp.findPointsBehindSeg(arr, seg, poly, minNeg, -1);
+			}
 
-            // If no other collision points are found, try colliding endpoints.
-            if (arr.Count == 0)
-            {
-                var mini2 = mini * 2;
-                var verts = poly.tVerts;
+			// If no other collision points are found, try colliding endpoints.
+			if (arr.Count == 0)
+			{
+				var mini2 = mini * 2;
+				var verts = poly.tVerts;
 
-                var poly_a = new cpVect(verts[mini2], verts[mini2 + 1]);
+				var poly_a = new cpVect(verts[mini2], verts[mini2 + 1]);
 
-                List<ContactPoint> con;
-                if ((con = circle2circleQuery(seg.ta, poly_a, seg.r, 0f)) != null) return con;
-                if ((con = circle2circleQuery(seg.tb, poly_a, seg.r, 0f)) != null) return con;
+				List<ContactPoint> con;
+				if ((con = circle2circleQuery(seg.ta, poly_a, seg.r, 0f)) != null) return con;
+				if ((con = circle2circleQuery(seg.tb, poly_a, seg.r, 0f)) != null) return con;
 
-                var len = numVerts * 2;
-                var poly_b = new cpVect(verts[(mini2 + 2) % len], verts[(mini2 + 3) % len]);
-                if ((con = circle2circleQuery(seg.ta, poly_b, seg.r, 0f)) != null) return con;
-                if ((con = circle2circleQuery(seg.tb, poly_b, seg.r, 0f)) != null) return con;
-            }
+				var len = numVerts * 2;
+				var poly_b = new cpVect(verts[(mini2 + 2) % len], verts[(mini2 + 3) % len]);
+				if ((con = circle2circleQuery(seg.ta, poly_b, seg.r, 0f)) != null) return con;
+				if ((con = circle2circleQuery(seg.tb, poly_b, seg.r, 0f)) != null) return con;
+			}
 
-            //	console.log(poly.tVerts, poly.tPlanes);
-            //	console.log('seg2poly', arr);
-            return arr;
-        }
-
-
-
-        public static List<ContactPoint> Poly2Poly(cpPolyShape poly1, cpPolyShape poly2)
-        {
-            float mini1 = cp.findMSA(poly2, poly1.tPlanes);
-            if (mini1 == -1) return new List<ContactPoint>();
-            float min1 = cp.last_MSA_min;
-
-            float mini2 = cp.findMSA(poly1, poly2.tPlanes);
-            if (mini2 == -1) return new List<ContactPoint>();
-            float min2 = cp.last_MSA_min;
-
-            // There is overlap, find the penetrating verts
-            if (min1 > min2)
-                return cp.findVerts(poly1, poly2, poly1.tPlanes[(int)mini1].n, min1);
-            else
-                return cp.findVerts(poly1, poly2, cpVect.cpvneg(poly2.tPlanes[(int)mini2].n), min2);
-
-            // return new List<ContactPoint>();
-        }
+			//	console.log(poly.tVerts, poly.tPlanes);
+			//	console.log('seg2poly', arr);
+			return arr;
+		}
 
 
 
+		public static List<ContactPoint> Poly2Poly(cpPolyShape poly1, cpPolyShape poly2)
+		{
+			float mini1 = cp.findMSA(poly2, poly1.tPlanes);
+			if (mini1 == -1) return new List<ContactPoint>();
+			float min1 = cp.last_MSA_min;
 
-        #endregion
+			float mini2 = cp.findMSA(poly1, poly2.tPlanes);
+			if (mini2 == -1) return new List<ContactPoint>();
+			float min2 = cp.last_MSA_min;
 
-    }
+			// There is overlap, find the penetrating verts
+			if (min1 > min2)
+				return cp.findVerts(poly1, poly2, poly1.tPlanes[(int)mini1].n, min1);
+			else
+				return cp.findVerts(poly1, poly2, cpVect.cpvneg(poly2.tPlanes[(int)mini2].n), min2);
+
+			// return new List<ContactPoint>();
+		}
+
+
+
+
+		#endregion
+
+
+		//public static int cpCollideShapes(cpShape a, cpShape b, int id, List<ContactPoint> arr)
+		//{
+		//	// Their shape types must be in order.
+		//	cp.assertSoft(a.shapeType <= b.shapeType, "Internal Error: Collision shapes passed to cpCollideShapes() are not sorted.");
+
+		//	CollisionFunc cfunc = colfuncs[((int)a.shapeType) + ((int)b.shapeType) * ((int)cpShapeType.CP_NUM_SHAPES)];
+
+		//	int numContacts = (cfunc != null ? cfunc(a, b, id, arr) : 0);
+		//	cp.assertSoft(numContacts <= cpArbiter.CP_MAX_CONTACTS_PER_ARBITER, "Internal error: Too many contact points returned.");
+
+		//	return numContacts;
+		//}
+
+
+	}
 
 
 
@@ -956,15 +971,3 @@ namespace ChipmunkSharp
 //    //TODO: 
 //}
 
-//public static int cpCollideShapes(cpShape a, cpShape b, int id, List<ContactPoint> arr)
-//{
-//    // Their shape types must be in order.
-//    cpEnvironment.assertSoft(a.klass.type <= b.klass.type, "Internal Error: Collision shapes passed to cpCollideShapes() are not sorted.");
-
-//    CollisionFunc cfunc = colfuncs[((int)a.klass.type) + ((int)b.klass.type) * ((int)cpShapeType.CP_NUM_SHAPES)];
-
-//    int numContacts = (cfunc != null ? cfunc(a, b, id, arr) : 0);
-//    cpEnvironment.assertSoft(numContacts <= cpArbiter.CP_MAX_CONTACTS_PER_ARBITER, "Internal error: Too many contact points returned.");
-
-//    return numContacts;
-//}

@@ -27,44 +27,49 @@ using System.Text;
 namespace ChipmunkSharp
 {
 
-    public class ContactPoint
-    {
+	public class ContactPoint
+	{
 
-        public cpVect p, n;
-        public float dist;
+		public cpVect p, n;
+		public float dist;
 
-        public cpVect r1, r2;
-        public float nMass, tMass, bounce;
+		public cpVect r1, r2;
+		public float nMass, tMass, bounce;
 
-        public float jnAcc, jtAcc, jBias;
-        public float bias;
+		public float jnAcc, jtAcc, jBias;
+		public float bias;
 
-        public string hash;
+		public string hash;
 
-        public ContactPoint(cpVect p, cpVect n, float dist, string hash)
-        {
-            Init(p, n, dist, hash);
-        }
+		public override string ToString()
+		{
+			return string.Format("{0}: p({1}),n({2}),dist({3})", hash, p, n, dist);
+		}
 
-        public ContactPoint Clone()
-        {
-            ContactPoint tmp = new ContactPoint(p, n, dist, hash);
-            return tmp;
-        }
+		public ContactPoint(cpVect p, cpVect n, float dist, string hash)
+		{
+			Init(p, n, dist, hash);
+		}
 
-        public void Init(cpVect p, cpVect n, float dist, string hash)
-        {
-            this.p = p;
-            this.n = n;
-            this.dist = dist;
+		public ContactPoint Clone()
+		{
+			ContactPoint tmp = new ContactPoint(p, n, dist, hash);
+			return tmp;
+		}
 
-            this.r1 = this.r2 = cpVect.Zero;
-            this.nMass = this.tMass = this.bounce = this.bias = 0;
+		public void Init(cpVect p, cpVect n, float dist, string hash)
+		{
+			this.p = p;
+			this.n = n;
+			this.dist = dist;
 
-            this.jnAcc = this.jtAcc = this.jBias = 0;
-            this.hash = hash;
-            cp.numContacts++;
-        }
-    };
+			this.r1 = this.r2 = cpVect.Zero;
+			this.nMass = this.tMass = this.bounce = this.bias = 0;
+
+			this.jnAcc = this.jtAcc = this.jBias = 0;
+			this.hash = hash;
+			cp.numContacts++;
+		}
+	};
 
 }

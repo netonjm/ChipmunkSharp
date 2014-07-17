@@ -40,6 +40,38 @@ namespace ChipmunkSharp.Constraints
 		#endregion
 
 
+
+		public override cpVect getAnchr1()
+		{
+			return anchr1;
+		}
+
+		public override void setAnchr1(cpVect anchr)
+		{
+			anchr1 = anchr;
+		}
+
+		public override cpVect getAnchr2()
+		{
+			return anchr2;
+		}
+
+		public override void setAnchr2(cpVect anchr)
+		{
+			anchr2 = anchr;
+		}
+
+
+		public override void setDist(float distance)
+		{
+			dist = distance;
+		}
+		public override float getDist()
+		{
+			return dist;
+		}
+
+
 		public cpPinJoint(cpBody a, cpBody b, cpVect anchr1, cpVect anchr2)
 			: base(a, b)
 		{
@@ -65,6 +97,9 @@ namespace ChipmunkSharp.Constraints
 			this.jnAcc = this.jnMax = 0.0f;
 			this.bias = 0.0f;
 		}
+
+
+
 
 
 		public override void PreStep(float dt)
