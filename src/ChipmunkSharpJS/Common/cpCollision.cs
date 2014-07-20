@@ -218,8 +218,8 @@ namespace ChipmunkSharp
 			var numVerts = planes.Length;
 
 			var segD = cpVect.cpvdot(seg.tn, seg.ta);
-			var minNorm = poly.valueOnAxis(seg.tn, segD) - seg.r;
-			var minNeg = poly.valueOnAxis(cpVect.cpvneg(seg.tn), -segD) - seg.r;
+			var minNorm = poly.ValueOnAxis(seg.tn, segD) - seg.r;
+			var minNeg = poly.ValueOnAxis(cpVect.cpvneg(seg.tn), -segD) - seg.r;
 			if (minNeg > 0 || minNorm > 0)
 				return new List<ContactPoint>();
 
@@ -246,9 +246,9 @@ namespace ChipmunkSharp
 
 			var va = cpVect.cpvadd(seg.ta, cpVect.cpvmult(poly_n, seg.r));
 			var vb = cpVect.cpvadd(seg.tb, cpVect.cpvmult(poly_n, seg.r));
-			if (poly.containsVert(va.x, va.y))
+			if (poly.ContainsVert(va.x, va.y))
 				arr.Add(new ContactPoint(va, poly_n, poly_min, cp.hashPair(seg.hashid, "0")));
-			if (poly.containsVert(vb.x, vb.y))
+			if (poly.ContainsVert(vb.x, vb.y))
 				arr.Add(new ContactPoint(vb, poly_n, poly_min, cp.hashPair(seg.hashid, "1")));
 
 			// Floating point precision problems here.

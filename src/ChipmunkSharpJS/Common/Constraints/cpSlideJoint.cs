@@ -64,23 +64,23 @@ namespace ChipmunkSharp.Constraints
 		#endregion
 
 
-		public override float getMin()
+		public override float GetMin()
 		{
 			return this.min;
 		}
 
-		public override void setMin(float min)
+		public override void SetMin(float min)
 		{
 			this.min = min;
 		}
 
-		public override void setMax(float max)
+		public override void SetMax(float max)
 		{
 			this.max = max;
 		}
 
 
-		public override float getMax()
+		public override float GetMax()
 		{
 			return this.max;
 		}
@@ -176,8 +176,8 @@ namespace ChipmunkSharp.Constraints
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
-			var a = this.a.local2World(this.anchr1);
-			var b = this.b.local2World(this.anchr2);
+			var a = this.a.Local2World(this.anchr1);
+			var b = this.b.Local2World(this.anchr2);
 			var midpoint = cpVect.cpvadd(a, cpVect.cpvclamp(cpVect.cpvsub(b, a), this.min));
 
 			m_debugDraw.DrawSegment(a, b, cpColor.Grey);

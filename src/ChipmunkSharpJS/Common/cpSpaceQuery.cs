@@ -40,7 +40,7 @@ namespace ChipmunkSharp
 			var helper = new Action<cpShape>(shape =>
 			{
 				if (
-					!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) && shape.pointQuery(point) != null
+					!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) && shape.PointQuery(point) != null
 				)
 				{
 					func(shape);
@@ -50,8 +50,8 @@ namespace ChipmunkSharp
 			var bb = new cpBB(point.x, point.y, point.x, point.y);
 			Lock();
 			{
-				this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
-				this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
+				this.activeShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
+				this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
 			} Unlock(true);
 		}
 
@@ -77,7 +77,7 @@ namespace ChipmunkSharp
 			//var bb = (body ? shape.update(body.p, body.rot) : shape.bb);
 			if (body != null)
 			{
-				shape.update(body.Position, body.Rotation);
+				shape.Update(body.Position, body.Rotation);
 			}
 
 			var bb = new cpBB(shape.bb_l, shape.bb_b, shape.bb_r, shape.bb_t);
@@ -100,7 +100,7 @@ namespace ChipmunkSharp
 				List<ContactPoint> contacts = new List<ContactPoint>();
 
 				// Shape 'a' should have the lower shape type. (required by collideShapes() )
-				if ((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode)
+				if ((a as ICollisionShape).CollisionCode <= (b as ICollisionShape).CollisionCode)
 				{
 					contacts = collideShapes(a, b);
 				}
@@ -140,8 +140,8 @@ namespace ChipmunkSharp
 
 			Lock();
 			{
-				this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
-				this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
+				this.activeShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
+				this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
 			}
 			Unlock(true);
 
@@ -155,7 +155,7 @@ namespace ChipmunkSharp
 
 			cpShape shape = obj1 as cpShape;
 
-			var info = shape.segmentQuery(start, end);
+			var info = shape.SegmentQuery(start, end);
 
 			if (
 				!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) &&
@@ -193,8 +193,8 @@ namespace ChipmunkSharp
 
 			Lock();
 			{
-				this.activeShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
-				this.staticShapes.query(bb, (o1, o2) => { helper(o1 as cpShape); });
+				this.activeShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
+				this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
 			} Unlock(true);
 		}
 		//point, layers, group
@@ -205,7 +205,7 @@ namespace ChipmunkSharp
 				var shape = o1 as cpShape;
 				if (!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0))
 				{
-					var info = shape.nearestPointQuery(point);
+					var info = shape.NearestPointQuery(point);
 
 					if (info.d < maxDistance) func(shape, info.d, info.p);
 				}
@@ -215,8 +215,8 @@ namespace ChipmunkSharp
 
 			this.Lock();
 			{
-				this.activeShapes.query(bb, (o1, o2) => helper(o1, o2));
-				this.staticShapes.query(bb, (o1, o2) => helper(o1, o2));
+				this.activeShapes.Query(bb, (o1, o2) => helper(o1, o2));
+				this.staticShapes.Query(bb, (o1, o2) => helper(o1, o2));
 			} this.Unlock(true);
 
 		}

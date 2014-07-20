@@ -46,6 +46,14 @@ namespace ChipmunkSharp
 
 	public class cp
 	{
+		public static string COLLISION_TYPE_STICKY = "1";
+		public static string CP_WILDCARD_COLLISION_TYPE
+		{
+			get
+			{
+				return (~0).ToString();
+			}
+		}
 
 		// Chipmunk 6.2.1
 		public static string CP_VERSION_MAJOR = "6";
@@ -489,6 +497,21 @@ namespace ChipmunkSharp
 
 		#endregion
 
+		public static int GetPointXIndexFromFloatArrayIndex(int index)
+		{
+			return GetFloatIndex(index);
+		}
+
+		public static int GetPointYIndexFromFloatArrayIndex(int index)
+		{
+			return GetFloatIndex(index) + 1;
+		}
+
+		public static int GetFloatIndex(int index)
+		{
+			return (index * 2);
+		}
+
 		public static void unlinkThread(Pair prev, Node leaf, Pair next)
 		{
 			if (next != null)
@@ -537,7 +560,7 @@ namespace ChipmunkSharp
 			}
 			else if (count == 2)
 			{
-				return tree.makeNode(nodes[offset], nodes[offset + 1]);
+				return tree.MakeNode(nodes[offset], nodes[offset + 1]);
 			}
 
 			// Find the AABB for these nodes
@@ -670,9 +693,9 @@ namespace ChipmunkSharp
 				var parent = leaf.parent;
 				if (parent == subtree)
 				{
-					var other = subtree.otherChild(leaf);
+					var other = subtree.OtherChild(leaf);
 					other.parent = subtree.parent;
-					subtree.recycle(tree);
+					subtree.Recycle(tree);
 					return other;
 				}
 				else
@@ -680,7 +703,7 @@ namespace ChipmunkSharp
 					if (parent == null)
 						return null;
 
-					parent.parent.ReplaceChild(parent, parent.otherChild(leaf), tree);
+					parent.parent.ReplaceChild(parent, parent.OtherChild(leaf), tree);
 					return subtree;
 				}
 			}
@@ -736,7 +759,7 @@ namespace ChipmunkSharp
 		{
 			if (node == filter)
 			{
-				return node.next(body);
+				return node.Next(body);
 			}
 			else if (node.a == body)
 			{
@@ -757,8 +780,8 @@ namespace ChipmunkSharp
 
 		public static void componentActivate(cpBody root)
 		{
-			if (root == null || !root.isSleeping()) return;
-			cp.assertHard(!root.isRogue(), "Internal Error: componentActivate() called on a rogue body.");
+			if (root == null || !root.IsSleeping()) return;
+			cp.assertHard(!root.IsRogue(), "Internal Error: componentActivate() called on a rogue body.");
 
 			var space = root.space;
 			cpBody body = root;
@@ -783,17 +806,17 @@ namespace ChipmunkSharp
 		{
 			// Rogue bodies cannot be put to sleep and prevent bodies they are touching from sleeping anyway.
 			// Static bodies (which are a type of rogue body) are effectively sleeping all the time.
-			if (!body.isRogue())
+			if (!body.IsRogue())
 			{
 				var other_root = componentRoot(body);
 				if (other_root == null)
 				{
 					componentAdd(root, body);
-					for (var arb = body.arbiterList; arb != null; arb = arb.next(body))
+					for (var arb = body.arbiterList; arb != null; arb = arb.Next(body))
 					{
 						floodFillComponent(root, (body == arb.body_a ? arb.body_b : arb.body_a));
 					}
-					for (var constraint = body.constraintList; constraint != null; constraint = constraint.next(body))
+					for (var constraint = body.constraintList; constraint != null; constraint = constraint.Next(body))
 					{
 						floodFillComponent(root, (body == constraint.a ? constraint.b : constraint.a));
 					}
@@ -832,7 +855,7 @@ namespace ChipmunkSharp
 		public static void updateFunc(cpShape shape)
 		{
 			var body = shape.body;
-			shape.update(body.Position, body.Rotation);
+			shape.Update(body.Position, body.Rotation);
 		}
 
 		//// **** All Important cpSpaceStep() Function
@@ -873,7 +896,7 @@ namespace ChipmunkSharp
 			}
 			else if (subtree.isLeaf)
 			{
-				return tree.makeNode(leaf, subtree);
+				return tree.MakeNode(leaf, subtree);
 			}
 			else
 			{
@@ -888,11 +911,11 @@ namespace ChipmunkSharp
 
 				if (cost_b < cost_a)
 				{
-					subtree.setB(subtreeInsert(subtree.B, leaf, tree));
+					subtree.SetB(subtreeInsert(subtree.B, leaf, tree));
 				}
 				else
 				{
-					subtree.setA(subtreeInsert(subtree.A, leaf, tree));
+					subtree.SetA(subtreeInsert(subtree.A, leaf, tree));
 				}
 
 				//		subtree.bb = bbMerge(subtree.bb, leaf.bb);
@@ -1227,7 +1250,7 @@ namespace ChipmunkSharp
 
 					_styles = new List<cpColor>();
 
-					for (var i = 200; i >= 0; i-=10)
+					for (var i = 200; i >= 0; i -= 10)
 					{
 						_styles.Add(new cpColor(rnd.Next(100, 255), rnd.Next(160, 255), rnd.Next(160, 255)));
 					}
@@ -1256,7 +1279,7 @@ namespace ChipmunkSharp
 			else
 			{
 
-				if (shape.body.isSleeping())
+				if (shape.body.IsSleeping())
 				{
 					return new cpColor(50, 50, 50);
 				}
@@ -1281,12 +1304,12 @@ namespace ChipmunkSharp
 		public static float findMSA(cpPolyShape poly, cpSplittingPlane[] planes)
 		{
 			float min_index = 0;
-			var min = poly.valueOnAxis(planes[0].n, planes[0].d);
+			var min = poly.ValueOnAxis(planes[0].n, planes[0].d);
 			if (min > 0) return -1;
 
 			for (var i = 1; i < planes.Length; i++)
 			{
-				var dist = poly.valueOnAxis(planes[i].n, planes[i].d);
+				var dist = poly.ValueOnAxis(planes[i].n, planes[i].d);
 				if (dist > 0)
 				{
 					return -1;
@@ -1311,7 +1334,7 @@ namespace ChipmunkSharp
 			{
 				var vx = verts1[i];
 				var vy = verts1[i + 1];
-				if (poly2.containsVert(vx, vy))
+				if (poly2.ContainsVert(vx, vy))
 				{
 					arr.Add(new ContactPoint(new cpVect(vx, vy), n, dist, cp.hashPair(poly1.hashid, (i >> 1).ToString())));
 				}
@@ -1322,7 +1345,7 @@ namespace ChipmunkSharp
 			{
 				var vx = verts2[i];
 				var vy = verts2[i + 1];
-				if (poly1.containsVert(vx, vy))
+				if (poly1.ContainsVert(vx, vy))
 				{
 					arr.Add(new ContactPoint(new cpVect(vx, vy), n, dist, cp.hashPair(poly2.hashid, (i >> 1).ToString())));
 				}
@@ -1344,7 +1367,7 @@ namespace ChipmunkSharp
 			{
 				var vx = verts1[i];
 				var vy = verts1[i + 1];
-				if (poly2.containsVertPartial(vx, vy, cpVect.cpvneg(n)))
+				if (poly2.ContainsVertPartial(vx, vy, cpVect.cpvneg(n)))
 				{
 					arr.Add(new ContactPoint(new cpVect(vx, vy), n, dist, cp.hashPair(poly1.hashid, i.ToString())));
 				}
@@ -1355,7 +1378,7 @@ namespace ChipmunkSharp
 			{
 				var vx = verts2[i];
 				var vy = verts2[i + 1];
-				if (poly1.containsVertPartial(vx, vy, n))
+				if (poly1.ContainsVertPartial(vx, vy, n))
 				{
 					arr.Add(new ContactPoint(new cpVect(vx, vy), n, dist, cp.hashPair(poly2.hashid, i.ToString())));
 				}

@@ -107,12 +107,12 @@ namespace ChipmunkSharp.Shapes
             return new cpSegmentQueryInfo(null, 1.0f, cpVect.Zero);
         }
 
-        public cpVect hitPoint(cpVect start, cpVect end)
+        public cpVect HitPoint(cpVect start, cpVect end)
         {
             return cpVect.Lerp(start, end, this.t);
         }
 
-        public float hitDist(cpVect start, cpVect end)
+        public float HitDist(cpVect start, cpVect end)
         {
             return cpVect.Distance(start, end) * this.t;
         }

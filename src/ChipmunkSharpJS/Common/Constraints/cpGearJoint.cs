@@ -95,7 +95,7 @@ namespace ChipmunkSharp.Constraints
 		}
 
 
-		public override void setRatio(float value)
+		public override void SetRatio(float value)
 		{
 			this.ratio = value;
 			this.ratio_inv = 1 / value;

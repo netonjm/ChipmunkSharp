@@ -29,24 +29,28 @@ namespace ChipmunkSharp
 	public enum cpDrawFlags
 	{
 
-		NONE = 0,
+		None = 0,
 
 
 		/// <summary>
 		/// Draw shapes.
 		/// </summary>
-		Shape = 1,
+		Shapes = 1,
 
 		/// <summary>
 		/// Draw joint connections.
 		/// </summary>
-		Joint = 2,
-
+		Joints = 2,
 
 		/// <summary>
 		/// Draw joint connections.
 		/// </summary>
-		ALL = 3,
+		ContactPoints = 3,
+
+		/// <summary>
+		/// Draw joint connections.
+		/// </summary>
+		All = 10,
 
 	}
 
@@ -121,6 +125,8 @@ namespace ChipmunkSharp
 		public abstract void DrawString(int x, int y, string format, params object[] objects);
 
 		public abstract void DrawSpring(cpVect a, cpVect b, cpColor cpColor);
+
+		public abstract void DrawPoint(cpVect p, float size, cpColor color);
 
 	}
 

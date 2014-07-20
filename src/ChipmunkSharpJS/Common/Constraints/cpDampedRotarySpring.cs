@@ -38,31 +38,31 @@ namespace ChipmunkSharp.Constraints
 
 		#region PROPS OVERWRTE
 
-		public override float getRestAngle()
+		public override float GetRestAngle()
 		{
 			return this.restAngle;
 		}
 
-		public override void setRestAngle(float restAngle)
+		public override void SetRestAngle(float restAngle)
 		{
 			this.restAngle = restAngle;
 		}
 
-		public override void setStiffness(float stiffness)
+		public override void SetStiffness(float stiffness)
 		{
 			this.stiffness = stiffness;
 		}
-		public override float getStiffness()
+		public override float GetStiffness()
 		{
 			return this.stiffness;
 		}
 
-		public override void setDamping(float damping)
+		public override void SetDamping(float damping)
 		{
-			base.setDamping(damping);
+			base.SetDamping(damping);
 		}
 
-		public override float getDamping()
+		public override float GetDamping()
 		{
 			return this.damping;
 		}

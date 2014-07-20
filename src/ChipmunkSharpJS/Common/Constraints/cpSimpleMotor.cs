@@ -89,14 +89,14 @@ namespace ChipmunkSharp.Constraints
 		public float rate { get; set; }
 
 
-		public override void setRate(float rate)
+		public override void SetRate(float rate)
 		{
 			this.rate = rate;
 
 		}
 
 
-		public override float getRate()
+		public override float GetRate()
 		{
 			return rate;
 		}

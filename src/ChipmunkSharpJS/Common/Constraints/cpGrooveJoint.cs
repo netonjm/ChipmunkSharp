@@ -83,8 +83,8 @@ namespace ChipmunkSharp.Constraints
 		{
 
 			// calculate endpoints in worldspace
-			var ta = a.local2World(this.grv_a);
-			var tb = a.local2World(this.grv_b);
+			var ta = a.Local2World(this.grv_a);
+			var tb = a.Local2World(this.grv_b);
 
 			// calculate axis
 			var n = cpVect.cpvrotate(this.grv_n, a.Rotation);
@@ -175,9 +175,9 @@ namespace ChipmunkSharp.Constraints
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
-			var a = this.a.local2World(this.grv_a);
-			var b = this.a.local2World(this.grv_b);
-			var c = this.b.local2World(this.anchr2);
+			var a = this.a.Local2World(this.grv_a);
+			var b = this.a.Local2World(this.grv_b);
+			var c = this.b.Local2World(this.anchr2);
 
 			m_debugDraw.DrawSegment(a, b, cpColor.Grey);
 			m_debugDraw.DrawCircle(c, 3f, cpColor.Grey);

@@ -34,7 +34,7 @@ namespace ChipmunkSharp
             {
                 shapeQuery(shape, (s, p) =>
                 {
-                    shape.body.activate();
+                    shape.body.Activate();
                 });
             }
         }

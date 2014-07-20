@@ -51,12 +51,13 @@ namespace ChipmunkSharp.Constraints
 
 		/// Function called before the solver runs.
 		/// Animate your joint anchors, update your motor torque, etc.
-		//public cpConstraintPreSolveFunc preSolve;
+		public Action<cpSpace> preSolve;
 		//TODO: cpConstraintPreSolveFunc
 
 		/// Function called after the solver runs.
 		/// Use the applied impulse to perform effects like breakable joints.
 		//public cpConstraintPostSolveFunc postSolve;
+		public Action<cpSpace> postSolve;
 		//TODO: cpConstraintPostSolveFunc
 
 		/// User definable data pointer.
@@ -84,14 +85,19 @@ namespace ChipmunkSharp.Constraints
 			this.errorBias = (float)Math.Pow(1 - 0.1, 60);
 			/// The maximum rate at which joint error is corrected.
 			this.maxBias = cp.Infinity;
+
+			preSolve = DefaultPreSolve;
+			postSolve = DefaultPostSolve;
+
+
 		}
 
 		public void activateBodies()
 		{
 			if (this.a != null)
-				this.a.activate();
+				this.a.Activate();
 			if (this.b != null)
-				this.b.activate();
+				this.b.Activate();
 		}
 
 		/// These methods are overridden by the constraint itself.
@@ -107,25 +113,25 @@ namespace ChipmunkSharp.Constraints
 			return 0;
 		}
 
-		/// Function called before the solver runs. This can be overridden by the user
-		/// to customize the constraint.
-		/// Animate your joint anchors, update your motor torque, etc.
-		public virtual void PreSolve(cpSpace space)
+		//Function called before the solver runs. This can be overridden by the user
+		//to customize the constraint.
+		//Animate your joint anchors, update your motor torque, etc.
+		public virtual void DefaultPreSolve(cpSpace space)
 		{
 
 		}
 
-		/// Function called after the solver runs. This can be overridden by the user
-		/// to customize the constraint.
-		/// Use the applied impulse to perform effects like breakable joints.
-		public virtual void postSolve(cpSpace space)
+		//Function called after the solver runs. This can be overridden by the user
+		//to customize the constraint.
+		//Use the applied impulse to perform effects like breakable joints.
+		public virtual void DefaultPostSolve(cpSpace space)
 		{
 
 		}
 
 		#endregion
 
-		public virtual cpConstraint next(cpBody body)
+		public virtual cpConstraint Next(cpBody body)
 		{
 			return (this.a == body ? this.next_a : this.next_b);
 		}
@@ -138,87 +144,87 @@ namespace ChipmunkSharp.Constraints
 
 
 
-		public virtual cpVect getAnchr1()
+		public virtual cpVect GetAnchr1()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual cpVect getAnchr2()
+		public virtual cpVect GetAnchr2()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float getMin()
+		public virtual float GetMin()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float getMax()
+		public virtual float GetMax()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setMax(float max)
+		public virtual void SetMax(float max)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setAnchr2(cpVect anchr2)
+		public virtual void SetAnchr2(cpVect anchr2)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setAnchr1(cpVect anchr1)
+		public virtual void SetAnchr1(cpVect anchr1)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setMin(float min)
+		public virtual void SetMin(float min)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float getDist()
+		public virtual float GetDist()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setDist(float distance)
+		public virtual void SetDist(float distance)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float getRestLength()
+		public virtual float GetRestLength()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setRestLength(float restLength)
+		public virtual void SetRestLength(float restLength)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float getStiffness()
+		public virtual float GetStiffness()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float getDamping()
+		public virtual float GetDamping()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setStiffness(float stiffness)
+		public virtual void SetStiffness(float stiffness)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setDamping(float damping)
+		public virtual void SetDamping(float damping)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual cpVect getGrooveA()
+		public virtual cpVect GetGrooveA()
 		{
 			throw new NotImplementedException();
 		}
@@ -228,72 +234,72 @@ namespace ChipmunkSharp.Constraints
 			throw new NotImplementedException();
 		}
 
-		public virtual cpVect getGrooveB()
+		public virtual cpVect GetGrooveB()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setGrooveB(cpVect grooveB)
+		public virtual void SetGrooveB(cpVect grooveB)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float getRestAngle()
+		public virtual float GetRestAngle()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setRestAngle(float restAngle)
+		public virtual void SetRestAngle(float restAngle)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float getRatchet()
+		public virtual float GetRatchet()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setRatchet(float ratchet)
+		public virtual void SetRatchet(float ratchet)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float getPhase()
+		public virtual float GetPhase()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float getAngle()
+		public virtual float GetAngle()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setAngle(float angle)
+		public virtual void SetAngle(float angle)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setPhase(float phase)
+		public virtual void SetPhase(float phase)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float getRatio()
+		public virtual float GetRatio()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setRatio(float ratchet)
+		public virtual void SetRatio(float ratchet)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float getRate()
+		public virtual float GetRate()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void setRate(float rate)
+		public virtual void SetRate(float rate)
 		{
 			throw new NotImplementedException();
 		}

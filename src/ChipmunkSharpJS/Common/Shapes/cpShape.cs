@@ -27,10 +27,19 @@ using System;
 namespace ChipmunkSharp
 {
 
+	/// @private
+	public enum cpShapeType
+	{
+		Circle = 1,
+		Segment = 2,
+		Polygon = 3,
+		Shapes = 4
+	};
+
 	public interface ICollisionShape
 	{
-		Func<object, object, List<ContactPoint>>[] collisionTable { get; }
-		int collisionCode { get; }
+		Func<object, object, List<ContactPoint>>[] CollisionTable { get; }
+		int CollisionCode { get; }
 	}
 
 	public class cpCircleShape : cpShape, ICollisionShape
@@ -52,12 +61,12 @@ namespace ChipmunkSharp
 		}
 
 
-		public override cpSegmentQueryInfo segmentQuery(cpVect a, cpVect b)
+		public override cpSegmentQueryInfo SegmentQuery(cpVect a, cpVect b)
 		{
 			return cp.circleSegmentQuery(this, this.tc, this.r, a, b);
 		}
 
-		public override void cacheData(cpVect p, cpVect rot)
+		public override void CacheData(cpVect p, cpVect rot)
 		{
 			//var c = this.tc = vadd(p, vrotate(this.c, rot));
 			var c = this.tc = cpVect.cpvrotate(this.c, rot) + p;
@@ -70,7 +79,7 @@ namespace ChipmunkSharp
 		}
 
 
-		public override cpNearestPointQueryInfo nearestPointQuery(cpVect p)
+		public override cpNearestPointQueryInfo NearestPointQuery(cpVect p)
 		{
 			var deltax = p.x - this.tc.x;
 			var deltay = p.y - this.tc.y;
@@ -95,7 +104,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public Func<object, object, List<ContactPoint>>[] collisionTable
+		public Func<object, object, List<ContactPoint>>[] CollisionTable
 		{
 			get
 			{
@@ -107,7 +116,7 @@ namespace ChipmunkSharp
 			}
 		}
 		//(
-		public int collisionCode
+		public int CollisionCode
 		{
 			get { return 0; }
 		}
@@ -151,7 +160,7 @@ namespace ChipmunkSharp
 			// Shape.call(this, body);
 		}
 
-		public override void cacheData(cpVect p, cpVect rot)
+		public override void CacheData(cpVect p, cpVect rot)
 		{
 			this.ta = cpVect.cpvadd(p, cpVect.cpvrotate(this.a, rot));
 			this.tb = cpVect.cpvadd(p, cpVect.cpvrotate(this.b, rot));
@@ -189,7 +198,7 @@ namespace ChipmunkSharp
 			this.bb_t = t + rad;
 		}
 
-		public override cpNearestPointQueryInfo nearestPointQuery(cpVect p)
+		public override cpNearestPointQueryInfo NearestPointQuery(cpVect p)
 		{
 			cpVect closest = cp.closestPointOnSegment(p, this.ta, this.tb);
 
@@ -203,7 +212,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public override cpSegmentQueryInfo segmentQuery(cpVect a, cpVect b)
+		public override cpSegmentQueryInfo SegmentQuery(cpVect a, cpVect b)
 		{
 			var n = this.tn;
 			var d = cpVect.cpvdot(cpVect.cpvsub(this.ta, a), n);
@@ -275,7 +284,7 @@ namespace ChipmunkSharp
 			m_debugDraw.DrawSegment(ta, tb, lineWidth, color);
 		}
 
-		public Func<object, object, List<ContactPoint>>[] collisionTable
+		public Func<object, object, List<ContactPoint>>[] CollisionTable
 		{
 			get
 			{
@@ -287,7 +296,7 @@ namespace ChipmunkSharp
 			}
 		}
 		//(o1,o2) => cpCollision.Circle2Circle(o1 as cpCircleShape ,o2 as cpCircleShape),
-		public int collisionCode
+		public int CollisionCode
 		{
 			get { return 1; }
 		}
@@ -442,15 +451,6 @@ namespace ChipmunkSharp
 	}
 
 
-	/// @private
-	public enum cpShapeType
-	{
-		Circle = 1,
-		Segment = 2,
-		Polygon = 3,
-		Shapes = 4
-	};
-
 
 	//#region DELEGATES
 
@@ -474,10 +474,15 @@ namespace ChipmunkSharp
 		//public virtual ContactPoint GetCollisionTable(object a, object b) { throw new NotImplementedException(); }
 
 
-		public cpShapeType shapeType;
+		public cpSpace space;
 
 		/// The rigid body this collision shape is attached to.
 		public cpBody body;
+
+
+
+		public cpShapeType shapeType;
+
 
 		/// The current bounding box of the shape.
 
@@ -509,7 +514,6 @@ namespace ChipmunkSharp
 		// Layer bitmask for this shape. Shapes only collide if the bitwise and of their layers is non-zero.
 		public int layers;
 
-		public cpSpace space;
 
 		public cpShape next;
 
@@ -559,38 +563,38 @@ namespace ChipmunkSharp
 		#region SETTERS
 
 
-		public void setElasticity(float value)
+		public void SetElasticity(float value)
 		{
 			// throw new NotImplementedException();
 			this.e = value;
 		}
-		public void setBody(cpBody body)
+		public void SetBody(cpBody body)
 		{
-			cp.assertHard(!active(), "You cannot change the body on an active shape. You must remove the shape from the space before changing the body.");
+			cp.assertHard(!Active(), "You cannot change the body on an active shape. You must remove the shape from the space before changing the body.");
 			this.body = body;
 		}
 
-		public void setGroup(int id)
+		public void SetGroup(int id)
 		{
 			group = id;
 		}
 
-		public void setLayers(int layers)
+		public void SetLayers(int layers)
 		{
-			this.body.activate(); this.layers = layers;
+			this.body.Activate(); this.layers = layers;
 		}
 
-		public void setSensor(bool sensor)
+		public void SetSensor(bool sensor)
 		{
-			this.body.activate(); this.sensor = sensor;
+			this.body.Activate(); this.sensor = sensor;
 		}
 
-		public void setCollisionType(string collision_type)
+		public void SetCollisionType(string collision_type)
 		{
-			this.body.activate(); this.collision_type = collision_type;
+			this.body.Activate(); this.collision_type = collision_type;
 		}
 
-		public void setFriction(float value)
+		public void SetFriction(float value)
 		{
 			u = value;
 		}
@@ -598,49 +602,49 @@ namespace ChipmunkSharp
 
 		#endregion
 
-		public bool active()
+		public bool Active()
 		{
 			return this.body != null && this.body.shapeList.IndexOf(this) != -1;
 		}
 
-		public virtual void cacheBB()
+		public virtual void CacheBB()
 		{
-			this.update(this.body.Position, this.body.Rotation);
+			this.Update(this.body.Position, this.body.Rotation);
 		}
 
 
-		public virtual cpSegmentQueryInfo segmentQuery(cpVect a, cpVect b)
+		public virtual cpSegmentQueryInfo SegmentQuery(cpVect a, cpVect b)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual cpNearestPointQueryInfo nearestPointQuery(cpVect p)
+		public virtual cpNearestPointQueryInfo NearestPointQuery(cpVect p)
 		{
 			throw new NotImplementedException();
 		}
 
 		/// Update, cache and return the bounding box of a shape with an explicit transformation.
-		public virtual void update(cpVect pos, cpVect rot)
+		public virtual void Update(cpVect pos, cpVect rot)
 		{
 			cp.assert(!float.IsNaN(rot.x), "Rotation is NaN");
 			cp.assert(!float.IsNaN(pos.x), "Position is NaN");
-			this.cacheData(pos, rot);
+			this.CacheData(pos, rot);
 		}
 
-		public virtual void cacheData(cpVect pos, cpVect rot)
+		public virtual void CacheData(cpVect pos, cpVect rot)
 		{
 			throw new NotImplementedException();
 		}
 
 		/// Test if a point lies within a shape.
-		public virtual cpNearestPointQueryInfo pointQuery(cpVect p)
+		public virtual cpNearestPointQueryInfo PointQuery(cpVect p)
 		{
-			var info = this.nearestPointQuery(p);
+			var info = this.NearestPointQuery(p);
 			if (info.d < 0) return info;
 			return null;
 		}
 
-		public cpBB getBB()
+		public cpBB GetBB()
 		{
 			return new cpBB(this.bb_l, this.bb_b, this.bb_r, this.bb_t);
 		}
@@ -650,12 +654,6 @@ namespace ChipmunkSharp
 			throw new NotImplementedException();
 		}
 
-
-
-		internal void push(cpShape shape)
-		{
-			throw new NotImplementedException();
-		}
 	};
 
 }

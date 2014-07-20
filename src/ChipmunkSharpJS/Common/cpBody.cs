@@ -79,11 +79,11 @@ namespace ChipmunkSharp
 
 		public float Angle { get { return a; } }
 
-		public cpVect Position { get { return p; } set { setPosition(value); } }
+		public cpVect Position { get { return p; } set { SetPosition(value); } }
 
-		public float Moment { get { return i; } set { setMoment(value); } }
+		public float Moment { get { return i; } set { SetMoment(value); } }
 
-		public float Mass { get { return m; } set { setMass(value); } }
+		public float Mass { get { return m; } set { SetMass(value); } }
 
 
 
@@ -179,8 +179,8 @@ namespace ChipmunkSharp
 		{
 
 
-			velocity_func = velocityFunc;
-			position_func = positionFunc;
+			velocity_func = VelocityFunc;
+			position_func = PositionFunc;
 
 			/// Mass of the body.
 			/// Must agree with cpBody.m_inv! Use body.setMass() when changing the mass for this reason.
@@ -236,14 +236,14 @@ namespace ChipmunkSharp
 			this.nodeIdleTime = 0;
 
 			// Set this.m and this.m_inv
-			this.setMass(m);
+			this.SetMass(m);
 
 			// Set this.i and this.i_inv
-			this.setMoment(i);
+			this.SetMoment(i);
 
 			// Set this.a and this.rot
 			this.rot = cpVect.Zero;
-			this.setAngle(0);
+			this.SetAngle(0);
 
 
 		}
@@ -252,74 +252,70 @@ namespace ChipmunkSharp
 
 		#region PUBLIC METHODS
 
-		public void sanityCheck()
+		public void SanityCheck()
 		{
-			//cpEnvironment.AssertHard(this.m == this.m && this.m_inv == this.m_inv, "Body's mass is invalid.");
-			//cpEnvironment.assert(this.i == this.i && this.i_inv == this.i_inv, "Body's moment is invalid.");
-			//cpEnvironment.v_assert_sane(this.p, "Body's position is invalid.");
-			//cpEnvironment.v_assert_sane(this.f, "Body's force is invalid.");
-			//cpEnvironment.assert(this.vx == this.vx && Math.abs(this.vx) != Infinity, "Body's velocity is invalid.");
-			//cpEnvironment.assert(this.vy == this.vy && Math.abs(this.vy) != Infinity, "Body's velocity is invalid.");
-			//cpEnvironment.assert(this.a == this.a && Math.abs(this.a) != Infinity, "Body's angle is invalid.");
-			//cpEnvironment.assert(this.w == this.w && Math.abs(this.w) != Infinity, "Body's angular velocity is invalid.");
-			//cpEnvironment.assert(this.t == this.t && Math.abs(this.t) != Infinity, "Body's torque is invalid.");
-			//cpEnvironment.v_assert_sane(this.rot, "Body's rotation vector is invalid.");
-			//cpEnvironment.assert(this.v_limit == this.v_limit, "Body's velocity limit is invalid.");
-			//cpEnvironment.assert(this.w_limit == this.w_limit, "Body's angular velocity limit is invalid.");
+			//cp.v_assert_sane(this.p, "Body's position is invalid.");
+			//cp.v_assert_sane(this.f, "Body's force is invalid.");
+			//cp.assert(this.vx == this.vx && Math.abs(this.vx) != Infinity, "Body's velocity is invalid.");
+			//cp.assert(this.vy == this.vy && Math.abs(this.vy) != Infinity, "Body's velocity is invalid.");
+			//cp.assert(this.a == this.a && Math.abs(this.a) != Infinity, "Body's angle is invalid.");
+			//cp.assert(this.w == this.w && Math.abs(this.w) != Infinity, "Body's angular velocity is invalid.");
+			//cp.assert(this.t == this.t && Math.abs(this.t) != Infinity, "Body's torque is invalid.");
+			//cp.v_assert_sane(this.rot, "Body's rotation vector is invalid.");
 
 		}
 
-		public cpVect getPos() { return this.p; }
-		public cpVect getVel() { return v; }
-		public float getAngVel() { return this.w; }
+		public cpVect GetPos() { return this.p; }
+		public cpVect GetVel() { return v; }
+		public float GetAngVel() { return this.w; }
 
 
 		/// Returns true if the body is sleeping.
-		public bool isSleeping()
+		public bool IsSleeping()
 		{
 			return this.nodeRoot != null;
 		}
 
 		/// Returns true if the body is static.
-		public bool isStatic()
+		public bool IsStatic()
 		{
 			return nodeIdleTime == cp.Infinity;
 		}
 
 		/// Returns true if the body has not been added to a space.
 		/// Note: Static bodies are a subtype of rogue bodies.
-		public bool isRogue()
+		public bool IsRogue()
 		{
 			return space == null;  //(cpSpace)0));
 		}
 
 		/// Set the mass of a body.
-		public void setMass(float mass)
+		public void SetMass(float mass)
 		{
 			cp.assertHard(mass > 0.0f, "Mass must be positive and non-zero.");
 
-			activate();
+			Activate();
 			m = mass;
 			m_inv = 1.0f / mass;
 		}
 
 		//CP_DefineBodyStructGetter(float, i, Moment)
 		/// Set the moment of a body.
-		public void setMoment(float moment)
+		public void SetMoment(float moment)
 		{
 			cp.assertHard(moment > 0.0f, "Moment of Inertia must be positive and non-zero.");
 
-			activate();
+			Activate();
 			i = moment;
 			i_inv = 1.0f / moment;
 		}
 
-		public void addShape(cpShape shape)
+		public void AddShape(cpShape shape)
 		{
 			this.shapeList.Add(shape);
 		}
 
-		public void removeShape(cpShape shape)
+		public void RemoveShape(cpShape shape)
 		{
 			// This implementation has a linear time complexity with the number of shapes.
 			// The original implementation used linked lists instead, which might be faster if
@@ -329,17 +325,17 @@ namespace ChipmunkSharp
 		}
 
 
-		public void removeConstraint(cpConstraint constraint)
+		public void RemoveConstraint(cpConstraint constraint)
 		{
 			constraintList = cp.filterConstraints(constraintList, this, constraint);
 		}
 
 
 		/// Set the position of a body.
-		public void setPosition(cpVect pos)
+		public void SetPosition(cpVect pos)
 		{
-			this.activate();
-			this.sanityCheck();
+			this.Activate();
+			this.SanityCheck();
 			// If I allow the position to be set to vzero, vzero will get changed.
 			//if (pos == cpVect.ZERO) {
 			//    pos = cp.v(0,0);
@@ -347,29 +343,29 @@ namespace ChipmunkSharp
 			this.p = pos;
 		}
 
-		public void setAngle(float angle)
+		public void SetAngle(float angle)
 		{
-			this.activate();
-			this.sanityCheck();
-			this.setAngleInternal(angle);
+			this.Activate();
+			this.SanityCheck();
+			this.SetAngleInternal(angle);
 		}
 
-		public void setVelocity(cpVect velocity)
+		public void SetVelocity(cpVect velocity)
 		{
-			this.activate();
+			this.Activate();
 			this.v.x = velocity.x;
 			this.v.y = velocity.y;
 		}
 
 
-		public void setAngVel(float w)
+		public void SetAngularVelocity(float w)
 		{
-			this.activate();
+			this.Activate();
 			this.w = w;
 		}
 
 
-		public void setAngleInternal(float angle)
+		public void SetAngleInternal(float angle)
 		{
 			cp.assertHard(!float.IsNaN(angle), "Internal Error: Attempting to set body's angle to NaN");
 			this.a = angle;//fmod(a, (cpFloat)M_PI*2.0f);
@@ -386,7 +382,7 @@ namespace ChipmunkSharp
 		//public delegate void cpBodyPositionFunc(cpBody body, float dt);
 
 
-		public void velocityFunc(cpVect gravity, float damping, float dt)
+		public void VelocityFunc(cpVect gravity, float damping, float dt)
 		{
 			//this.v = vclamp(vadd(vmult(this.v, damping), vmult(vadd(gravity, vmult(this.f, this.m_inv)), dt)), this.v_limit);
 			var vx = this.v.x * damping + (gravity.x + this.f.x * this.m_inv) * dt;
@@ -403,11 +399,11 @@ namespace ChipmunkSharp
 			var w_limit = this.w_limit;
 			this.w = cp.cpfclamp(this.w * damping + this.t * this.i_inv * dt, -w_limit, w_limit);
 
-			this.sanityCheck();
+			this.SanityCheck();
 		}
 
 
-		public void positionFunc(float dt)
+		public void PositionFunc(float dt)
 		{
 			//this.p = vadd(this.p, vmult(vadd(this.v, this.v_bias), dt));
 
@@ -415,38 +411,38 @@ namespace ChipmunkSharp
 			this.p.x += (this.v.x + this.v_bias.x) * dt;
 			this.p.y += (this.v.y + this.v_bias.y) * dt;
 
-			this.setAngleInternal(this.a + (this.w + this.w_bias) * dt);
+			this.SetAngleInternal(this.a + (this.w + this.w_bias) * dt);
 
 			this.v_bias.x = this.v_bias.y = 0;
 			this.w_bias = 0;
 
-			this.sanityCheck();
+			this.SanityCheck();
 		}
 
 		/// Set the forces and torque or a body to zero.
-		public void resetForces()
+		public void ResetForces()
 		{
-			this.activate();
+			this.Activate();
 			f = cpVect.Zero;
 			t = 0.0f;
 		}
 
 		/// Apply an force (in world coordinates) to the body at a point relative to the center of gravity (also in world coordinates).
-		public void applyForce(cpVect force, cpVect r)
+		public void ApplyForce(cpVect force, cpVect r)
 		{
-			this.activate();
+			this.Activate();
 			f = cpVect.cpvadd(force, force);
 			t += cpVect.cpvcross(r, force);
 		}
 
 		/// Apply an impulse (in world coordinates) to the body at a point relative to the center of gravity (also in world coordinates).
-		public void applyImpulse(cpVect j, cpVect r)
+		public void ApplyImpulse(cpVect j, cpVect r)
 		{
-			this.activate();
+			this.Activate();
 			cp.apply_impulse(this, j, r);
 		}
 
-		public cpVect getVelAtPoint(cpVect r)
+		public cpVect GetVelAtPoint(cpVect r)
 		{
 			return cpVect.cpvadd(v, cpVect.cpvmult(cpVect.cpvperp(r), w));
 		}
@@ -454,14 +450,14 @@ namespace ChipmunkSharp
 		/// Get the velocity on a body (in world units) at a point on the body in world coordinates.
 		public cpVect GetVelAtWorldPoint(cpVect point)
 		{
-			return getVelAtPoint(cpVect.cpvsub(point, p));
+			return GetVelAtPoint(cpVect.cpvsub(point, p));
 		}
 
 
 		/// Get the velocity on a body (in world units) at a point on the body in local coordinates.
 		public cpVect GetVelAtLocalPoint(cpVect point)
 		{
-			return getVelAtPoint(cpVect.cpvrotate(point, rot));
+			return GetVelAtPoint(cpVect.cpvrotate(point, rot));
 		}
 
 
@@ -472,7 +468,7 @@ namespace ChipmunkSharp
 		//public delegate void cpBodyShapeIteratorFunc(cpBody body, cpShape shape, object data);
 
 
-		public void eachShape(Action<cpShape> func)
+		public void EachShape(Action<cpShape> func)
 		{
 			for (int i = 0, len = this.shapeList.Count; i < len; i++)
 			{
@@ -484,12 +480,12 @@ namespace ChipmunkSharp
 		//public delegate void cpBodyConstraintIteratorFunc(cpBody body, cpConstraint raint, object data);
 
 
-		public void eachConstraint(Action<cpConstraint> func)
+		public void EachConstraint(Action<cpConstraint> func)
 		{
 			var constraint = this.constraintList;
 			while (constraint != null)
 			{
-				var next = constraint.next(this);
+				var next = constraint.Next(this);
 				func(constraint);
 				constraint = next;
 			}
@@ -499,12 +495,12 @@ namespace ChipmunkSharp
 		/// Body/arbiter iterator callback function type. 
 		//public delegate void cpBodyArbiterIteratorFunc(cpBody body, cpArbiter arbiter, object data);
 
-		public void eachArbiter(Action<cpArbiter> func)
+		public void EachArbiter(Action<cpArbiter> func)
 		{
 			var arb = this.arbiterList;
 			while (arb != null)
 			{
-				var next = arb.next(this);
+				var next = arb.Next(this);
 
 				arb.swappedColl = (this == arb.body_b);
 				func(arb);
@@ -515,19 +511,19 @@ namespace ChipmunkSharp
 
 
 		/// Convert body relative/local coordinates to absolute/world coordinates.
-		public cpVect local2World(cpVect v)
+		public cpVect Local2World(cpVect v)
 		{
 			return cpVect.cpvadd(p, cpVect.cpvrotate(v, rot));
 		}
 
 		/// Convert body absolute/world coordinates to  relative/local coordinates.
-		public cpVect world2Local(cpVect v)
+		public cpVect World2Local(cpVect v)
 		{
 			return cpVect.cpvunrotate(cpVect.cpvsub(v, p), rot);
 		}
 
 		//        /// Get the kinetic energy of a body.
-		public float kineticEnergy()
+		public float KineticEnergy()
 		{
 			// Need to do some fudging to avoid NaNs
 			var vsq = this.v.x * this.v.x + this.v.y * this.v.y;
@@ -538,9 +534,9 @@ namespace ChipmunkSharp
 
 		//        // Defined in cpSpace.c
 		//        /// Wake up a sleeping or idle body.
-		public void activate()
+		public void Activate()
 		{
-			if (!this.isRogue())
+			if (!this.IsRogue())
 			{
 				this.nodeIdleTime = 0;
 				cp.componentActivate(cp.componentRoot(this));
@@ -548,15 +544,15 @@ namespace ChipmunkSharp
 
 		}
 		//        /// Wake up any sleeping or idle bodies touching a static body.
-		public void activateStatic(cpShape filter)
+		public void ActivateStatic(cpShape filter)
 		{
-			cp.assertHard(this.isStatic(), "Body.activateStatic() called on a non-static body.");
+			cp.assertHard(this.IsStatic(), "Body.activateStatic() called on a non-static body.");
 
-			for (var arb = this.arbiterList; arb != null; arb = arb.next(this))
+			for (var arb = this.arbiterList; arb != null; arb = arb.Next(this))
 			{
 				if (filter == null || filter == arb.a || filter == arb.b)
 				{
-					(arb.body_a == this ? arb.body_b : arb.body_a).activate();
+					(arb.body_a == this ? arb.body_b : arb.body_a).Activate();
 				}
 			}
 
@@ -566,7 +562,7 @@ namespace ChipmunkSharp
 
 
 
-		public void pushArbiter(cpArbiter arb)
+		public void PushArbiter(cpArbiter arb)
 		{
 
 			cp.assertSoft((arb.body_a == this ? arb.thread_a_next : arb.thread_b_next) == null,
@@ -607,21 +603,21 @@ namespace ChipmunkSharp
 		//        /// Force a body to fall asleep immediately.
 		public void Sleep()
 		{
-			this.sleepWithGroup(null);
+			this.SleepWithGroup(null);
 		}
 
 
 		//        /// Force a body to fall asleep immediately along with other bodies in a group.
-		public void sleepWithGroup(cpBody group)
+		public void SleepWithGroup(cpBody group)
 		{
-			cp.assertSoft(!this.isStatic() && !this.isRogue(), "Rogue and static bodies cannot be put to sleep.");
+			cp.assertSoft(!this.IsStatic() && !this.IsRogue(), "Rogue and static bodies cannot be put to sleep.");
 
 			var space = this.space;
 			cp.assertSoft(space != null, "Cannot put a rogue body to sleep.");
 			cp.assertSoft(space.isLocked, "Bodies cannot be put to sleep during a query or a call to cpSpaceStep(). Put these calls into a post-step callback.");
-			cp.assertSoft(group == null || group.isSleeping(), "Cannot use a non-sleeping body as a group identifier.");
+			cp.assertSoft(group == null || group.IsSleeping(), "Cannot use a non-sleeping body as a group identifier.");
 
-			if (this.isSleeping())
+			if (this.IsSleeping())
 			{
 				cp.assertSoft(cp.componentRoot(this) == cp.componentRoot(group), "The body is already sleeping and it's group cannot be reassigned.");
 				return;
@@ -629,7 +625,7 @@ namespace ChipmunkSharp
 
 			for (var i = 0; i < this.shapeList.Count; i++)
 			{
-				this.shapeList[i].update(this.p, this.rot);
+				this.shapeList[i].Update(this.p, this.rot);
 			}
 			space.deactivateBody(this);
 

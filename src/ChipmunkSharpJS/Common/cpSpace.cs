@@ -136,13 +136,18 @@ namespace ChipmunkSharp
 		public List<ContactPoint> collideShapes(cpShape a, cpShape b)
 		{
 
-			cp.assert((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode, "Collided shapes must be sorted by type");
-			return (a as ICollisionShape).collisionTable[(b as ICollisionShape).collisionCode](a, b);
+			cp.assert((a as ICollisionShape).CollisionCode <= (b as ICollisionShape).CollisionCode, "Collided shapes must be sorted by type");
+			return (a as ICollisionShape).CollisionTable[(b as ICollisionShape).CollisionCode](a, b);
 
 		}
 
 		public cpSpace()
 		{
+
+#if DEBUG
+			Console.WriteLine("Initializing cpSpace - Chipmunk v{0} (Debug Enabled)\n", cp.cpVersionString);
+			Console.WriteLine("Compile with -DNDEBUG defined to disable debug mode and runtime assertion checks\n");
+#endif
 
 			this.stamp = 0;
 			this.curr_dt = 0;
@@ -251,7 +256,7 @@ namespace ChipmunkSharp
 				if (sensor && handler == cp.defaultCollisionHandler) return;
 
 				// Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
-				if ((a as ICollisionShape).collisionCode > (b as ICollisionShape).collisionCode)
+				if ((a as ICollisionShape).CollisionCode > (b as ICollisionShape).CollisionCode)
 				{
 					var temp = a;
 					a = b;
@@ -277,12 +282,12 @@ namespace ChipmunkSharp
 					cachedArbiters.Add(arbHash, arb);
 				}
 
-				arb.update(contacts, handler, a, b);
+				arb.Update(contacts, handler, a, b);
 
 				// Call the begin function first if it's the first step
 				if (arb.state == cpArbiterState.FirstColl && !handler.begin(arb, this))
 				{
-					arb.ignore(); // permanently ignore the collision until separation
+					arb.Ignore(); // permanently ignore the collision until separation
 				}
 
 				if (
@@ -324,8 +329,8 @@ namespace ChipmunkSharp
 			// Preserve arbiters on sensors and rejected arbiters for sleeping objects.
 			// This prevents errant separate callbacks from happenening.
 			if (
-				(a.isStatic() || a.isSleeping()) &&
-				(b.isStatic() || b.isSleeping())
+				(a.IsStatic() || a.IsSleeping()) &&
+				(b.IsStatic() || b.IsSleeping())
 			)
 			{
 				return true;
@@ -334,7 +339,7 @@ namespace ChipmunkSharp
 			// Arbiter was used last frame, but not this one
 			if (ticks >= 1 && arb.state != cpArbiterState.Cached)
 			{
-				arb.callSeparate(this);
+				arb.CallSeparate(this);
 				arb.state = cpArbiterState.Cached;
 			}
 
@@ -379,9 +384,9 @@ namespace ChipmunkSharp
 				arbiters[i].state = cpArbiterState.Normal;
 
 				// If both bodies are awake, unthread the arbiter from the contact graph.
-				if (!arbiters[i].body_a.isSleeping() && !arbiters[i].body_b.isSleeping())
+				if (!arbiters[i].body_a.IsSleeping() && !arbiters[i].body_b.IsSleeping())
 				{
-					arbiters[i].unthread();
+					arbiters[i].Unthread();
 				}
 			}
 
@@ -397,8 +402,8 @@ namespace ChipmunkSharp
 				}
 
 				// Find colliding pairs.
-				this.activeShapes.each(s => cp.updateFunc(s as cpShape));
-				this.activeShapes.reindexQuery(makeCollideShapes());
+				this.activeShapes.Each(s => cp.updateFunc(s as cpShape));
+				this.activeShapes.ReindexQuery(makeCollideShapes());
 
 			} Unlock(false);
 
@@ -424,14 +429,14 @@ namespace ChipmunkSharp
 				var biasCoef = 1 - cp.cpfpow(this.collisionBias, dt);
 				for (i = 0; i < arbiters.Count; i++)
 				{
-					arbiters[i].preStep(dt, slop, biasCoef);
+					arbiters[i].PreStep(dt, slop, biasCoef);
 				}
 
 				for (i = 0; i < constraints.Count; i++)
 				{
 					var constraint = constraints[i];
 
-					constraint.PreSolve(this);
+					constraint.preSolve(this);
 					constraint.PreStep(dt);
 				}
 
@@ -447,7 +452,7 @@ namespace ChipmunkSharp
 				var dt_coef = (prev_dt == 0 ? 0 : dt / prev_dt);
 				for (i = 0; i < arbiters.Count; i++)
 				{
-					arbiters[i].applyCachedImpulse(dt_coef);
+					arbiters[i].ApplyCachedImpulse(dt_coef);
 				}
 
 				for (i = 0; i < constraints.Count; i++)
@@ -460,7 +465,7 @@ namespace ChipmunkSharp
 				{
 					for (j = 0; j < arbiters.Count; j++)
 					{
-						arbiters[j].applyImpulse(dt);
+						arbiters[j].ApplyImpulse(dt);
 					}
 
 					for (j = 0; j < constraints.Count; j++)
@@ -518,13 +523,13 @@ namespace ChipmunkSharp
 		{
 			cp.assertSoft(!this.isLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
 
-			this.staticShapes.each(s =>
+			this.staticShapes.Each(s =>
 			{
 				var shape = s as cpShape;
 				var body = shape.body;
-				shape.update(body.Position, body.Rotation);
+				shape.Update(body.Position, body.Rotation);
 			});
-			this.staticShapes.reindex();
+			this.staticShapes.Reindex();
 
 		}
 
@@ -534,11 +539,11 @@ namespace ChipmunkSharp
 			cp.assertHard(!isLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
 
 			var body = shape.body;
-			shape.update(body.Position, body.Rotation);
+			shape.Update(body.Position, body.Rotation);
 
 			// attempt to rehash the shape in both hashes
-			this.activeShapes.reindexObject(shape.hashid, shape);
-			this.staticShapes.reindexObject(shape.hashid, shape);
+			this.activeShapes.ReindexObject(shape.hashid, shape);
+			this.staticShapes.ReindexObject(shape.hashid, shape);
 		}
 
 		/// Update the collision detection data for all shapes attached to a body.
@@ -585,7 +590,7 @@ namespace ChipmunkSharp
 		public void removeShape(cpShape shape)
 		{
 			var body = shape.body;
-			if (body.isStatic())
+			if (body.IsStatic())
 			{
 				this.removeStaticShape(shape);
 			}
@@ -595,10 +600,10 @@ namespace ChipmunkSharp
 					"Cannot remove a shape that was not added to the space. (Removed twice maybe?)");
 				cp.assertSpaceUnlocked(this);
 
-				body.activate();
-				body.removeShape(shape);
+				body.Activate();
+				body.RemoveShape(shape);
 				this.filterArbiters(body, shape);
-				this.activeShapes.remove(shape.hashid);
+				this.activeShapes.Remove(shape.hashid);
 				shape.space = null;
 			}
 
@@ -612,10 +617,10 @@ namespace ChipmunkSharp
 			cp.assertSpaceUnlocked(this);
 
 			var body = shape.body;
-			if (body.isStatic()) body.activateStatic(shape);
-			body.removeShape(shape);
+			if (body.IsStatic()) body.ActivateStatic(shape);
+			body.RemoveShape(shape);
 			this.filterArbiters(body, shape);
-			this.staticShapes.remove(shape.hashid);
+			this.staticShapes.Remove(shape.hashid);
 			shape.space = null;
 
 		}
@@ -627,7 +632,7 @@ namespace ChipmunkSharp
 		 "Cannot remove a body that was not added to the space. (Removed twice maybe?)");
 			cp.assertSpaceUnlocked(this);
 
-			body.activate();
+			body.Activate();
 			//	this.filterArbiters(body, null);
 			this.bodies.Remove(body);
 			body.space = null;
@@ -643,13 +648,13 @@ namespace ChipmunkSharp
 		   "Cannot remove a constraint that was not added to the space. (Removed twice maybe?)");
 			cp.assertSpaceUnlocked(this);
 
-			constraint.a.activate();
-			constraint.b.activate();
+			constraint.a.Activate();
+			constraint.b.Activate();
 
 			this.constraints.Remove(constraint);
 
-			constraint.a.removeConstraint(constraint);
-			constraint.b.removeConstraint(constraint);
+			constraint.a.RemoveConstraint(constraint);
+			constraint.b.RemoveConstraint(constraint);
 			constraint.space = null;
 		}
 
@@ -670,9 +675,9 @@ namespace ChipmunkSharp
 				{
 					// Call separate when removing shapes.
 					if (filter != null && arb.state != cpArbiterState.Cached)
-						arb.callSeparate(this);
+						arb.CallSeparate(this);
 
-					arb.unthread();
+					arb.Unthread();
 
 					this.arbiters.Remove(arb);
 					safeDelete.Add(hash.Key);
@@ -692,7 +697,7 @@ namespace ChipmunkSharp
 		/// Add a rigid body to the simulation.
 		public cpBody addBody(cpBody body)
 		{
-			cp.assertHard(!body.isStatic(), "Do not add static bodies to a space. Static bodies do not move and should not be simulated.");
+			cp.assertHard(!body.IsStatic(), "Do not add static bodies to a space. Static bodies do not move and should not be simulated.");
 			cp.assertHard(body.space != this, "You have already added this body to this space. You must not add it a second time.");
 			cp.assertHard(body.space == null, "You have already added this body to another space. You cannot add it to a second.");
 			cp.assertSpaceUnlocked(this);
@@ -713,8 +718,8 @@ namespace ChipmunkSharp
 
 			cpBody a = constraint.a, b = constraint.b;
 
-			a.activate();
-			b.activate();
+			a.Activate();
+			b.Activate();
 			this.constraints.Add(constraint);
 
 			// Push onto the heads of the bodies' constraint lists
@@ -734,18 +739,18 @@ namespace ChipmunkSharp
 
 			var body = shape.body;
 
-			if (shape.body.isStatic())
+			if (shape.body.IsStatic())
 				return this.addStaticShape(shape);
 
 			cp.assertHard(shape.space != this, "You have already added this shape to this space. You must not add it a second time.");
 			cp.assertHard(shape.space == null, "You have already added this shape to another space. You cannot add it to a second.");
 			cp.assertSpaceUnlocked(this);
 
-			body.activate();
-			body.addShape(shape);
+			body.Activate();
+			body.AddShape(shape);
 
-			shape.update(body.Position, body.Rotation);
-			this.activeShapes.insert(shape.hashid, shape);
+			shape.Update(body.Position, body.Rotation);
+			this.activeShapes.Insert(shape.hashid, shape);
 			shape.space = this;
 
 			return shape;
@@ -762,10 +767,10 @@ namespace ChipmunkSharp
 
 
 			var body = shape.body;
-			body.addShape(shape);
+			body.AddShape(shape);
 
-			shape.update(body.Position, body.Rotation);
-			this.staticShapes.insert(shape.hashid, shape);
+			shape.Update(body.Position, body.Rotation);
+			this.staticShapes.Insert(shape.hashid, shape);
 			shape.space = this;
 
 			return shape;
@@ -805,8 +810,8 @@ namespace ChipmunkSharp
 		{
 			this.Lock();
 			{
-				this.activeShapes.each(s => func(s as cpShape));
-				this.staticShapes.each(s => func(s as cpShape));
+				this.activeShapes.Each(s => func(s as cpShape));
+				this.staticShapes.Each(s => func(s as cpShape));
 			} this.Unlock(true);
 		}
 
@@ -870,7 +875,7 @@ namespace ChipmunkSharp
 		public void activateBody(cpBody body)
 		{
 
-			cp.assert(!body.isRogue(), "Internal error: Attempting to activate a rogue body.");
+			cp.assert(!body.IsRogue(), "Internal error: Attempting to activate a rogue body.");
 
 			if (this.isLocked)
 			{
@@ -884,14 +889,14 @@ namespace ChipmunkSharp
 				for (var i = 0; i < body.shapeList.Count; i++)
 				{
 					var shape = body.shapeList[i];
-					this.staticShapes.remove(shape.hashid);
-					this.activeShapes.insert(shape.hashid, shape);
+					this.staticShapes.Remove(shape.hashid);
+					this.activeShapes.Insert(shape.hashid, shape);
 				}
 
-				for (var arb = body.arbiterList; arb != null; arb = arb.next(body))
+				for (var arb = body.arbiterList; arb != null; arb = arb.Next(body))
 				{
 					var bodyA = arb.body_a;
-					if (body == bodyA || bodyA.isStatic())
+					if (body == bodyA || bodyA.IsStatic())
 					{
 
 						// Reinsert the arbiter into the arbiter cache
@@ -905,10 +910,10 @@ namespace ChipmunkSharp
 					}
 				}
 
-				for (var constraint = body.constraintList; constraint != null; constraint = constraint.next(null))
+				for (var constraint = body.constraintList; constraint != null; constraint = constraint.Next(null))
 				{
 					var bodyA = constraint.a;
-					if (body == bodyA || bodyA.isStatic()) this.constraints.Add(constraint);
+					if (body == bodyA || bodyA.IsStatic()) this.constraints.Add(constraint);
 				}
 			}
 
@@ -917,7 +922,7 @@ namespace ChipmunkSharp
 
 		public void deactivateBody(cpBody body)
 		{
-			cp.assert(!body.isRogue(), "Internal error: Attempting to deactivate a rogue body.");
+			cp.assert(!body.IsRogue(), "Internal error: Attempting to deactivate a rogue body.");
 
 			this.bodies.Remove(body);
 
@@ -925,14 +930,14 @@ namespace ChipmunkSharp
 			for (var i = 0; i < body.shapeList.Count; i++)
 			{
 				var shape = body.shapeList[i];
-				this.activeShapes.remove(shape.hashid);
-				this.staticShapes.insert(shape.hashid, shape);
+				this.activeShapes.Remove(shape.hashid);
+				this.staticShapes.Insert(shape.hashid, shape);
 			}
 
-			for (var arb = body.arbiterList; arb != null; arb = arb.next(body))
+			for (var arb = body.arbiterList; arb != null; arb = arb.Next(body))
 			{
 				var bodyA = arb.body_a;
-				if (body == bodyA || bodyA.isStatic())
+				if (body == bodyA || bodyA.IsStatic())
 				{
 					this.uncacheArbiter(arb);
 
@@ -944,10 +949,10 @@ namespace ChipmunkSharp
 				}
 			}
 
-			for (var constraint = body.constraintList; constraint != null; constraint = constraint.next(null))
+			for (var constraint = body.constraintList; constraint != null; constraint = constraint.Next(null))
 			{
 				var bodyA = constraint.a;
-				if (body == bodyA || bodyA.isStatic())
+				if (body == bodyA || bodyA.IsStatic())
 					this.constraints.Remove(constraint);
 			}
 		}
@@ -979,7 +984,7 @@ namespace ChipmunkSharp
 
 					// Need to deal with infinite mass objects
 					var keThreshold = (dvsq != 0 ? bodies[i].Mass * dvsq : 0);
-					bodies[i].nodeIdleTime = (bodies[i].kineticEnergy() > keThreshold ? 0 : bodies[i].nodeIdleTime + dt);
+					bodies[i].nodeIdleTime = (bodies[i].KineticEnergy() > keThreshold ? 0 : bodies[i].nodeIdleTime + dt);
 				}
 			}
 
@@ -995,15 +1000,15 @@ namespace ChipmunkSharp
 				if (sleep)
 				{
 
-					if ((b.isRogue() && !b.isStatic()) || a.isSleeping())
-						a.activate();
+					if ((b.IsRogue() && !b.IsStatic()) || a.IsSleeping())
+						a.Activate();
 
-					if ((a.isRogue() && !a.isStatic()) || b.isSleeping())
-						b.activate();
+					if ((a.IsRogue() && !a.IsStatic()) || b.IsSleeping())
+						b.Activate();
 				}
 
-				a.pushArbiter(arb);
-				b.pushArbiter(arb);
+				a.PushArbiter(arb);
+				b.PushArbiter(arb);
 			}
 
 
@@ -1017,11 +1022,11 @@ namespace ChipmunkSharp
 					cpConstraint constraint = constraints[i];
 					cpBody a = constraint.a, b = constraint.b;
 
-					if (b.isRogue() && !b.isStatic())
-						a.activate();
+					if (b.IsRogue() && !b.IsStatic())
+						a.Activate();
 
-					if (a.isRogue() && !a.isStatic())
-						b.activate();
+					if (a.IsRogue() && !a.IsStatic())
+						b.Activate();
 				}
 
 				// Generate components and deactivate sleeping ones
@@ -1077,26 +1082,33 @@ namespace ChipmunkSharp
 			m_debugDraw.DrawString(0, 50, string.Format("Bodies : {0}/{1}", bodies.Count, bodies.Capacity));
 			m_debugDraw.DrawString(0, 80, string.Format("Arbiters: {0}/{1}", arbiters.Count, arbiters.Capacity));
 
-			var contacts = 0;
-			for (var i = 0; i < arbiters.Count; i++)
+			if (m_debugDraw.Flags == cpDrawFlags.All || m_debugDraw.Flags == cpDrawFlags.Shapes)
 			{
-				contacts += arbiters[i].contacts.Count;
+				eachShape(s => s.Draw(m_debugDraw));
+			}
+
+			if (m_debugDraw.Flags == cpDrawFlags.All || m_debugDraw.Flags == cpDrawFlags.Joints)
+			{
+				eachConstraint(c => c.Draw(m_debugDraw));
+			}
+
+			var contacts = 0;
+			if (m_debugDraw.Flags == cpDrawFlags.All || m_debugDraw.Flags == cpDrawFlags.ContactPoints)
+			{
+				for (var i = 0; i < arbiters.Count; i++)
+				{
+					for (int j = 0; j < arbiters[i].contacts.Count; j++)
+					{
+						arbiters[i].contacts[j].Draw(m_debugDraw);
+					}
+					contacts += arbiters[i].contacts.Count;
+				}
+
 			}
 
 			m_debugDraw.DrawString(0, 110, "Contact points: " + contacts);
 			m_debugDraw.DrawString(0, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}", cp.numLeaves, cp.numNodes, cp.numPairs));
 
-			//cpDrawFlags flags = m_debugDraw.Flags;
-
-			if (m_debugDraw.Flags == cpDrawFlags.ALL || m_debugDraw.Flags == cpDrawFlags.Shape)
-			{
-				eachShape(s => s.Draw(m_debugDraw));
-			}
-
-			if (m_debugDraw.Flags == cpDrawFlags.ALL || m_debugDraw.Flags == cpDrawFlags.Joint)
-			{
-				eachConstraint(c => c.Draw(m_debugDraw));
-			}
 
 		}
 
@@ -1184,7 +1196,7 @@ namespace ChipmunkSharp
 			{
 				cpShape shape = o1 as cpShape;
 
-				cpSegmentQueryInfo info = shape.segmentQuery(start, end);
+				cpSegmentQueryInfo info = shape.SegmentQuery(start, end);
 
 
 				if (
@@ -1233,7 +1245,7 @@ namespace ChipmunkSharp
 
 				if (!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0))
 				{
-					cpNearestPointQueryInfo info = shape.nearestPointQuery(point);
+					cpNearestPointQueryInfo info = shape.NearestPointQuery(point);
 
 					if (info.d < maxDistance)
 						func(shape, info.d, info.p);
@@ -1244,8 +1256,8 @@ namespace ChipmunkSharp
 			cpBB bb = cp.bbNewForCircle(point, maxDistance);
 			this.Lock();
 			{
-				this.activeShapes.query(bb, helper);
-				this.staticShapes.query(bb, helper);
+				this.activeShapes.Query(bb, helper);
+				this.staticShapes.Query(bb, helper);
 			} this.Unlock(true);
 		}
 
@@ -1304,7 +1316,7 @@ namespace ChipmunkSharp
 
 				if (!(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) && !shape.sensor)
 				{
-					cpNearestPointQueryInfo info = shape.nearestPointQuery(point);
+					cpNearestPointQueryInfo info = shape.NearestPointQuery(point);
 
 					if (info.d < maxDistance && (output == null || info.d < output.d))
 						output = info;
@@ -1313,8 +1325,8 @@ namespace ChipmunkSharp
 
 			cpBB bb = cp.bbNewForCircle(point, maxDistance);
 
-			this.activeShapes.query(bb, helper);
-			this.staticShapes.query(bb, helper);
+			this.activeShapes.Query(bb, helper);
+			this.staticShapes.Query(bb, helper);
 
 			return output;
 		}

@@ -47,29 +47,29 @@ namespace ChipmunkSharp.Constraints
 
 		#endregion
 
-		public override void setAnchr1(cpVect anchr1)
+		public override void SetAnchr1(cpVect anchr1)
 		{
 			this.anchr1 = anchr1;
 		}
 
-		public override cpVect getAnchr1()
+		public override cpVect GetAnchr1()
 		{
 			return anchr1;
 		}
 
-		public override void setAnchr2(cpVect anchr2)
+		public override void SetAnchr2(cpVect anchr2)
 		{
 			this.anchr2 = anchr2;
 		}
 
-		public override cpVect getAnchr2()
+		public override cpVect GetAnchr2()
 		{
 			return anchr2;
 		}
 
 
 		public cpPivotJoint(cpBody a, cpBody b, cpVect pivot)
-			: this(a, b, (a != null ? a.world2Local(pivot) : pivot), (b != null ? b.world2Local(pivot) : pivot))
+			: this(a, b, (a != null ? a.World2Local(pivot) : pivot), (b != null ? b.World2Local(pivot) : pivot))
 		{
 
 		}
@@ -83,8 +83,8 @@ namespace ChipmunkSharp.Constraints
 			{
 				var pivot = anchr1;
 
-				anchr1 = (a != null ? a.world2Local(pivot) : pivot);
-				anchr2 = (b != null ? b.world2Local(pivot) : pivot);
+				anchr1 = (a != null ? a.World2Local(pivot) : pivot);
+				anchr2 = (b != null ? b.World2Local(pivot) : pivot);
 			}
 
 			this.anchr1 = anchr1;
@@ -146,8 +146,8 @@ namespace ChipmunkSharp.Constraints
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
-			var a = this.a.local2World(this.anchr1);
-			var b = this.b.local2World(this.anchr2);
+			var a = this.a.Local2World(this.anchr1);
+			var b = this.b.Local2World(this.anchr2);
 			m_debugDraw.DrawCircle(a, 2, cpColor.Grey);
 			m_debugDraw.DrawCircle(b, 2, cpColor.Grey);
 

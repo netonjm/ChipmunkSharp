@@ -43,7 +43,7 @@ namespace ChipmunkSharp
 			this.d = d;
 		}
 
-		public float compare(cpVect v)
+		public float Compare(cpVect v)
 		{
 			return cpVect.cpvdot(n, v) - d;
 		}
@@ -65,12 +65,12 @@ namespace ChipmunkSharp
 		public cpPolyShape(cpBody body, float[] verts, cpVect offset)
 			: base(body)
 		{
-			this.setVerts(verts, offset);
+			this.SetVerts(verts, offset);
 			this.shapeType = cpShapeType.Polygon;
 			//Shape.call(this, body);
 		}
 
-		public void setVerts(float[] verts, cpVect offset)
+		public void SetVerts(float[] verts, cpVect offset)
 		{
 			cp.assert(verts.Length >= 4, "Polygons require some verts");
 			//cpEnvironment.assert(typeof(verts[0]) == 'number',
@@ -109,7 +109,7 @@ namespace ChipmunkSharp
 		}
 
 
-		public void transformVerts(cpVect p, cpVect rot)
+		public void TransformVerts(cpVect p, cpVect rot)
 		{
 			var src = this.verts;
 			var dst = this.tVerts;
@@ -143,7 +143,7 @@ namespace ChipmunkSharp
 			this.bb_t = t;
 		}
 
-		public void transformAxes(cpVect p, cpVect rot)
+		public void TransformAxes(cpVect p, cpVect rot)
 		{
 			var src = this.planes;
 			var dst = this.tPlanes;
@@ -157,13 +157,13 @@ namespace ChipmunkSharp
 		}
 
 
-		public override void cacheData(cpVect p, cpVect rot)
+		public override void CacheData(cpVect p, cpVect rot)
 		{
-			this.transformAxes(p, rot);
-			this.transformVerts(p, rot);
+			this.TransformAxes(p, rot);
+			this.TransformVerts(p, rot);
 		}
 
-		public override cpNearestPointQueryInfo nearestPointQuery(cpVect p)
+		public override cpNearestPointQueryInfo NearestPointQuery(cpVect p)
 		{
 			var planes = this.tPlanes;
 			var verts = this.tVerts;
@@ -176,7 +176,7 @@ namespace ChipmunkSharp
 
 			for (var i = 0; i < planes.Length; i++)
 			{
-				if (planes[i].compare(p) > 0) outside = true;
+				if (planes[i].Compare(p) > 0) outside = true;
 
 				var v1x = verts[i * 2];
 				var v1y = verts[i * 2 + 1];
@@ -196,7 +196,7 @@ namespace ChipmunkSharp
 			return new cpNearestPointQueryInfo(this, closestPoint, (outside ? minDist : -minDist));
 		}
 
-		public override cpSegmentQueryInfo segmentQuery(cpVect a, cpVect b)
+		public override cpSegmentQueryInfo SegmentQuery(cpVect a, cpVect b)
 		{
 			var axes = this.tPlanes;
 			var verts = this.tVerts;
@@ -229,7 +229,7 @@ namespace ChipmunkSharp
 			return null;
 		}
 
-		public float valueOnAxis(cpVect n, float d)
+		public float ValueOnAxis(cpVect n, float d)
 		{
 			var verts = this.tVerts;
 			var m = cpVect.cpvdot2(n.x, n.y, verts[0], verts[1]);
@@ -242,7 +242,7 @@ namespace ChipmunkSharp
 			return m - d;
 		}
 
-		public bool containsVert(float vx, float vy)
+		public bool ContainsVert(float vx, float vy)
 		{
 			var planes = this.tPlanes;
 
@@ -256,7 +256,7 @@ namespace ChipmunkSharp
 			return true;
 		}
 
-		public bool containsVertPartial(float vx, float vy, cpVect n)
+		public bool ContainsVertPartial(float vx, float vy, cpVect n)
 		{
 			var planes = this.tPlanes;
 
@@ -271,39 +271,36 @@ namespace ChipmunkSharp
 			return true;
 		}
 
-		public int getNumVerts()
+		public int GetNumVerts()
 		{
 			return this.verts.Length / 2;
 		}
 
 		// These methods are provided for API compatibility with Chipmunk. I recommend against using
 		// them - just access the poly.verts list directly.
-		public cpVect getVert(int i)
+		public cpVect GetVert(int i)
 		{
 			return new cpVect(this.verts[i * 2], this.verts[i * 2 + 1]);
 		}
 
-		public List<cpVect> getVers()
+		public List<cpVect> GetVers()
 		{
 			List<cpVect> dev = new List<cpVect>();
-			for (int i = 0; i < getNumVerts(); i++)
-				dev.Add(getVert(i));
+			for (int i = 0; i < GetNumVerts(); i++)
+				dev.Add(GetVert(i));
 			return dev;
 		}
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
 
-			// var verts = this.tVerts;
 			var len = tVerts.Count();
 
 			List<cpVect> vertices = new List<cpVect>();
 
 			var lastPoint = new cpVect(tVerts[len - 2], tVerts[len - 1]);
-			////ctx.moveTo(lastPoint.x, lastPoint.y);
 
 			cpColor color = cp.GetShapeColor(this);
-			//cpColor color = new cpColor(255, 0, 100);
 
 			for (var i = 0; i < len; i += 2)
 			{
@@ -311,20 +308,10 @@ namespace ChipmunkSharp
 				m_debugDraw.DrawSegment(lastPoint, p, color);
 				lastPoint = p;
 			}
-			//m_debugDraw.DrawPolygon(getVers(), getNumVerts(), cpColor.Red);
-
-
-			//// convert chipmunk points to coco points
-			//Point *pointArray = new Point[poly->numVerts];
-			//for (int i=0; i < poly->numVerts; i++) {
-			//    pointArray[i] = Point(poly->tVerts[i].x, poly->tVerts[i].y);
-			//}
-
-			//DrawPrimitives::drawPoly(pointArray, poly->numVerts, true);
 
 		}
 
-		public Func<object, object, List<ContactPoint>>[] collisionTable
+		public Func<object, object, List<ContactPoint>>[] CollisionTable
 		{
 			get
 			{
@@ -335,8 +322,8 @@ namespace ChipmunkSharp
                 };
 			}
 		}
-		//(o1,o2) => cpCollision.Circle2Circle(o1 as cpCircleShape ,o2 as cpCircleShape),
-		public int collisionCode
+
+		public int CollisionCode
 		{
 			get { return 2; }
 		}
@@ -345,191 +332,3 @@ namespace ChipmunkSharp
 	}
 
 }
-
-
-/*
-
-        public static void cpPolyShapeSegmentQuery(cpPolyShape poly, cpVect a, cpVect b, cpSegmentQueryInfo info)
-        {
-            List<cpSplittingPlane> axes = poly.tPlanes;
-            List<cpVect> verts = poly.tVerts;
-            int numVerts = poly.numVerts;
-            float r = poly.r;
-
-            for (int i = 0; i < numVerts; i++)
-            {
-                cpVect n = axes[i].n;
-                float an = cpVect.cpvdot(a, n);
-                float d = axes[i].d + r - an;
-                if (d > 0.0f) continue;
-
-                float bn = cpVect.cpvdot(b, n);
-                float t = d / (bn - an);
-                if (t < 0.0f || 1.0f < t) continue;
-
-                cpVect point = cpVect.cpvlerp(a, b, t);
-                float dt = -cpVect.cpvcross(n, point);
-                float dtMin = -cpVect.cpvcross(n, verts[(i - 1 + numVerts) % numVerts]);
-                float dtMax = -cpVect.cpvcross(n, verts[i]);
-
-                if (dtMin <= dt && dt <= dtMax)
-                {
-                    info.shape = (cpShape)poly;
-                    info.t = t;
-                    info.n = n;
-                }
-            }
-
-            // Also check against the beveled vertexes.
-            if (r > 0.0f)
-            {
-                for (int i = 0; i < numVerts; i++)
-                {
-                    cpSegmentQueryInfo circle_info = cpSegmentQueryInfo.CreateBlanck(); //  { null, 1.0f, cpVect.ZERO };
-                    cpCircleShape.SegmentQuery(poly, verts[i], r, a, b, circle_info);
-                    if (circle_info.t < info.t) info.Set(circle_info);
-                }
-            }
-        }
-
-
-        /// Allocate a polygon shape.
-
-        /// Initialize a polygon shape.
-        /// A convex hull will be created from the vertexes.
-        public static cpPolyShape cpPolyShapeInit(cpPolyShape poly, cpBody body, List<cpVect> verts, cpVect offset)
-        {
-            return cpPolyShapeInit2(poly, body, verts, offset, 0.0f);
-        }
-        /// Initialize a polygon shape.
-        /// A convex hull will be created from the vertexes.
-        public static cpPolyShape cpPolyShapeInit2(cpPolyShape poly, cpBody body, List<cpVect> verts, cpVect offset, float radius)
-        {
-            setUpVerts(poly, verts, offset);
-            poly.Init(polyClass, body);
-            //cpShapeInit((cpShape)poly,);
-            poly.r = radius;
-
-            return poly;
-        }
-        /// Allocate and initialize a polygon shape.
-        /// A convex hull will be created from the vertexes.
-        public static cpShape cpPolyShapeNew(cpBody body, List<cpVect> verts, cpVect offset)
-        {
-            return cpPolyShapeNew2(body, verts, offset, 0.0f);
-        }
-        /// Allocate and initialize a polygon shape.
-        /// A convex hull will be created from the vertexes.
-        public static cpShape cpPolyShapeNew2(cpBody body, List<cpVect> verts, cpVect offset, float radius)
-        {
-
-            return (cpShape)cpPolyShapeInit2(new cpPolyShape(), body, verts, offset, radius);
-        }
-
-        /// Initialize a box shaped polygon shape.
-        public static cpPolyShape cpBoxShapeInit(cpPolyShape poly, cpBody body, float width, float height)
-        {
-            float hw = width / 2.0f;
-            float hh = height / 2.0f;
-
-            return cpBoxShapeInit2(poly, body, cpBB.cpBBNew(-hw, -hh, hw, hh));
-        }
-        /// Initialize an offset box shaped polygon shape.
-        public static cpPolyShape cpBoxShapeInit2(cpPolyShape poly, cpBody body, cpBB box)
-        {
-            return cpBoxShapeInit3(poly, body, box, 0.0f);
-        }
-        /// Initialize an offset box shaped polygon shape.
-        public static cpPolyShape cpBoxShapeInit3(cpPolyShape poly, cpBody body, cpBB box, float radius)
-        {
-            List<cpVect> verts = new List<cpVect>() {
-	new cpVect(box.l, box.b),
-	new cpVect(box.l, box.t),
-	new cpVect(box.r, box.t),
-	new cpVect(box.r, box.b),
-	};
-
-            return cpPolyShapeInit2(poly, body, verts, cpVect.ZERO, radius);
-        }
-        /// Allocate and initialize a box shaped polygon shape.
-        public static cpShape cpBoxShapeNew(cpBody body, float width, float height)
-        {
-
-            return (cpShape)cpBoxShapeInit(new cpPolyShape(), body, width, height);
-        }
-        /// Allocate and initialize an offset box shaped polygon shape.
-        public static cpShape cpBoxShapeNew2(cpBody body, cpBB box)
-        {
-            return (cpShape)cpBoxShapeInit2(new cpPolyShape(), body, box);
-        }
-        /// Allocate and initialize an offset box shaped polygon shape.
-        public static cpShape cpBoxShapeNew3(cpBody body, cpBB box, float radius)
-        {
-            return (cpShape)cpBoxShapeInit3(new cpPolyShape(), body, box, radius);
-        }
-
-        /// Check that a set of vertexes is convex and has a clockwise winding.
-        /// NOTE: Due to floating point precision issues, hulls created with cpQuickHull() are not guaranteed to validate!
-        public static bool cpPolyValidate(List<cpVect> verts, int numVerts)
-        {
-            for (int i = 0; i < numVerts; i++)
-            {
-                cpVect a = verts[i];
-                cpVect b = verts[(i + 1) % numVerts];
-                cpVect c = verts[(i + 2) % numVerts];
-
-                if (cpVect.cpvcross(cpVect.cpvsub(b, a), cpVect.cpvsub(c, a)) > 0.0f)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        /// Get the number of verts in a polygon shape.
-        public static int cpPolyShapeGetNumVerts(cpShape shape)
-        {
-            cpEnvironment.assertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
-            return ((cpPolyShape)shape).numVerts;
-        }
-        /// Get the @c ith vertex of a polygon shape.
-        public static cpVect cpPolyShapeGetVert(cpShape shape, int idx)
-        {
-            cpEnvironment.assertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
-            cpEnvironment.assertHard(0 <= idx && idx < cpPolyShapeGetNumVerts(shape), "Index out of range.");
-
-            return ((cpPolyShape)shape).verts[idx];
-        }
-        /// Get the radius of a polygon shape.
-        public static float cpPolyShapeGetRadius(cpShape shape)
-        {
-            cpEnvironment.assertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
-            return ((cpPolyShape)shape).r;
-        }
-
-        /// @}
-        // Unsafe API (chipmunk_unsafe.h)
-
-        public static void cpPolyShapeSetVerts(cpShape shape, List<cpVect> verts, cpVect offset)
-        {
-            cpEnvironment.assertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
-            cpPolyShapeDestroy((cpPolyShape)shape);
-            setUpVerts((cpPolyShape)shape, verts, offset);
-        }
-
-        public static void cpPolyShapeSetRadius(cpShape shape, float radius)
-        {
-            cpEnvironment.assertHard(shape.klass.Equals(polyClass), "Shape is not a poly shape.");
-            ((cpPolyShape)shape).r = radius;
-        }
-
-
-        public cpVect GetVert(int idx)
-        {
-
-            //cpEnvironment.cpAssertHard(klass == &polyClass, "Shape is not a poly shape.");
-            cpEnvironment.assertHard(0 <= idx && idx < cpPolyShapeGetNumVerts(this), "Index out of range.");
-
-            return verts[idx];
-        }*/

@@ -70,6 +70,12 @@ namespace ChipmunkSharp
 			this.hash = hash;
 			cp.numContacts++;
 		}
+
+		public void Draw(cpDebugDraw m_debugDraw)
+		{
+			m_debugDraw.DrawPoint(p, 1, cpColor.Red);
+		}
+
 	};
 
 }

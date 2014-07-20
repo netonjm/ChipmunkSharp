@@ -54,60 +54,60 @@ namespace ChipmunkSharp.Constraints
 
 		#region PROPS OVERIDE
 
-		public override float getDist()
+		public override float GetDist()
 		{
 			return dist;
 		}
-		public override void setDist(float distance)
+		public override void SetDist(float distance)
 		{
 			dist = distance;
 		}
-		public override void setStiffness(float stiffness)
+		public override void SetStiffness(float stiffness)
 		{
 			this.stiffness = stiffness;
 		}
 
-		public override float getStiffness()
+		public override float GetStiffness()
 		{
-			return base.getStiffness();
+			return base.GetStiffness();
 		}
 
-		public override void setAnchr1(cpVect anchr1)
+		public override void SetAnchr1(cpVect anchr1)
 		{
 			this.anchr1 = anchr1;
 		}
 
-		public override cpVect getAnchr1()
+		public override cpVect GetAnchr1()
 		{
 			return this.anchr1;
 		}
 
-		public override void setAnchr2(cpVect anchr2)
+		public override void SetAnchr2(cpVect anchr2)
 		{
 			this.anchr2 = anchr2;
 		}
 
-		public override cpVect getAnchr2()
+		public override cpVect GetAnchr2()
 		{
 			return anchr2;
 		}
 
-		public override void setRestLength(float restLength)
+		public override void SetRestLength(float restLength)
 		{
 			this.restLength = restLength;
 		}
 
-		public override float getRestLength()
+		public override float GetRestLength()
 		{
 			return restLength;
 		}
 
-		public override float getDamping()
+		public override float GetDamping()
 		{
 			return damping;
 		}
 
-		public override void setDamping(float damping)
+		public override void SetDamping(float damping)
 		{
 			this.damping = damping;
 		}
@@ -187,8 +187,8 @@ namespace ChipmunkSharp.Constraints
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
-			var a = this.a.local2World(this.anchr1);
-			var b = this.b.local2World(this.anchr2);
+			var a = this.a.Local2World(this.anchr1);
+			var b = this.b.Local2World(this.anchr2);
 
 			m_debugDraw.DrawSpring(a, b, cpColor.Grey);
 		}

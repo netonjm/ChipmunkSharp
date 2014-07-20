@@ -41,32 +41,32 @@ namespace ChipmunkSharp.Constraints
 
 
 
-		public override cpVect getAnchr1()
+		public override cpVect GetAnchr1()
 		{
 			return anchr1;
 		}
 
-		public override void setAnchr1(cpVect anchr)
+		public override void SetAnchr1(cpVect anchr)
 		{
 			anchr1 = anchr;
 		}
 
-		public override cpVect getAnchr2()
+		public override cpVect GetAnchr2()
 		{
 			return anchr2;
 		}
 
-		public override void setAnchr2(cpVect anchr)
+		public override void SetAnchr2(cpVect anchr)
 		{
 			anchr2 = anchr;
 		}
 
 
-		public override void setDist(float distance)
+		public override void SetDist(float distance)
 		{
 			dist = distance;
 		}
-		public override float getDist()
+		public override float GetDist()
 		{
 			return dist;
 		}
@@ -156,8 +156,8 @@ namespace ChipmunkSharp.Constraints
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
-			var a = this.a.local2World(this.anchr1);
-			var b = this.b.local2World(this.anchr2);
+			var a = this.a.Local2World(this.anchr1);
+			var b = this.b.Local2World(this.anchr2);
 			m_debugDraw.DrawSegment(a, b, cpColor.Grey);
 
 		}
