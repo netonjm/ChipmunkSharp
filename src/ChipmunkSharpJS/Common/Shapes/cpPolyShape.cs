@@ -62,13 +62,43 @@ namespace ChipmunkSharp
 
 		public float r;
 
+		public cpPolyShape(cpBody body, float[] verts, cpTransform transform,
+			float radius)
+			: this(body, GetVertices(transform, verts), radius)
+		{
+
+		}
+
 
 		public cpPolyShape(cpBody body, float[] verts, float radius)
-			: base(body)
+			: base(body, cpShapeMassInfo.cpPolyShapeMassInfo(0.0f, verts, radius))
 		{
+
+			//cp.BoxShape
+
 			this.SetVerts(verts, cpVect.Zero);
 			this.shapeType = cpShapeType.Polygon;
 			this.r = radius;
+		}
+
+		public static cpPolyShape BoxShape(cpBody body, float width, float height, float radius)
+		{
+			var hw = width / 2;
+			var hh = height / 2;
+
+			return BoxShape2(body, new cpBB(-hw, -hh, hw, hh), radius);
+
+
+		}
+		public static cpPolyShape BoxShape2(cpBody body, cpBB box, float radius)
+		{
+			float[] verts = new float[] {
+		box.l, box.b,
+		box.l, box.t,
+		box.r, box.t,
+		box.r, box.b};
+
+			return new cpPolyShape(body, verts, radius);
 		}
 
 		public static float[] GetVertices(cpTransform transform, float[] verts)
@@ -77,20 +107,13 @@ namespace ChipmunkSharp
 			float[] hullVerts = new float[verts.Length];
 			cpVect tmp;
 			int count = (verts.Length / 2);
-			for (int i = 0; i < count-1; i++)
+			for (int i = 0; i < count - 1; i++)
 			{
 				tmp = cpTransform.cpTransformPoint(transform, new cpVect(verts[i], verts[i + 1]));
 				hullVerts[i] = tmp.x;
 				hullVerts[i + 1] = tmp.y;
 			}
 			return hullVerts;
-		}
-
-		public cpPolyShape(cpBody body, float[] verts, cpTransform transform,
-			float radius)
-			: this(body, GetVertices(transform, verts), radius)
-		{
-
 		}
 
 		public void SetVerts(float[] verts, cpVect offset)
@@ -130,7 +153,6 @@ namespace ChipmunkSharp
 				this.tPlanes[i >> 1] = new cpSplittingPlane(new cpVect(0, 0), 0);
 			}
 		}
-
 
 		public void TransformVerts(cpVect p, cpVect rot)
 		{
@@ -177,79 +199,6 @@ namespace ChipmunkSharp
 				dst[i].n = n;
 				dst[i].d = cpVect.cpvdot(p, n) + src[i].d;
 			}
-		}
-
-
-		public override void CacheData(cpVect p, cpVect rot)
-		{
-			this.TransformAxes(p, rot);
-			this.TransformVerts(p, rot);
-		}
-
-		public override cpNearestPointQueryInfo NearestPointQuery(cpVect p)
-		{
-			var planes = this.tPlanes;
-			var verts = this.tVerts;
-
-			var v0x = verts[verts.Length - 2];
-			var v0y = verts[verts.Length - 1];
-			var minDist = cp.Infinity;
-			var closestPoint = cpVect.Zero;
-			var outside = false;
-
-			for (var i = 0; i < planes.Length; i++)
-			{
-				if (planes[i].Compare(p) > 0) outside = true;
-
-				var v1x = verts[i * 2];
-				var v1y = verts[i * 2 + 1];
-				var closest = cp.closestPointOnSegment2(p.x, p.y, v0x, v0y, v1x, v1y);
-
-				var dist = cpVect.cpvdist(p, closest);
-				if (dist < minDist)
-				{
-					minDist = dist;
-					closestPoint = closest;
-				}
-
-				v0x = v1x;
-				v0y = v1y;
-			}
-
-			return new cpNearestPointQueryInfo(this, closestPoint, (outside ? minDist : -minDist));
-		}
-
-		public override cpSegmentQueryInfo SegmentQuery(cpVect a, cpVect b)
-		{
-			var axes = this.tPlanes;
-			var verts = this.tVerts;
-			var numVerts = axes.Length;
-			var len = numVerts * 2;
-
-			for (var i = 0; i < numVerts; i++)
-			{
-				var n = axes[i].n;
-				var an = cpVect.cpvdot(a, n);
-				if (axes[i].d > an) continue;
-
-				var bn = cpVect.cpvdot(b, n);
-				var t = (axes[i].d - an) / (bn - an);
-				if (t < 0 || 1 < t) continue;
-
-				var point = cpVect.cpvlerp(a, b, t);
-				var dt = -cpVect.cpvcross(n, point);
-				var dtMin = -cpVect.cpvcross2(n.x, n.y, verts[i * 2], verts[i * 2 + 1]);
-				var dtMax = -cpVect.cpvcross2(n.x, n.y, verts[(i * 2 + 2) % len], verts[(i * 2 + 3) % len]);
-
-				if (dtMin <= dt && dt <= dtMax)
-				{
-					// josephg: In the original C code, this function keeps
-					// looping through axes after finding a match. I *think*
-					// this code is equivalent...
-					return new cpSegmentQueryInfo(this, t, n);
-				}
-			}
-			return null;
 		}
 
 		public float ValueOnAxis(cpVect n, float d)
@@ -333,6 +282,88 @@ namespace ChipmunkSharp
 			}
 
 		}
+
+
+		#region OBSOLETE
+
+		[Obsolete("This method was obsolete from Chipmunk JS")]
+		public override void CacheData(cpVect p, cpVect rot)
+		{
+			this.TransformAxes(p, rot);
+			this.TransformVerts(p, rot);
+		}
+
+		[Obsolete("This method was obsolete from Chipmunk JS")]
+		public override cpPointQueryInfo NearestPointQuery(cpVect p)
+		{
+			var planes = this.tPlanes;
+			var verts = this.tVerts;
+
+			var v0x = verts[verts.Length - 2];
+			var v0y = verts[verts.Length - 1];
+			var minDist = cp.Infinity;
+			var closestPoint = cpVect.Zero;
+			var outside = false;
+
+			for (var i = 0; i < planes.Length; i++)
+			{
+				if (planes[i].Compare(p) > 0) outside = true;
+
+				var v1x = verts[i * 2];
+				var v1y = verts[i * 2 + 1];
+				var closest = cp.closestPointOnSegment2(p.x, p.y, v0x, v0y, v1x, v1y);
+
+				var dist = cpVect.cpvdist(p, closest);
+				if (dist < minDist)
+				{
+					minDist = dist;
+					closestPoint = closest;
+				}
+
+				v0x = v1x;
+				v0y = v1y;
+			}
+
+			return new cpPointQueryInfo(this, closestPoint, (outside ? minDist : -minDist), cpVect.Zero);
+		}
+
+		[Obsolete("This method was obsolete from Chipmunk JS")]
+		public override cpSegmentQueryInfo SegmentQuery(cpVect a, cpVect b)
+		{
+			var axes = this.tPlanes;
+			var verts = this.tVerts;
+			var numVerts = axes.Length;
+			var len = numVerts * 2;
+
+			for (var i = 0; i < numVerts; i++)
+			{
+				var n = axes[i].n;
+				var an = cpVect.cpvdot(a, n);
+				if (axes[i].d > an) continue;
+
+				var bn = cpVect.cpvdot(b, n);
+				var t = (axes[i].d - an) / (bn - an);
+				if (t < 0 || 1 < t) continue;
+
+				var point = cpVect.cpvlerp(a, b, t);
+				var dt = -cpVect.cpvcross(n, point);
+				var dtMin = -cpVect.cpvcross2(n.x, n.y, verts[i * 2], verts[i * 2 + 1]);
+				var dtMax = -cpVect.cpvcross2(n.x, n.y, verts[(i * 2 + 2) % len], verts[(i * 2 + 3) % len]);
+
+				if (dtMin <= dt && dt <= dtMax)
+				{
+					// josephg: In the original C code, this function keeps
+					// looping through axes after finding a match. I *think*
+					// this code is equivalent...
+					return new cpSegmentQueryInfo(this, n, cpVect.Zero, t);
+				}
+			}
+			return null;
+		}
+
+
+		#endregion
+
 
 		public Func<object, object, List<ContactPoint>>[] CollisionTable
 		{

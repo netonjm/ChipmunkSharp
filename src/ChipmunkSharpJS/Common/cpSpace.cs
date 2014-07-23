@@ -251,7 +251,7 @@ namespace ChipmunkSharp
 					|| !(a.layers != 0 & b.layers != 0)
 				) return;
 
-				var handler = lookupHandler(a.collision_type, b.collision_type);
+				var handler = lookupHandler(a.type, b.type);
 
 				var sensor = a.sensor || b.sensor;
 				if (sensor && handler == cp.defaultCollisionHandler) return;
@@ -906,7 +906,7 @@ namespace ChipmunkSharp
 
 						// Update the arbiter's state
 						arb.stamp = this.stamp;
-						arb.handler = this.lookupHandler(a.collision_type, b.collision_type);
+						arb.handler = this.lookupHandler(a.type, b.type);
 						this.arbiters.Add(arb);
 					}
 				}
@@ -1203,68 +1203,27 @@ namespace ChipmunkSharp
 				if (
 					!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) &&
 					!shape.sensor && info != null &&
-					(output == null || info.t < output.t)
+					(output == null || info.alpha < output.alpha)
 				)
 				{
 					output = info;
 				}
 
-				return output != null ? output.t : 1;
+				return output != null ? output.alpha : 1;
 			}
 				);
 
 			this.staticShapes.SegmentQuery(start, end, 1f, helper);
-			this.activeShapes.SegmentQuery(start, end, output != null ? output.t : 1, helper);
+			this.activeShapes.SegmentQuery(start, end, output != null ? output.alpha : 1, helper);
 
 			return output;
 		}
 
-		public void NearestPointQuery(cpVect point, int maxDistance, int layers, int group, Action<cpShape, float, cpVect> func)
-		{
-			var helper = new Action<object, object>((o1, o2) =>
-			{
-				cpShape shape = o1 as cpShape;
 
-				if (!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0))
-				{
-					cpNearestPointQueryInfo info = shape.NearestPointQuery(point);
-
-					if (info.d < maxDistance)
-						func(shape, info.d, info.p);
-
-				}
-			});
-
-			cpBB bb = cp.bbNewForCircle(point, maxDistance);
-			this.Lock();
-			{
-				this.activeShapes.Query(bb, helper);
-				this.staticShapes.Query(bb, helper);
-			} this.Unlock(true);
-		}
-
-		public class NearestPointQueryInfo
+		public cpShape NearestPointQuery(cpVect point, int maxDistance, int layers, int group)
 		{
 
-			public NearestPointQueryInfo(cpShape shape, cpVect p, float d)
-			{
-				/// The nearest shape, NULL if no shape was within range.
-				this.shape = shape;
-				/// The closest point on the shape's surface. (in world space coordinates)
-				this.p = p;
-				/// The distance to the point. The distance is negative if the point is inside the shape.
-				this.d = d;
-			}
-
-			public cpShape shape { get; set; }
-			public cpVect p { get; set; }
-			public float d { get; set; }
-		}
-
-		public cpNearestPointQueryInfo NearestPointQuery(cpVect point, int maxDistance, int layers, int group)
-		{
-
-			cpNearestPointQueryInfo output = null;
+			cpPointQueryInfo output = null;
 
 			var helper = new Action<object, object>((o1, o2) =>
 			{
@@ -1272,9 +1231,9 @@ namespace ChipmunkSharp
 
 				if (!(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) && !shape.sensor)
 				{
-					cpNearestPointQueryInfo info = shape.NearestPointQuery(point);
+					cpPointQueryInfo info = shape.NearestPointQuery(point);
 
-					if (info.d < maxDistance && (output == null || info.d < output.d))
+					if (info.distance < maxDistance && (output == null || info.distance < output.distance))
 						output = info;
 				}
 			});
@@ -1284,7 +1243,7 @@ namespace ChipmunkSharp
 			this.activeShapes.Query(bb, helper);
 			this.staticShapes.Query(bb, helper);
 
-			return output;
+			return output.shape;
 		}
 
 		public void clear()
@@ -1320,7 +1279,6 @@ namespace ChipmunkSharp
 
 			//foreach (var item in space.collisionHandlers)
 			//	space.removeCollisionHandler(item.Value.a, item.Value.b);
-
 		}
 
 		public CollisionHandler AddWildcardHandler(string COLLISION_TYPE_STICKY)
@@ -1328,4 +1286,43 @@ namespace ChipmunkSharp
 			throw new NotImplementedException();
 		}
 	}
+
+	public class cpPointQueryInfo
+	{
+
+		public cpPointQueryInfo(cpShape shape, cpVect point, float distance, cpVect gradient)
+		{
+			/// The nearest shape, NULL if no shape was within range.
+			this.shape = shape;
+			/// The closest point on the shape's surface. (in world space coordinates)
+			this.point = point;
+			/// The distance to the point. The distance is negative if the point is inside the shape.
+			this.distance = distance;
+
+			this.gradient = gradient;
+		}
+
+		public void Set(cpPointQueryInfo newPointInfo)
+		{
+			/// The nearest shape, NULL if no shape was within range.
+			shape = newPointInfo.shape;
+			point = newPointInfo.point;
+			distance = newPointInfo.distance;
+			gradient = newPointInfo.gradient;
+			// g = newPointInfo.g;
+		}
+
+		/// The nearest shape, NULL if no shape was within range.
+		public cpShape shape;
+		/// The closest point on the shape's surface. (in world space coordinates)
+		public cpVect point;
+		/// The distance to the point. The distance is negative if the point is inside the shape.
+		public float distance;
+		/// The gradient of the signed distance function.
+		/// The same as info.p/info.d, but accurate even for very small values of info.d.
+		public cpVect gradient;
+	}
+
+
+
 }

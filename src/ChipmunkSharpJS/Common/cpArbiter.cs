@@ -491,7 +491,7 @@ namespace ChipmunkSharp
 			this.contacts = contacts;
 
 			this.handler = handler;
-			this.swapped = (a.collision_type != handler.a);
+			this.swapped = (a.type != handler.a);
 
 			this.e = a.e * b.e;
 			this.u = a.u * b.u;
@@ -620,7 +620,7 @@ namespace ChipmunkSharp
 		public void CallSeparate(cpSpace space)
 		{
 			// The handler needs to be looked up again as the handler cached on the arbiter may have been deleted since the last step.
-			var handler = space.lookupHandler(this.a.collision_type, this.b.collision_type);
+			var handler = space.lookupHandler(this.a.type, this.b.type);
 			handler.separate(this, space);
 		}
 

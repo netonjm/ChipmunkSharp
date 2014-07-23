@@ -659,6 +659,11 @@ namespace ChipmunkSharp
 			//body.SetType()
 			return body;
 		}
+
+		internal void AccumulateMassFromShapes()
+		{
+			throw new NotImplementedException();
+		}
 	}
 		#endregion
 

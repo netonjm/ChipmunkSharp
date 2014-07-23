@@ -28,119 +28,84 @@ namespace ChipmunkSharp.Shapes
 {
 
 
-    public class cpNearestPointQueryInfo
-    {
+	/// Extended point query info struct. Returned from calling pointQuery on a shape.
+	public class cpSegmentQueryInfo
+	{
 
-        /// The nearest shape, NULL if no shape was within range.
-        public cpShape shape;
-        /// The closest point on the shape's surface. (in world space coordinates)
-        public cpVect p;
-        /// The distance to the point. The distance is negative if the point is inside the shape.
-        public float d;
-        /// The gradient of the signed distance function.
-        /// The same as info.p/info.d, but accurate even for very small values of info.d.
-        //   public cpVect g;
+		/// The shape that was hit, NULL if no collision occured.
+		public cpShape shape;
+		/// The normalized distance along the query segment in the range [0, 1].
+		public float alpha;
+		/// The normal of the surface hit.
+		public cpVect normal;
 
-        public cpNearestPointQueryInfo(cpShape shape, cpVect p, float d)
-        {
-            /// The nearest shape, NULL if no shape was within range.
-            this.shape = shape;
-            /// The closest point on the shape's surface. (in world space coordinates)
-            this.p = p;
-            /// The distance to the point. The distance is negative if the point is inside the shape.
-            this.d = d;
-            //    this.g = g;
-        }
+		/// The point of impact.
+		public cpVect point;
 
+		public cpSegmentQueryInfo(cpShape shape, cpVect point, cpVect normal, float alpha)
+		{
+			/// The shape that was hit, NULL if no collision occured.
+			this.shape = shape;
+			/// The normalized distance along the query segment in the range [0, 1].
+			this.alpha = alpha;
+			/// The normal of the surface hit.
+			this.normal = normal;
 
-        public void Set(cpNearestPointQueryInfo newPointInfo)
-        {
-            /// The nearest shape, NULL if no shape was within range.
-            shape = newPointInfo.shape;
-            p = newPointInfo.p;
-            d = newPointInfo.d;
-            // g = newPointInfo.g;
-        }
+			this.point = point;
 
-        //public static cpNearestPointQueryInfo CreateEmpty()
-        //{
-        //    cpNearestPointQueryInfo tmp = new cpNearestPointQueryInfo(null, cpVect.ZERO, cpEnvironment.Infinity, cpVect.ZERO);
-        //    return tmp;
-        //}
-    }
+		}
 
-    /// Extended point query info struct. Returned from calling pointQuery on a shape.
-    public class cpSegmentQueryInfo
-    {
+		public void Set(cpSegmentQueryInfo info1)
+		{
+			/// The shape that was hit, NULL if no collision occured.
+			this.shape = info1.shape;
+			/// The normalized distance along the query segment in the range [0, 1].
+			this.alpha = info1.alpha;
+			/// The normal of the surface hit.
+			this.normal = info1.normal;
 
-        /// The shape that was hit, NULL if no collision occured.
-        public cpShape shape;
-        /// The normalized distance along the query segment in the range [0, 1].
-        public float t;
-        /// The normal of the surface hit.
-        public cpVect n;
+			this.point = info1.point;
 
-        public cpSegmentQueryInfo(cpShape shape, float t, cpVect n)
-        {
-            /// The shape that was hit, NULL if no collision occured.
-            this.shape = shape;
-            /// The normalized distance along the query segment in the range [0, 1].
-            this.t = t;
-            /// The normal of the surface hit.
-            this.n = n;
+		}
 
+		//public static cpSegmentQueryInfo CreateBlanck()
+		//{
+		//	return new cpSegmentQueryInfo(null, 1.0f, cpVect.Zero);
+		//}
 
-        }
+		public cpVect HitPoint(cpVect start, cpVect end)
+		{
+			return cpVect.Lerp(start, end, this.alpha);
+		}
 
-        public void Set(cpSegmentQueryInfo info1)
-        {
-            /// The shape that was hit, NULL if no collision occured.
-            this.shape = info1.shape;
-            /// The normalized distance along the query segment in the range [0, 1].
-            this.t = info1.t;
-            /// The normal of the surface hit.
-            this.n = info1.n;
-        }
-
-        public static cpSegmentQueryInfo CreateBlanck()
-        {
-            return new cpSegmentQueryInfo(null, 1.0f, cpVect.Zero);
-        }
-
-        public cpVect HitPoint(cpVect start, cpVect end)
-        {
-            return cpVect.Lerp(start, end, this.t);
-        }
-
-        public float HitDist(cpVect start, cpVect end)
-        {
-            return cpVect.Distance(start, end) * this.t;
-        }
+		public float HitDist(cpVect start, cpVect end)
+		{
+			return cpVect.Distance(start, end) * this.alpha;
+		}
 
 
 
+	
+	}
 
 
-    }
+	/// Extended point query info struct. Returned from calling pointQuery on a shape.
+	public struct cpPointQueryExtendedInfo
+	{
+		public cpShape shape;
+		public cpVect n;
+		public float d;
 
+		public cpPointQueryExtendedInfo(cpShape tShape)
+		{
+			/// The nearest shape, NULL if no shape was within range.
+			this.shape = tShape;
+			/// The closest point on the shape's surface. (in world space coordinates)
+			this.d = cp.Infinity;
+			/// The distance to the point. The distance is negative if the point is inside the shape.
+			this.n = cpVect.Zero;
+		}
 
-    /// Extended point query info struct. Returned from calling pointQuery on a shape.
-    public struct cpPointQueryExtendedInfo
-    {
-        public cpShape shape;
-        public cpVect n;
-        public float d;
-
-        public cpPointQueryExtendedInfo(cpShape tShape)
-        {
-            /// The nearest shape, NULL if no shape was within range.
-            this.shape = tShape;
-            /// The closest point on the shape's surface. (in world space coordinates)
-            this.d = cp.Infinity;
-            /// The distance to the point. The distance is negative if the point is inside the shape.
-            this.n = cpVect.Zero;
-        }
-
-    }
+	}
 
 }

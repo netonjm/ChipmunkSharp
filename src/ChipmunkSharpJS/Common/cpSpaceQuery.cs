@@ -40,7 +40,7 @@ namespace ChipmunkSharp
 			var helper = new Action<cpShape>(shape =>
 			{
 				if (
-					!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) && shape.PointQuery(point) != null
+					!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) && shape.NearestPointQuery(point) != null
 				)
 				{
 					func(shape);
@@ -162,7 +162,7 @@ namespace ChipmunkSharp
 				info != null
 			)
 			{
-				func(shape, info.t, info.n);
+				func(shape, info.alpha, info.normal);
 			}
 			return 1;
 
@@ -197,30 +197,6 @@ namespace ChipmunkSharp
 				this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
 			} Unlock(true);
 		}
-		//point, layers, group
-		public void pointQueryFirst(cpVect point, float maxDistance, int layers, int group, Action<cpShape, float, cpVect> func)
-		{
-			var helper = new Action<object, object>((o1, o2) =>
-			{
-				var shape = o1 as cpShape;
-				if (!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0))
-				{
-					var info = shape.NearestPointQuery(point);
-
-					if (info.d < maxDistance) func(shape, info.d, info.p);
-				}
-			});
-
-			var bb = cp.bbNewForCircle(point, maxDistance);
-
-			this.Lock();
-			{
-				this.activeShapes.Query(bb, (o1, o2) => helper(o1, o2));
-				this.staticShapes.Query(bb, (o1, o2) => helper(o1, o2));
-			} this.Unlock(true);
-
-		}
-		//nearestPointQuery
 
 
 

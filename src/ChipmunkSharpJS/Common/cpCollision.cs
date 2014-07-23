@@ -84,7 +84,7 @@ namespace ChipmunkSharp
 		//MARK: Collision Functions
 
 
-		#region  Collision Functions
+		#region  OBSOLETE JS FUNCTIONS
 
 		public static List<ContactPoint> circle2circle(cpCircleShape circ1, cpCircleShape circ2)
 		{
@@ -286,8 +286,6 @@ namespace ChipmunkSharp
 			return arr;
 		}
 
-
-
 		public static List<ContactPoint> Poly2Poly(cpPolyShape poly1, cpPolyShape poly2)
 		{
 			float mini1 = cp.findMSA(poly2, poly1.tPlanes);
@@ -307,9 +305,6 @@ namespace ChipmunkSharp
 			// return new List<ContactPoint>();
 		}
 
-
-
-
 		#endregion
 
 
@@ -326,7 +321,44 @@ namespace ChipmunkSharp
 		//	return numContacts;
 		//}
 
+		public static Action<cpShape, cpShape, cpCollisionInfo>[] BuiltinCollisionFuncs = new Action<cpShape, cpShape, cpCollisionInfo>[9]
+		{
+			new Action<cpShape, cpShape, cpCollisionInfo> ((s,e,r) => {}),
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+	//(CollisionFunc)CircleToCircle,
+	//CollisionError,
+	//CollisionError,
+	//(CollisionFunc)CircleToSegment,
+	//(CollisionFunc)SegmentToSegment,
+	//CollisionError,
+	//(CollisionFunc)CircleToPoly,
+	//(CollisionFunc)SegmentToPoly,
+	//(CollisionFunc)PolyToPoly,
+};
 
+
+		public static Action<cpShape, cpShape, cpCollisionInfo>[] CollisionFuncs = BuiltinCollisionFuncs;
+
+		public static cpCollisionInfo cpCollide(cpShape a, cpShape b, int id, ContactPoint[] contacts)
+		{
+			cpCollisionInfo info = new cpCollisionInfo(a, b, id, cpVect.Zero, contacts);
+			// Make sure the shape types are in order.
+			if (a.shapeType > b.shapeType)
+			{
+				info.a = b;
+				info.b = a;
+			}
+			int idSelected = (int)info.a.shapeType + (int)info.b.shapeType * (int)cpShapeType.NumShapes;
+			CollisionFuncs[idSelected](info.a, info.b, info);
+			return info;
+		}
 	}
 
 

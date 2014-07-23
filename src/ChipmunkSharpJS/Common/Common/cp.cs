@@ -963,28 +963,42 @@ namespace ChipmunkSharp
 			return new cpVect(bx + deltax * t, by + deltay * t);
 		}
 
-		public static cpPolyShape BoxShape(cpBody body, float width, float height, float radius)
+
+
+		public static void CircleSegmentQuery(cpShape shape, cpVect center, float r1, cpVect a, cpVect b, float r2, ref cpSegmentQueryInfo info)
 		{
-			var hw = width / 2;
-			var hh = height / 2;
+			// offset the line to be relative to the circle
+			cpVect da = cpVect.cpvsub(a, center);
+			cpVect db = cpVect.cpvsub(b, center);
+			float rsum = r1 + r2;
 
-			return BoxShape2(body, new cpBB(-hw, -hh, hw, hh), radius);
+
+			float qa = cpVect.cpvdot(da, da) - 2 * cpVect.cpvdot(da, db) + cpVect.cpvdot(db, db);
+			float qb = cpVect.cpvdot(da, db) - cpVect.cpvdot(da, da);
+			float det = qb * qb - qa * (cpVect.cpvdot(da, da) - rsum * rsum);
+
+			if (det >= 0.0f)
+			{
+				float t = (-qb - cp.cpfsqrt(det)) / (qa);
+				if (0.0f <= t && t <= 1.0f)
+				{
+					{
+						cpVect n = cpVect.cpvnormalize(cpVect.cpvlerp(da, db, t));
+
+						info.shape = shape;
+						info.point = cpVect.cpvsub(cpVect.cpvlerp(da, db, t), cpVect.cpvmult(n, r2));
+						info.normal = n;
+						info.alpha = t;
 
 
+					}
+
+				}
+			}
 		}
 
-		public static cpPolyShape BoxShape2(cpBody body, cpBB box, float radius)
-		{
-			float[] verts = new float[] {
-		box.l, box.b,
-		box.l, box.t,
-		box.r, box.t,
-		box.r, box.b};
-
-			return new cpPolyShape(body, verts, radius);
-		}
-
-		internal static cpSegmentQueryInfo circleSegmentQuery(cpShape shape, cpVect center, float r, cpVect a, cpVect b)
+		[Obsolete("This method was obsolete from Chipmunk JS")]
+		public static cpSegmentQueryInfo circleSegmentQuery(cpShape shape, cpVect center, float r, cpVect a, cpVect b)
 		{
 			// offset the line to be relative to the circle
 			a = cpVect.cpvsub(a, center);
@@ -1001,7 +1015,7 @@ namespace ChipmunkSharp
 				var t = (-qb - cp.cpfsqrt(det)) / (2 * qa);
 				if (0 <= t && t <= 1)
 				{
-					return new cpSegmentQueryInfo(shape, t, cpVect.cpvnormalize(cpVect.cpvlerp(a, b, t)));
+					return new cpSegmentQueryInfo(shape, cpVect.cpvnormalize(cpVect.cpvlerp(a, b, t)), cpVect.Zero, 0.0f);
 				}
 
 			}
@@ -1209,7 +1223,7 @@ namespace ChipmunkSharp
 			arr[idx2 * 2 + 1] = tmp;
 		}
 
-		public static float momentForPoly(float m, float[] verts, cpVect offset)
+		public static float momentForPoly(float m, float[] verts, cpVect offset, float r = 0.0f)
 		{
 			float sum1 = 0f;
 			float sum2 = 0f;
@@ -1237,11 +1251,6 @@ namespace ChipmunkSharp
 			//0.2f,0.4f,0.5f,0.7f,0.8f,1f
 						178,1,255
 		};
-
-		//public static float randColor(Random rnd)
-		//{
-		//	return (float)colorRanges[rnd.Next(0, colorRanges.Length - 1)];
-		//}
 
 		public static List<cpColor> styles
 		{
@@ -1433,7 +1442,9 @@ namespace ChipmunkSharp
 
 
 
-		
+
+
+		public static int numShapes { get; set; }
 	}
 
 }
