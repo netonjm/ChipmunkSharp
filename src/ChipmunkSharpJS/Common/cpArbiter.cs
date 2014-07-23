@@ -25,6 +25,24 @@ using System.Collections.Generic;
 namespace ChipmunkSharp
 {
 
+	public class PointsDistance
+	{
+		public cpVect pointA, pointB;
+		/// Penetration distance of the two shapes. Overlapping means it will be negative.
+		/// This value is calculated as cpvdot(cpvsub(point2, point1), normal) and is ignored by cpArbiterSetContactPointSet().
+		public float distance;
+	}
+
+	public class cpContactPointSet
+	{
+
+		public int Count { get { return points.Count; } }
+
+		/// The normal of the collision.
+		public cpVect normal;
+
+		public List<PointsDistance> points = new List<PointsDistance>();
+	}
 
 	/// @private
 	public class CollisionHandler
@@ -155,12 +173,19 @@ namespace ChipmunkSharp
 
 
 		public List<ContactPoint> contacts { get; set; }
+		cpVect n { get; set; }
 
 		public CollisionHandler handler { get; set; }
 
+		public CollisionHandler handlerA { get; set; }
+		public CollisionHandler handlerB { get; set; }
+
+
 		public int stamp;
 
-		public bool swappedColl { get; set; }
+		public bool swapped { get; set; }
+
+
 
 		public cpArbiter thread_a_next { get; set; }
 		public cpArbiter thread_a_prev { get; set; }
@@ -178,7 +203,7 @@ namespace ChipmunkSharp
 		{
 			get
 			{
-				if (swappedColl)
+				if (swapped)
 					return b;
 				else
 					return a;
@@ -189,7 +214,7 @@ namespace ChipmunkSharp
 		{
 			get
 			{
-				if (swappedColl)
+				if (swapped)
 					return a;
 				else
 					return b;
@@ -201,7 +226,7 @@ namespace ChipmunkSharp
 
 		public object UserData { get { return data; } set { data = value; } }
 
-		public int numContacts { get { return contacts.Count; } }
+		public int Count { get { return contacts.Count; } }
 
 
 		#endregion
@@ -244,7 +269,7 @@ namespace ChipmunkSharp
 
 			this.stamp = 0;
 			this.handler = null;
-			this.swappedColl = false;
+			this.swapped = false;
 			this.state = cpArbiterState.FirstColl;
 		}
 
@@ -255,7 +280,7 @@ namespace ChipmunkSharp
 		/// the order set when the collision handler was registered.
 		public cpShape[] GetShapes()
 		{
-			if (swappedColl)
+			if (swapped)
 				return new cpShape[] { b, a };
 			else
 				return new cpShape[] { a, b };
@@ -263,7 +288,7 @@ namespace ChipmunkSharp
 
 		public void GetShapes(out cpShape a, out cpShape b)
 		{
-			if (swappedColl)
+			if (swapped)
 			{
 				a = this.b; b = this.a;
 			}
@@ -285,7 +310,7 @@ namespace ChipmunkSharp
 				sum = sum.Add(con.n.Multiply(con.jnAcc));
 			}
 
-			return this.swappedColl ? sum : sum.Neg();
+			return this.swapped ? sum : sum.Neg();
 		}
 
 
@@ -302,7 +327,7 @@ namespace ChipmunkSharp
 				sum = sum.Add(new cpVect(con.jnAcc, con.jtAcc).Rotate(con.n));
 			}
 
-			return this.swappedColl ? sum : sum.Neg();
+			return this.swapped ? sum : sum.Neg();
 		}
 
 
@@ -347,12 +372,52 @@ namespace ChipmunkSharp
 		}
 
 
-		/// Return a contact set from an arbiter.
-		public List<ContactPoint> GetContactPointSet()
+		public void SetContactPointSet(cpContactPointSet set)
 		{
-			List<ContactPoint> set = new List<ContactPoint>();
-			foreach (var item in contacts)
-				set.Add(item.Clone());
+			int count = set.Count;
+
+			cp.assertHard(count == Count, "The number of contact points cannot be changed.");
+
+
+			n = (swapped ? cpVect.cpvneg(set.normal) : set.normal);
+
+			for (int i = 0; i < count; i++)
+			{
+				// Convert back to CoG relative offsets.
+				cpVect p1 = set.points[i].pointA;
+				cpVect p2 = set.points[i].pointB;
+
+				this.contacts[i].r1 = cpVect.cpvsub(swapped ? p2 : p1, this.body_a.p);
+				this.contacts[i].r2 = cpVect.cpvsub(swapped ? p1 : p2, this.body_b.p);
+			}
+
+		}
+
+
+
+		/// Return a contact set from an arbiter.
+		public cpContactPointSet GetContactPointSet()
+		{
+			cpContactPointSet set = new cpContactPointSet();
+			//set.count = Count;
+
+			bool swapped = this.swapped;
+			//cpVect n = this.n;
+			set.normal = (swapped ? cpVect.cpvneg(n) : n);
+
+			PointsDistance tmp;
+			for (int i = 0; i < Count; i++)
+			{
+				// Contact points are relative to body CoGs;
+				cpVect p1 = cpVect.cpvadd(this.body_a.p, this.contacts[i].r1);
+				cpVect p2 = cpVect.cpvadd(this.body_b.p, this.contacts[i].r2);
+
+				tmp = new PointsDistance();
+				tmp.pointA = (swapped ? p2 : p1);
+				tmp.pointB = (swapped ? p1 : p2);
+				tmp.distance = cpVect.cpvdot(cpVect.cpvsub(p2, p1), n);
+				set.points.Add(tmp);
+			}
 			return set;
 		}
 
@@ -370,7 +435,7 @@ namespace ChipmunkSharp
 			cp.assertHard(0 <= i && i < contacts.Count, "Index error: The specified contact index is invalid for this arbiter");
 
 			var n = this.contacts[i].n;
-			return this.swappedColl ? n.Neg() : n;
+			return this.swapped ? n.Neg() : n;
 		}
 
 
@@ -426,7 +491,7 @@ namespace ChipmunkSharp
 			this.contacts = contacts;
 
 			this.handler = handler;
-			this.swappedColl = (a.collision_type != handler.a);
+			this.swapped = (a.collision_type != handler.a);
 
 			this.e = a.e * b.e;
 			this.u = a.u * b.u;
@@ -565,6 +630,14 @@ namespace ChipmunkSharp
 		}
 
 
+		/// Return the colliding bodies involved for this arbiter.
+		/// The order of the cpSpace.collision_type the bodies are associated with values will match
+		/// the order set when the collision handler was registered.
+		public void getBodies(out cpBody bodyA, out cpBody bodyB)
+		{
+			bodyA = this.body_a;
+			bodyB = this.body_b;
+		}
 
 	};
 

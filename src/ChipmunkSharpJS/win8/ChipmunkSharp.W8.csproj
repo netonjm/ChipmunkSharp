@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{096FE27A-A370-4CDC-B725-0CCB06E8F118}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ChipmunkSharp</RootNamespace>
+    <AssemblyName>ChipmunkSharp</AssemblyName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkProfile>Profile36</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- A reference to the entire .NET Framework is automatically included -->
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\common\common\cp.cs">
+      <Link>Common\cp.cs</Link>
+    </Compile>
+    <Compile Include="..\common\common\cpColor.cs">
+      <Link>Common\cpColor.cs</Link>
+    </Compile>
+    <Compile Include="..\common\common\cpDebugDraw.cs">
+      <Link>Debug\cpDebugDraw.cs</Link>
+    </Compile>
+    <Compile Include="..\common\constraints\cpConstraint.cs">
+      <Link>Constraints\cpConstraint.cs</Link>
+    </Compile>
+    <Compile Include="..\common\constraints\cpDampedRotarySpring.cs">
+      <Link>Constraints\cpDampedRotarySpring.cs</Link>
+    </Compile>
+    <Compile Include="..\common\constraints\cpDampedSpring.cs">
+      <Link>Constraints\cpDampedSpring.cs</Link>
+    </Compile>
+    <Compile Include="..\common\constraints\cpGearJoint.cs">
+      <Link>Constraints\cpGearJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\common\constraints\cpGrooveJoint.cs">
+      <Link>Constraints\cpGrooveJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\common\constraints\cpPinJoint.cs">
+      <Link>Constraints\cpPinJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\common\constraints\cpPivotJoint.cs">
+      <Link>Constraints\cpPivotJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\common\constraints\cpRatchetJoint.cs">
+      <Link>Constraints\cpRatchetJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\common\constraints\cpRotaryLimitJoint.cs">
+      <Link>Constraints\cpRotaryLimitJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\common\constraints\cpSimpleMotor.cs">
+      <Link>Constraints\cpSimpleMotor.cs</Link>
+    </Compile>
+    <Compile Include="..\common\constraints\cpSlideJoint.cs">
+      <Link>Constraints\cpSlideJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\cpArbiter.cs">
+      <Link>cpArbiter.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\cpBB.cs">
+      <Link>cpBB.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\cpBBTree.cs">
+      <Link>cpBBTree.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\cpBody.cs">
+      <Link>cpBody.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\cpCollision.cs">
+      <Link>cpCollision.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\cpContact.cs">
+      <Link>cpContact.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\cpSpace.cs">
+      <Link>cpSpace.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\cpSpaceComponent.cs">
+      <Link>cpSpaceComponent.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\cpSpaceQuery.cs">
+      <Link>cpSpaceQuery.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\cpSpaceStep.cs">
+      <Link>cpSpaceStep.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\cpVect.cs">
+      <Link>cpVect.cs</Link>
+    </Compile>
+    <Compile Include="..\common\helpers\RandomHelper.cs">
+      <Link>Helpers\RandomHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\common\shapes\cpPolyShape.cs">
+      <Link>Shapes\cpPolyShape.cs</Link>
+    </Compile>
+    <Compile Include="..\common\shapes\cpQueryInfo.cs">
+      <Link>Shapes\cpQueryInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\common\shapes\cpShape.cs">
+      <Link>Shapes\cpShape.cs</Link>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

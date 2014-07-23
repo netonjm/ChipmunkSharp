@@ -113,7 +113,7 @@ namespace ChipmunkSharp
 		public float i_inv;
 
 		/// Position of the rigid body's center of gravity.
-		private cpVect p;
+		public cpVect p;
 		/// Velocity of the rigid body's center of gravity.
 		public cpVect v;
 		/// Force acting on the rigid body's center of gravity.
@@ -502,7 +502,7 @@ namespace ChipmunkSharp
 			{
 				var next = arb.Next(this);
 
-				arb.swappedColl = (this == arb.body_b);
+				arb.swapped = (this == arb.body_b);
 				func(arb);
 
 				arb = next;
@@ -652,6 +652,13 @@ namespace ChipmunkSharp
 		}
 
 
+
+		public static cpBody NewKinematic()
+		{
+			cpBody body = new cpBody(0.0f, 0.0f);
+			//body.SetType()
+			return body;
+		}
 	}
 		#endregion
 

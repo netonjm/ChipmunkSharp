@@ -62,12 +62,35 @@ namespace ChipmunkSharp
 
 		public float r;
 
-		public cpPolyShape(cpBody body, float[] verts, cpVect offset)
+
+		public cpPolyShape(cpBody body, float[] verts, float radius)
 			: base(body)
 		{
-			this.SetVerts(verts, offset);
+			this.SetVerts(verts, cpVect.Zero);
 			this.shapeType = cpShapeType.Polygon;
-			//Shape.call(this, body);
+			this.r = radius;
+		}
+
+		public static float[] GetVertices(cpTransform transform, float[] verts)
+		{
+
+			float[] hullVerts = new float[verts.Length];
+			cpVect tmp;
+			int count = (verts.Length / 2);
+			for (int i = 0; i < count-1; i++)
+			{
+				tmp = cpTransform.cpTransformPoint(transform, new cpVect(verts[i], verts[i + 1]));
+				hullVerts[i] = tmp.x;
+				hullVerts[i + 1] = tmp.y;
+			}
+			return hullVerts;
+		}
+
+		public cpPolyShape(cpBody body, float[] verts, cpTransform transform,
+			float radius)
+			: this(body, GetVertices(transform, verts), radius)
+		{
+
 		}
 
 		public void SetVerts(float[] verts, cpVect offset)

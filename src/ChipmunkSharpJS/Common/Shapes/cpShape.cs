@@ -27,6 +27,27 @@ using System;
 namespace ChipmunkSharp
 {
 
+	public class cpShapeFilter
+	{
+		int group;
+		int categories;
+		int mask;
+
+		public cpShapeFilter()
+		{
+
+		}
+
+		public cpShapeFilter(int group, int categories, int mask)
+		{
+			this.group = group;
+			this.categories = categories;
+			this.mask = mask;
+		}
+
+
+	}
+
 	/// @private
 	public enum cpShapeType
 	{
@@ -472,7 +493,7 @@ namespace ChipmunkSharp
 		//public virtual int GetCollisionCode() { throw new NotImplementedException(); }
 
 		//public virtual ContactPoint GetCollisionTable(object a, object b) { throw new NotImplementedException(); }
-
+		public cpShapeFilter filter { get; set; }
 
 		public cpSpace space;
 
@@ -523,6 +544,7 @@ namespace ChipmunkSharp
 
 		#endregion
 
+
 		public cpShape(cpBody body)
 		{
 			/// The rigid body this collision shape is attached to.
@@ -549,6 +571,7 @@ namespace ChipmunkSharp
 			this.collision_type = "0";
 			/// Group of this shape. Shapes in the same group don't collide.
 			this.group = 0;
+
 			// Layer bitmask for this shape. Shapes only collide if the bitwise and of their layers is non-zero.
 			this.layers = cp.ALL_LAYERS;
 
@@ -579,10 +602,10 @@ namespace ChipmunkSharp
 			group = id;
 		}
 
-		public void SetLayers(int layers)
-		{
-			this.body.Activate(); this.layers = layers;
-		}
+		//public void SetLayers(int layers)
+		//{
+		//	this.body.Activate(); this.layers = layers;
+		//}
 
 		public void SetSensor(bool sensor)
 		{
@@ -653,6 +676,15 @@ namespace ChipmunkSharp
 		{
 			throw new NotImplementedException();
 		}
+
+		public virtual void SetFilter(cpShapeFilter filter)
+		{
+			body.Activate();
+			this.filter = filter;
+
+
+		}
+
 
 	};
 

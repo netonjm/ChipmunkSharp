@@ -25,6 +25,13 @@ namespace ChipmunkSharp
 		}
 
 
+		public static float frand() //HACK
+		{
+			//double tmp = ((rand.NextDouble() *  f) / ((double) (/*(uint)~0*/ 0xFFFFFFFF /*or is it -1 :P */)));
+			//return tmp < 0 ? (-tmp) : tmp;
+			return (float)(rand.NextDouble());
+		}
+
 		/// <summary>
 		/// This is bit spooky conversion of C -> C#...
 		/// </summary>
@@ -32,7 +39,7 @@ namespace ChipmunkSharp
 		{
 			//double tmp = ((rand.NextDouble() *  f) / ((double) (/*(uint)~0*/ 0xFFFFFFFF /*or is it -1 :P */)));
 			//return tmp < 0 ? (-tmp) : tmp;
-			return (float)(rand.NextDouble() * f);
+			return frand() * f;
 		}
 
 		public static float FastDistance2D(float x, float y)

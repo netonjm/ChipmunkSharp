@@ -23,6 +23,7 @@ using ChipmunkSharp.Constraints;
 using ChipmunkSharp.Shapes;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -68,6 +69,9 @@ namespace ChipmunkSharp
 
 		public static int shapeIDCounter = 0;
 		public static int CP_USE_CGPOINTS = 1;
+
+		public const int ALL_CATEGORIES = ~0;
+		public const int WILDCARD_COLLISION_TYPE = ~0;
 
 		public static int NO_GROUP = 0;
 		public static int ALL_LAYERS = ~0;
@@ -384,13 +388,12 @@ namespace ChipmunkSharp
 
 		public static void Trace(string message)
 		{
-			Console.WriteLine("ASSERTION FAILED: " + message);
+			Debug.WriteLine(message);
 		}
 
 		public static void Error(string message)
 		{
-			//throw new Exception(message);
-			Console.WriteLine("ASSERTION FAILED: " + message);
+			Debug.Assert(false, message);
 		}
 
 		#endregion
@@ -960,15 +963,17 @@ namespace ChipmunkSharp
 			return new cpVect(bx + deltax * t, by + deltay * t);
 		}
 
-		public static cpPolyShape BoxShape(cpBody body, float width, float height)
+		public static cpPolyShape BoxShape(cpBody body, float width, float height, float radius)
 		{
 			var hw = width / 2;
 			var hh = height / 2;
 
-			return BoxShape2(body, new cpBB(-hw, -hh, hw, hh));
+			return BoxShape2(body, new cpBB(-hw, -hh, hw, hh), radius);
+
+
 		}
 
-		public static cpPolyShape BoxShape2(cpBody body, cpBB box)
+		public static cpPolyShape BoxShape2(cpBody body, cpBB box, float radius)
 		{
 			float[] verts = new float[] {
 		box.l, box.b,
@@ -976,7 +981,7 @@ namespace ChipmunkSharp
 		box.r, box.t,
 		box.r, box.b};
 
-			return new cpPolyShape(body, verts, cpVect.Zero);
+			return new cpPolyShape(body, verts, radius);
 		}
 
 		internal static cpSegmentQueryInfo circleSegmentQuery(cpShape shape, cpVect center, float r, cpVect a, cpVect b)
@@ -1425,6 +1430,10 @@ namespace ChipmunkSharp
 			//return tmp < 0 ? (-tmp) : tmp;
 			return RandomHelper.frand(1);
 		}
+
+
+
+		
 	}
 
 }

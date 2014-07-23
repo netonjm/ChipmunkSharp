@@ -23,6 +23,7 @@ using ChipmunkSharp.Constraints;
 using ChipmunkSharp.Shapes;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace ChipmunkSharp
@@ -145,8 +146,8 @@ namespace ChipmunkSharp
 		{
 
 #if DEBUG
-			Console.WriteLine("Initializing cpSpace - Chipmunk v{0} (Debug Enabled)\n", cp.cpVersionString);
-			Console.WriteLine("Compile with -DNDEBUG defined to disable debug mode and runtime assertion checks\n");
+			Debug.WriteLine("Initializing cpSpace - Chipmunk v{0} (Debug Enabled)\n", cp.cpVersionString);
+			Debug.WriteLine("Compile with -DNDEBUG defined to disable debug mode and runtime assertion checks\n");
 #endif
 
 			this.stamp = 0;
@@ -1218,25 +1219,6 @@ namespace ChipmunkSharp
 			return output;
 		}
 
-
-		//		Space.prototype.nearestPointQuery = function(point, maxDistance, layers, group, func)
-		//{
-		//	var helper = function(shape){
-		//		if(!(shape.group && group === shape.group) && (layers & shape.layers)){
-		//			var info = shape.nearestPointQuery(point);
-
-		//			if(info.d < maxDistance) func(shape, info.d, info.p);
-		//		}
-		//	};
-
-		//	var bb = bbNewForCircle(point, maxDistance);
-
-		//	this.lock(); {
-		//		this.activeShapes.query(bb, helper);
-		//		this.staticShapes.query(bb, helper);
-		//	} this.unlock(true);
-		//};
-
 		public void NearestPointQuery(cpVect point, int maxDistance, int layers, int group, Action<cpShape, float, cpVect> func)
 		{
 			var helper = new Action<object, object>((o1, o2) =>
@@ -1260,32 +1242,6 @@ namespace ChipmunkSharp
 				this.staticShapes.Query(bb, helper);
 			} this.Unlock(true);
 		}
-
-		//public cpNearestPointQueryInfo NearestPointQuery(cpVect point, int maxDistance, int layers, int group)
-		//{
-
-		//	cpNearestPointQueryInfo output = null;
-
-		//	var helper = new Action<object, object>((o1, o2) =>
-		//	{
-		//		cpShape shape = o1 as cpShape;
-
-		//		if (!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) && !shape.sensor)
-		//		{
-		//			cpNearestPointQueryInfo info = shape.nearestPointQuery(point);
-
-		//			if (info.d < maxDistance && (output == null || info.d < output.d))
-		//				output = info;
-		//		}
-		//	});
-
-		//	cpBB bb = cp.bbNewForCircle(point, maxDistance);
-
-		//	this.activeShapes.query(bb, helper);
-		//	this.staticShapes.query(bb, helper);
-
-		//	return output;
-		//}
 
 		public class NearestPointQueryInfo
 		{
@@ -1365,6 +1321,11 @@ namespace ChipmunkSharp
 			//foreach (var item in space.collisionHandlers)
 			//	space.removeCollisionHandler(item.Value.a, item.Value.b);
 
+		}
+
+		public CollisionHandler AddWildcardHandler(string COLLISION_TYPE_STICKY)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

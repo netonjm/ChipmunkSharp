@@ -127,6 +127,7 @@
     <Compile Include="..\Common\Shapes\cpShape.cs">
       <Link>Shapes\cpShape.cs</Link>
     </Compile>
+    <Compile Include="Common\cpTransform.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />

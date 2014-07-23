@@ -26,14 +26,14 @@ namespace ChipmunkSharp.Constraints
 	public class cpConstraint
 	{
 
-		//cpConstraintClass klass;
+		public cpSpace space;
+
 
 		/// The first body connected to this constraint.
 		public cpBody a;
 		/// The second body connected to this constraint.
 		public cpBody b;
 
-		public cpSpace space;
 
 		public cpConstraint next_a;
 		public cpConstraint next_b;
@@ -65,6 +65,8 @@ namespace ChipmunkSharp.Constraints
 		/// when given a cpConstraint reference in a callback.
 		//public cpDataPointer data;
 
+		bool collideBodies;
+
 		public cpConstraint(cpBody a, cpBody b)
 		{
 			/// The first body connected to this constraint.
@@ -88,7 +90,6 @@ namespace ChipmunkSharp.Constraints
 
 			preSolve = DefaultPreSolve;
 			postSolve = DefaultPostSolve;
-
 
 		}
 
@@ -137,12 +138,59 @@ namespace ChipmunkSharp.Constraints
 		}
 
 
-		//    typedef void (*cpConstraintPreStepImpl)(cpConstraint *constraint, cpFloat dt);
-		//typedef void (*cpConstraintApplyCachedImpulseImpl)(cpConstraint *constraint, cpFloat dt_coef);
-		//typedef void (*cpConstraintApplyImpulseImpl)(cpConstraint *constraint, cpFloat dt);
-		//typedef cpFloat (*cpConstraintGetImpulseImpl)(cpConstraint *constraint);
+		public virtual void Draw(cpDebugDraw m_debugDraw)
+		{
 
+		}
 
+		public float GetMaxForce()
+		{
+			return maxForce;
+		}
+
+		public void SetMaxForce(float maxForce)
+		{
+			cp.assertHard(maxForce >= 0.0f, "maxForce must be positive.");
+			activateBodies();// cpConstraintActivateBodies(constraint);
+			this.maxForce = maxForce;
+		}
+
+		public float GetErrorBias()
+		{
+			return this.errorBias;
+		}
+
+		public void SetErrorBias(float errorBias)
+		{
+			cp.assertHard(errorBias >= 0.0f, "errorBias must be positive.");
+			activateBodies();
+			this.errorBias = errorBias;
+		}
+
+		public float GetMaxBias()
+		{
+			return this.maxBias;
+		}
+
+		public void SetMaxBias(float maxBias)
+		{
+			cp.assertHard(maxBias >= 0.0f, "errorBias must be positive.");
+			activateBodies();
+			this.maxBias = maxBias;
+		}
+
+		public bool GetCollideBodies()
+		{
+			return collideBodies;
+		}
+
+		public void SetCollideBodies(bool value)
+		{
+			activateBodies();
+			this.collideBodies = value;
+		}
+
+		#region OverRideMethods
 
 		public virtual cpVect GetAnchr1()
 		{
@@ -304,11 +352,7 @@ namespace ChipmunkSharp.Constraints
 			throw new NotImplementedException();
 		}
 
-		public virtual void Draw(cpDebugDraw m_debugDraw)
-		{
-
-		}
-
+		#endregion
 
 
 	}

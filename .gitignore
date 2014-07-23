@@ -169,3 +169,5 @@ packages
 /chipmunk.png
 /chipmunk.ico
 
+/example/MonoGameChipmunkExample
+/example/Cocos2dChipmunkExample
