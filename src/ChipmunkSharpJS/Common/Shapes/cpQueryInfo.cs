@@ -83,9 +83,6 @@ namespace ChipmunkSharp.Shapes
 			return cpVect.Distance(start, end) * this.alpha;
 		}
 
-
-
-	
 	}
 
 

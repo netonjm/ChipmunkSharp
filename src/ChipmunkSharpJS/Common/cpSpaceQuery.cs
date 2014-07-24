@@ -40,7 +40,10 @@ namespace ChipmunkSharp
 			var helper = new Action<cpShape>(shape =>
 			{
 				if (
-					!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) && shape.NearestPointQuery(point) != null
+					!(shape.filter.group != 0
+					&& group == shape.filter.group)
+					&& (layers != 0)
+					&& shape.NearestPointQuery(point) != null
 				)
 				{
 					func(shape);
@@ -91,8 +94,8 @@ namespace ChipmunkSharp
 				var a = shape;
 				// Reject any of the simple cases
 				if (
-					(a.group != 0 && a.group == b.group) ||
-					(a.layers & b.layers) == 0 ||
+					(a.filter.group != 0 && a.filter.group == b.filter.group) ||
+
 					a == b
 				) return;
 
@@ -158,8 +161,9 @@ namespace ChipmunkSharp
 			var info = shape.SegmentQuery(start, end);
 
 			if (
-				!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) &&
-				info != null
+				!(shape.filter.group != 0 && group == shape.filter.group)
+				&& (layers != 0)
+				&& info != null
 			)
 			{
 				func(shape, info.alpha, info.normal);
@@ -182,7 +186,7 @@ namespace ChipmunkSharp
 			var helper = new Action<cpShape>(shape =>
 			{
 				if (
-					!(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) &&
+					!(shape.filter.group > 0 && group == shape.filter.group) && (layers != 0) &&
 					 cp.bbIntersects2(bb, shape.bb_l, shape.bb_b, shape.bb_r, shape.bb_t)
 				)
 				{

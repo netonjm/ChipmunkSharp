@@ -246,9 +246,10 @@ namespace ChipmunkSharp
 					// Don't collide shapes attached to the same body.
 					|| a.body == b.body
 					// Don't collide objects in the same non-zero group
-					|| (a.group != 0 && a.group == b.group)
+					|| (a.filter.group != 0 && a.filter.group == b.filter.group)
 					// Don't collide objects that don't share at least on layer.
-					|| !(a.layers != 0 & b.layers != 0)
+					//|| !(a.filter.categories != 0 & b.filter.categories != 0
+					//)
 				) return;
 
 				var handler = lookupHandler(a.type, b.type);
@@ -1201,7 +1202,7 @@ namespace ChipmunkSharp
 
 
 				if (
-					!(shape.group != 0 && group == shape.group) && (layers != 0 & shape.layers != 0) &&
+					!(shape.filter.group != 0 && group == shape.filter.group) && (layers != 0 & shape.filter.categories != 0 & shape.filter.mask != 0) &&
 					!shape.sensor && info != null &&
 					(output == null || info.alpha < output.alpha)
 				)
@@ -1229,7 +1230,7 @@ namespace ChipmunkSharp
 			{
 				cpShape shape = o1 as cpShape;
 
-				if (!(shape.group > 0 && group == shape.group) && (layers > 0 & shape.layers > 0) && !shape.sensor)
+				if (!(shape.filter.group > 0 && group == shape.filter.group) && (layers != 0 & shape.filter.mask != 0 & shape.filter.categories != 0) && !shape.sensor)
 				{
 					cpPointQueryInfo info = shape.NearestPointQuery(point);
 

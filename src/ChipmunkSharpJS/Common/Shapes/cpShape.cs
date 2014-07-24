@@ -29,9 +29,9 @@ namespace ChipmunkSharp
 
 	public class cpShapeFilter
 	{
-		int group;
-		int categories;
-		int mask;
+		public int group;
+		public int categories;
+		public int mask;
 
 		public cpShapeFilter()
 		{
@@ -43,6 +43,18 @@ namespace ChipmunkSharp
 			this.group = group;
 			this.categories = categories;
 			this.mask = mask;
+		}
+
+		public static bool FilterReject(cpShapeFilter a, cpShapeFilter b)
+		{
+			// Reject the collision if:
+			return (
+				// They are in the same non-zero group.
+				(a.group != 0 && a.group == b.group) ||
+				// One of the category/mask combinations fails.
+				(a.categories & b.mask) == 0 ||
+				(b.categories & a.mask) == 0
+			);
 		}
 
 
@@ -512,14 +524,12 @@ namespace ChipmunkSharp
 	public class cpShape : IObjectBox
 	{
 
+
+
 		public static int IDCounter = 0;
 
 		#region PROPS
 
-		//public virtual int GetCollisionCode() { throw new NotImplementedException(); }
-
-		//public virtual ContactPoint GetCollisionTable(object a, object b) { throw new NotImplementedException(); }
-		public cpShapeFilter filter { get; set; }
 
 		public cpSpace space;
 
@@ -528,10 +538,8 @@ namespace ChipmunkSharp
 
 		public cpShapeMassInfo massInfo;
 
-		public cpShapeType shapeType;
 
 		/// The current bounding box of the shape.
-
 		public float bb_l { get; set; }
 		public float bb_b { get; set; }
 		public float bb_r { get; set; }
@@ -551,14 +559,14 @@ namespace ChipmunkSharp
 		/// User definable data pointer.
 		/// Generally this points to your the game object class so you can access it
 		/// when given a cpShape reference in a callback.
-		public object data;
+		public object userData;
+
+		public cpShapeType shapeType;
 
 		/// Collision type of this shape used when picking collision handlers.
 		public string type;
-		/// Group of this shape. Shapes in the same group don't collide.
-		public int group;
-		// Layer bitmask for this shape. Shapes only collide if the bitwise and of their layers is non-zero.
-		public int layers;
+
+		public cpShapeFilter filter { get; set; }
 
 
 		public cpShape next;
@@ -572,6 +580,9 @@ namespace ChipmunkSharp
 
 		public cpShape(cpBody body, cpShapeMassInfo massInfo)
 		{
+
+			filter = new cpShapeFilter();
+
 			/// The rigid body this collision shape is attached to.
 			this.body = body;
 
@@ -596,11 +607,6 @@ namespace ChipmunkSharp
 
 			/// Collision type of this shape used when picking collision handlers.
 			this.type = "0";
-			/// Group of this shape. Shapes in the same group don't collide.
-			this.group = 0;
-
-			// Layer bitmask for this shape. Shapes only collide if the bitwise and of their layers is non-zero.
-			this.layers = cp.ALL_LAYERS;
 
 			this.space = null;
 
@@ -626,7 +632,7 @@ namespace ChipmunkSharp
 
 		public void SetGroup(int id)
 		{
-			group = id;
+			filter.group = id;
 		}
 
 
