@@ -554,7 +554,7 @@ namespace ChipmunkSharp
 		/// Coefficient of friction.
 		public float u;
 		/// Surface velocity used when solving for friction.
-		public cpVect surface_v;
+		public cpVect surfaceV;
 
 		/// User definable data pointer.
 		/// Generally this points to your the game object class so you can access it
@@ -603,7 +603,7 @@ namespace ChipmunkSharp
 			/// Coefficient of friction.
 			this.u = 0;
 			/// Surface velocity used when solving for friction.
-			this.surface_v = cpVect.Zero;
+			this.surfaceV = cpVect.Zero;
 
 			/// Collision type of this shape used when picking collision handlers.
 			this.type = "0";

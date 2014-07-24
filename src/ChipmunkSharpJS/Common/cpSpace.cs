@@ -103,6 +103,8 @@ namespace ChipmunkSharp
 		public cpBBTree staticShapes;
 		public cpBBTree activeShapes;
 
+		public bool usesWildcards;
+
 		public List<cpArbiter> arbiters { get; set; }
 
 		public List<ContactPoint> contactBuffersHead;
@@ -125,7 +127,6 @@ namespace ChipmunkSharp
 
 
 		public Dictionary<string, CollisionHandler> collisionHandlers;
-		//public cpCollisionHandler defaultHandler;
 
 		public bool skipPostStep;
 
@@ -228,96 +229,6 @@ namespace ChipmunkSharp
 		}
 
 		public Action<object, object> collideShapeFunc { get; set; }
-
-		public Action<object, object> makeCollideShapes()
-		{
-			// It would be nicer to use .bind() or something, but this is faster.
-			return new Action<object, object>((obj1, obj2) =>
-			{
-
-				var a = obj1 as cpShape;
-				var b = obj2 as cpShape;
-
-				// Reject any of the simple cases
-				if (
-					// BBoxes must overlap
-					//!bbIntersects(a.bb, b.bb)
-					!(a.bb_l <= b.bb_r && b.bb_l <= a.bb_r && a.bb_b <= b.bb_t && b.bb_b <= a.bb_t)
-					// Don't collide shapes attached to the same body.
-					|| a.body == b.body
-					// Don't collide objects in the same non-zero group
-					|| (a.filter.group != 0 && a.filter.group == b.filter.group)
-					// Don't collide objects that don't share at least on layer.
-					//|| !(a.filter.categories != 0 & b.filter.categories != 0
-					//)
-				) return;
-
-				var handler = lookupHandler(a.type, b.type);
-
-				var sensor = a.sensor || b.sensor;
-				if (sensor && handler == cp.defaultCollisionHandler) return;
-
-				// Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
-				if ((a as ICollisionShape).CollisionCode > (b as ICollisionShape).CollisionCode)
-				{
-					var temp = a;
-					a = b;
-					b = temp;
-				}
-
-				// Narrow-phase collision detection.
-				//cpContact *contacts = cpContactBufferGetArray(space);
-				//int numContacts = cpCollideShapes(a, b, contacts);
-				var contacts = collideShapes(a, b);
-				if (contacts == null || contacts.Count == 0)
-					return; // Shapes are not colliding.
-				//cpSpacePushContacts(space, numContacts);
-
-				// Get an arbiter from space.arbiterSet for the two shapes.
-				// This is where the persistant contact magic comes from.
-				var arbHash = cp.hashPair(a.hashid, b.hashid);
-
-				cpArbiter arb;
-				if (!cachedArbiters.TryGetValue(arbHash, out arb))
-				{
-					arb = new cpArbiter(a, b);
-					cachedArbiters.Add(arbHash, arb);
-				}
-
-				arb.Update(contacts, handler, a, b);
-
-				// Call the begin function first if it's the first step
-				if (arb.state == cpArbiterState.FirstColl && !handler.begin(arb, this))
-				{
-					arb.Ignore(); // permanently ignore the collision until separation
-				}
-
-				if (
-					// Ignore the arbiter if it has been flagged
-					(arb.state != cpArbiterState.Ignore) &&
-					// Call preSolve
-					handler.preSolve(arb, this) &&
-					// Process, but don't add collisions for sensors.
-					!sensor
-				)
-				{
-					this.arbiters.Add(arb);
-				}
-				else
-				{
-					//cpSpacePopContacts(space, numContacts);
-
-					arb.contacts = null;
-
-					// Normally arbiters are set as used after calling the post-solve callback.
-					// However, post-solve callbacks are not called for sensors or arbiters rejected from pre-solve.
-					if (arb.state != cpArbiterState.Ignore) arb.state = cpArbiterState.Normal;
-				}
-
-				// Time stamp the arbiter so we know it was used recently.
-				arb.stamp = this.stamp;
-			});
-		}
 
 		// Hashset filter func to throw away old arbiters.
 		public bool arbiterSetFilter(cpArbiter arb)
@@ -485,7 +396,7 @@ namespace ChipmunkSharp
 				// run the post-solve callbacks
 				for (i = 0; i < arbiters.Count; i++)
 				{
-					arbiters[i].handler.postSolve(arbiters[i], this);
+					arbiters[i].handler.postSolve(arbiters[i], this, null);
 				}
 			}
 			this.Unlock(true);
@@ -828,14 +739,24 @@ namespace ChipmunkSharp
 		}
 
 
-		public CollisionHandler lookupHandler(string a, string b)
+		public CollisionHandler lookupHandler(string a, string b, CollisionHandler defaultValue)
 		{
 			CollisionHandler test;
 			if (collisionHandlers.TryGetValue(cp.hashPair(a, b), out test))
 				return test;
 			else
-				return defaultHandler;
+				return defaultValue;
 		}
+
+
+		//public CollisionHandler lookupHandler(string a, string b)
+		//{
+		//	CollisionHandler test;
+		//	if (collisionHandlers.TryGetValue(cp.hashPair(a, b), out test))
+		//		return test;
+		//	else
+		//		return defaultHandler;
+		//}
 
 		/// Unset a collision handler.
 		public void removeCollisionHandler(string a, string b)
@@ -848,7 +769,10 @@ namespace ChipmunkSharp
 		/// Set a collision handler to be used whenever the two shapes with the given collision types collide.
 		/// You can pass null for any function you don't want to implement.
 		public void addCollisionHandler(string a, string b,
-			Func<cpArbiter, cpSpace, bool> begin, Func<cpArbiter, cpSpace, bool> preSolve, Action<cpArbiter, cpSpace> postSolve, Action<cpArbiter, cpSpace> separate)
+			Func<cpArbiter, cpSpace, object, bool> begin,
+			Func<cpArbiter, cpSpace, object, bool> preSolve,
+			Action<cpArbiter, cpSpace, object> postSolve,
+			Action<cpArbiter, cpSpace, object> separate)
 		{
 
 			cp.assertSpaceUnlocked(this);
@@ -857,8 +781,8 @@ namespace ChipmunkSharp
 			this.removeCollisionHandler(a, b);
 
 			var handler = new CollisionHandler();
-			handler.a = a;
-			handler.b = b;
+			handler.typeA = a;
+			handler.typeB = b;
 			if (begin != null)
 				handler.begin = begin;
 			if (preSolve != null)
@@ -907,7 +831,7 @@ namespace ChipmunkSharp
 
 						// Update the arbiter's state
 						arb.stamp = this.stamp;
-						arb.handler = this.lookupHandler(a.type, b.type);
+						arb.handler = this.lookupHandler(a.type, b.type, defaultHandler);
 						this.arbiters.Add(arb);
 					}
 				}
@@ -1189,64 +1113,6 @@ namespace ChipmunkSharp
 
 		#endregion
 
-
-		public cpSegmentQueryInfo segmentQueryFirst(cpVect start, cpVect end, int layers, int group)
-		{
-			cpSegmentQueryInfo output = null;
-
-			var helper = new Func<object, float>(o1 =>
-			{
-				cpShape shape = o1 as cpShape;
-
-				cpSegmentQueryInfo info = shape.SegmentQuery(start, end);
-
-
-				if (
-					!(shape.filter.group != 0 && group == shape.filter.group) && (layers != 0 & shape.filter.categories != 0 & shape.filter.mask != 0) &&
-					!shape.sensor && info != null &&
-					(output == null || info.alpha < output.alpha)
-				)
-				{
-					output = info;
-				}
-
-				return output != null ? output.alpha : 1;
-			}
-				);
-
-			this.staticShapes.SegmentQuery(start, end, 1f, helper);
-			this.activeShapes.SegmentQuery(start, end, output != null ? output.alpha : 1, helper);
-
-			return output;
-		}
-
-
-		public cpShape NearestPointQuery(cpVect point, int maxDistance, int layers, int group)
-		{
-
-			cpPointQueryInfo output = null;
-
-			var helper = new Action<object, object>((o1, o2) =>
-			{
-				cpShape shape = o1 as cpShape;
-
-				if (!(shape.filter.group > 0 && group == shape.filter.group) && (layers != 0 & shape.filter.mask != 0 & shape.filter.categories != 0) && !shape.sensor)
-				{
-					cpPointQueryInfo info = shape.NearestPointQuery(point);
-
-					if (info.distance < maxDistance && (output == null || info.distance < output.distance))
-						output = info;
-				}
-			});
-
-			cpBB bb = cp.bbNewForCircle(point, maxDistance);
-
-			this.activeShapes.Query(bb, helper);
-			this.staticShapes.Query(bb, helper);
-
-			return output.shape;
-		}
-
 		public void clear()
 		{
 			List<object> safeList = new List<object>();
@@ -1282,10 +1148,33 @@ namespace ChipmunkSharp
 			//	space.removeCollisionHandler(item.Value.a, item.Value.b);
 		}
 
-		public CollisionHandler AddWildcardHandler(string COLLISION_TYPE_STICKY)
+		public CollisionHandler AddWildcardHandler(string type)
 		{
-			throw new NotImplementedException();
+			UseWildcardDefaultHandler();
+
+			string hash = cp.hashPair(type, cp.WILDCARD_COLLISION_TYPE);
+
+			var handlers = this.collisionHandlers;
+
+			CollisionHandler handler;
+			if (!handlers.TryGetValue(hash, out handler))
+			{
+				handler = new CollisionHandler(type, cp.WILDCARD_COLLISION_TYPE, CollisionHandler.AlwaysCollide, CollisionHandler.AlwaysCollide, CollisionHandler.DoNothing, CollisionHandler.DoNothing, null);
+				handlers.Add(hash, handler);
+			}
+			return handler;
 		}
+
+		public void UseWildcardDefaultHandler()
+		{
+			// Spaces default to using the slightly faster "do nothing" default handler until wildcards are potentially needed.
+			if (!this.usesWildcards)
+			{
+				this.usesWildcards = true;
+				this.defaultHandler = CollisionHandler.cpCollisionHandlerDefault;
+			}
+		}
+
 	}
 
 	public class cpPointQueryInfo

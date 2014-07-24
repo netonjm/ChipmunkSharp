@@ -18,7 +18,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
  */
-
+using System.Linq;
 using System;
 using System.Collections.Generic;
 
@@ -48,20 +48,58 @@ namespace ChipmunkSharp
 	public class CollisionHandler
 	{
 
+		public static bool AlwaysCollide(cpArbiter arb, cpSpace space, object data) { return true; }
+		public static void DoNothing(cpArbiter arb, cpSpace space, object data) { }
 
-		public string a;
-		public string b;
+		public static CollisionHandler cpCollisionHandlerDoNothing
+		{
+			get
+			{
 
-		public Func<cpArbiter, cpSpace, bool> begin;
-		public Func<cpArbiter, cpSpace, bool> preSolve;
-		public Action<cpArbiter, cpSpace> postSolve;
-		public Action<cpArbiter, cpSpace> separate;
+				return new CollisionHandler(
+				   cp.WILDCARD_COLLISION_TYPE,
+	   cp.WILDCARD_COLLISION_TYPE,
+	   AlwaysCollide,
+	   AlwaysCollide,
+	   DoNothing,
+	   DoNothing, null
+					);
 
+
+			}
+		}
+
+
+		// Use the wildcard identifier since  the default handler should never match any type pair.
+		public static CollisionHandler cpCollisionHandlerDefault
+		{
+			get
+			{
+				return new CollisionHandler(
+	   cp.WILDCARD_COLLISION_TYPE,
+	   cp.WILDCARD_COLLISION_TYPE,
+	   DefaultBegin,
+	   DefaultPreSolve,
+	   DefaultPostSolve,
+	   DefaultSeparate, null
+	   );
+			}
+		}
+
+		public string typeA;
+		public string typeB;
+
+		public Func<cpArbiter, cpSpace, object, bool> begin;
+		public Func<cpArbiter, cpSpace, object, bool> preSolve;
+		public Action<cpArbiter, cpSpace, object> postSolve;
+		public Action<cpArbiter, cpSpace, object> separate;
+
+		public object userData;
 
 		public CollisionHandler()
 		{
-			this.a = cp.CP_WILDCARD_COLLISION_TYPE;
-			this.b = cp.CP_WILDCARD_COLLISION_TYPE;
+			this.typeA = cp.WILDCARD_COLLISION_TYPE;
+			this.typeB = cp.WILDCARD_COLLISION_TYPE;
 
 			begin = DefaultBegin;
 			preSolve = DefaultPreSolve;
@@ -70,50 +108,59 @@ namespace ChipmunkSharp
 		}
 
 
-		public CollisionHandler(string a, string b, Func<cpArbiter, cpSpace, bool> begin, Func<cpArbiter, cpSpace, bool> preSolve,
-			Action<cpArbiter, cpSpace> postSolve, Action<cpArbiter, cpSpace> separate
+		public CollisionHandler(string a, string b,
+			Func<cpArbiter, cpSpace, object, bool> begin,
+			Func<cpArbiter, cpSpace, object, bool> preSolve,
+			Action<cpArbiter, cpSpace, object> postSolve,
+			Action<cpArbiter, cpSpace, object> separate,
+			object userData
 
 			)
 		{
-			this.a = a;
-			this.b = b;
+			this.typeA = a;
+			this.typeB = b;
 
 			this.begin = begin;
 			this.preSolve = preSolve;
 			this.postSolve = postSolve;
 			this.separate = separate;
+			this.userData = userData;
 		}
 
 
 		public CollisionHandler Clone()
 		{
 			CollisionHandler copy = new CollisionHandler();
-			copy.a = a;
-			copy.b = b;
+			copy.typeA = typeA;
+			copy.typeB = typeB;
 
 			copy.begin = begin;
 			copy.preSolve = preSolve;
 			copy.postSolve = postSolve;
 			copy.separate = separate;
+
+			copy.userData = userData;
+
+
 			return copy;
 		}
 
-		public bool DefaultBegin(cpArbiter arb, cpSpace space)
+		public static bool DefaultBegin(cpArbiter arb, cpSpace space, object o)
 		{
 			return true;
 		}
 
 
-		public bool DefaultPreSolve(cpArbiter arb, cpSpace space)
+		public static bool DefaultPreSolve(cpArbiter arb, cpSpace space, object o)
 		{
 			return true;
 		}
 
-		public void DefaultPostSolve(cpArbiter arb, cpSpace space)
+		public static void DefaultPostSolve(cpArbiter arb, cpSpace space, object o)
 		{
 		}
 
-		public void DefaultSeparate(cpArbiter arb, cpSpace space)
+		public static void DefaultSeparate(cpArbiter arb, cpSpace space, object o)
 		{
 		}
 
@@ -459,7 +506,73 @@ namespace ChipmunkSharp
 			this.thread_b_next = null;
 		}
 
+		public void Update(cpCollisionInfo info, cpSpace space)
+		{
 
+			cpShape a = info.a, b = info.b;
+
+			// For collisions between two similar primitive types, the order could have been swapped since the last frame.
+			this.a = a; this.body_a = a.body;
+			this.b = b; this.body_b = b.body;
+
+			// Iterate over the possible pairs to look for hash value matches.
+			for (int i = 0; i < info.Count; i++)
+			{
+				ContactPoint con = info.arr[i];
+
+				// r1 and r2 store absolute offsets at init time.
+				// Need to convert them to relative offsets.
+				con.r1 = cpVect.cpvsub(con.r1, a.body.p);
+				con.r2 = cpVect.cpvsub(con.r2, b.body.p);
+
+				// Cached impulses are not zeroed at init time.
+				con.jnAcc = con.jtAcc = 0.0f;
+
+				for (int j = 0; j < this.Count; j++)
+				{
+					ContactPoint old = this.contacts[j];
+
+					// This could trigger false positives, but is fairly unlikely nor serious if it does.
+					if (con.hash == old.hash)
+					{
+						// Copy the persistant contact information.
+						con.jnAcc = old.jnAcc;
+						con.jtAcc = old.jtAcc;
+					}
+				}
+			}
+			//TODO: revise
+			this.contacts = info.arr.ToList();
+			//this.count = info.count;
+			this.n = info.n;
+
+			this.e = a.e * b.e;
+			this.u = a.u * b.u;
+
+			cpVect surface_vr = cpVect.cpvsub(b.surfaceV, a.surfaceV);
+			this.surface_vr = cpVect.cpvsub(surface_vr, cpVect.cpvmult(info.n, cpVect.cpvdot(surface_vr, info.n)));
+
+			string typeA = info.a.type, typeB = info.b.type;
+			CollisionHandler defaultHandler = space.defaultHandler;
+			CollisionHandler handler = this.handler = space.lookupHandler(typeA, typeB, defaultHandler);
+
+			// Check if the types match, but don't swap for a default handler which use the wildcard for type A.
+			bool swapped = this.swapped = (typeA != handler.typeA && handler.typeA != cp.WILDCARD_COLLISION_TYPE);
+
+			if (handler != defaultHandler || space.usesWildcards)
+			{
+				// The order of the main handler swaps the wildcard handlers too. Uffda.
+				this.handlerA = space.lookupHandler(swapped ? typeB : typeA, cp.WILDCARD_COLLISION_TYPE, CollisionHandler.cpCollisionHandlerDoNothing);
+				this.handlerB = space.lookupHandler(swapped ? typeA : typeB, cp.WILDCARD_COLLISION_TYPE, CollisionHandler.cpCollisionHandlerDoNothing);
+			}
+
+			// mark it as new if it's been cached
+			if (this.state == cpArbiterState.Cached)
+				this.state = cpArbiterState.FirstColl;
+
+		}
+
+		[Obsolete("This method was obsolete from Chipmunk JS")]
 		public void Update(List<ContactPoint> contacts, CollisionHandler handler, cpShape a, cpShape b)
 		{
 			//throw new NotImplementedException();
@@ -491,12 +604,12 @@ namespace ChipmunkSharp
 			this.contacts = contacts;
 
 			this.handler = handler;
-			this.swapped = (a.type != handler.a);
+			this.swapped = (a.type != handler.typeA);
 
 			this.e = a.e * b.e;
 			this.u = a.u * b.u;
 
-			this.surface_vr = cpVect.cpvsub(a.surface_v, b.surface_v);
+			this.surface_vr = cpVect.cpvsub(a.surfaceV, b.surfaceV);
 
 			// For collisions between two similar primitive types, the order could have been swapped.
 			this.a = a; this.body_a = a.body;
@@ -620,8 +733,8 @@ namespace ChipmunkSharp
 		public void CallSeparate(cpSpace space)
 		{
 			// The handler needs to be looked up again as the handler cached on the arbiter may have been deleted since the last step.
-			var handler = space.lookupHandler(this.a.type, this.b.type);
-			handler.separate(this, space);
+			var handler = space.lookupHandler(this.a.type, this.b.type, space.defaultHandler);
+			handler.separate(this, space, null);
 		}
 
 		public cpArbiter Next(cpBody body)

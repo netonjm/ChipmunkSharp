@@ -48,7 +48,7 @@ namespace ChipmunkSharp
 	public class cp
 	{
 		public static string COLLISION_TYPE_STICKY = "1";
-		public static string CP_WILDCARD_COLLISION_TYPE
+		public static string WILDCARD_COLLISION_TYPE
 		{
 			get
 			{
@@ -71,7 +71,7 @@ namespace ChipmunkSharp
 		public static int CP_USE_CGPOINTS = 1;
 
 		public const int ALL_CATEGORIES = ~0;
-		public const int WILDCARD_COLLISION_TYPE = ~0;
+		//public const int WILDCARD_COLLISION_TYPE = ~0;
 
 		public static int NO_GROUP = 0;
 		public static int ALL_LAYERS = ~0;
