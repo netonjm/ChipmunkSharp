@@ -30,7 +30,7 @@ namespace ChipmunkSharp
 
 	public class cpSplittingPlane
 	{
-		public cpVect n;
+		public cpVect n, v0;
 		public float d;
 
 		/// Initialize a polygon shape.
@@ -54,13 +54,13 @@ namespace ChipmunkSharp
 	public class cpPolyShape : cpShape, ICollisionShape
 	{
 
-		public int numVerts { get { return verts.Length; } }
-
-		//int numVerts;
-		public float[] verts, tVerts;
+		public float r;
 		public cpSplittingPlane[] planes, tPlanes;
 
-		public float r;
+		public int numVerts { get { return verts.Length; } }
+		//int numVerts;
+		public float[] verts, tVerts;
+
 
 		public cpPolyShape(cpBody body, float[] verts, cpTransform transform,
 			float radius)

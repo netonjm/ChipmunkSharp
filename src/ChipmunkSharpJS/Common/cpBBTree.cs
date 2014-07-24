@@ -102,10 +102,6 @@ namespace ChipmunkSharp
 	public class Node : IObjectBox
 	{
 
-		#region MyRegion
-
-		#endregion
-
 		public bool isLeaf;
 
 		private Node a { get; set; }
@@ -121,11 +117,6 @@ namespace ChipmunkSharp
 		public IObjectBox obj;
 
 		public cpBB bb { get; set; }
-		//public float bb_l { get; set; }
-		//public float bb_b { get; set; }
-		//public float bb_r { get; set; }
-		//public float bb_t { get; set; }
-
 
 		public Node parent;
 
@@ -141,11 +132,6 @@ namespace ChipmunkSharp
 				Math.Max(a.bb.r, b.bb.r),
 				Math.Max(a.bb.t, b.bb.t)
 		);
-
-			//bb_l = Math.Min(a.bb_l, b.bb_l);
-			//bb_b = Math.Min(a.bb_b, b.bb_b);
-			//bb_r = Math.Max(a.bb_r, b.bb_r);
-			//bb_t = Math.Max(a.bb_t, b.bb_t);
 
 			parent = null;
 

@@ -26,6 +26,42 @@ using System;
 
 namespace ChipmunkSharp
 {
+	public interface ICollisionShape
+	{
+		Func<object, object, List<ContactPoint>>[] CollisionTable { get; }
+		int CollisionCode { get; }
+	}
+
+	public enum cpShapeType
+	{
+		Circle = 1,
+		Segment = 2,
+		Polygon = 3,
+		Shapes = 4,
+		NumShapes = 5
+	};
+
+	public class cpCollisionInfo
+	{
+		public cpShape a, b;
+		public int id;
+		public cpVect n;
+		public int Count { get { return arr.Length; } }
+
+		// TODO Should this be a unique struct type?
+
+		public ContactPoint[] arr;
+
+		public cpCollisionInfo(cpShape a, cpShape b, int id, cpVect n, ContactPoint[] contacts)
+		{
+			// TODO: Complete member initialization
+			this.a = a;
+			this.b = b;
+			this.id = id;
+			this.n = n;
+			this.arr = contacts;
+		}
+	};
 
 	public class cpShapeFilter
 	{
@@ -59,16 +95,6 @@ namespace ChipmunkSharp
 
 
 	}
-
-	/// @private
-	public enum cpShapeType
-	{
-		Circle = 1,
-		Segment = 2,
-		Polygon = 3,
-		Shapes = 4,
-		NumShapes = 5
-	};
 
 	public struct cpShapeMassInfo
 	{
@@ -121,21 +147,10 @@ namespace ChipmunkSharp
 		}
 	};
 
-	public interface ICollisionShape
-	{
-		Func<object, object, List<ContactPoint>>[] CollisionTable { get; }
-		int CollisionCode { get; }
-	}
-
 	public class cpCircleShape : cpShape, ICollisionShape
 	{
-
 		public cpVect c, tc;
 		public float r;
-
-		public float Radius { get { return r; } }
-
-		public cpVect Offset { get { return c; } }
 
 		public cpCircleShape(cpBody body, float radius, cpVect offset)
 			: base(body, cpShapeMassInfo.cpCircleShapeMassInfo(0.0f, radius, offset))
@@ -243,24 +258,18 @@ namespace ChipmunkSharp
 	public class cpSegmentShape : cpShape, ICollisionShape
 	{
 
-		public cpShape shape;
-
 		public cpVect a, b, n;
 		public cpVect ta, tb, tn;
 		public float r;
 
 		public cpVect a_tangent, b_tangent;
 
-		public cpVect A { get { return a; } }
-		public cpVect B { get { return n; } }
-		public cpVect Normal { get { return n; } }
-		public float Radius { get { return r; } }
 
 		public cpSegmentShape(cpBody body, cpVect a, cpVect b, float r)
 			: base(body, cpShapeMassInfo.cpSegmentShapeMassInfo(0.0f, a, b, r))
 		{
 
-		
+
 			this.a = a;
 			this.b = b;
 
@@ -518,32 +527,24 @@ namespace ChipmunkSharp
 
 	}
 
-
-
 	/// Opaque collision shape struct.
 	public class cpShape : IObjectBox
 	{
 
-
-
-		public static int IDCounter = 0;
-
 		#region PROPS
 
+		public cpShapeType shapeType;
 
 		public cpSpace space;
 
 		/// The rigid body this collision shape is attached to.
 		public cpBody body;
 
+		/// The current bounding box of the shape.
+		public cpBB bb { get; set; }
+
 		public cpShapeMassInfo massInfo;
 
-		public cpBB bb { get; set; }
-		/// The current bounding box of the shape.
-		//public float bb_l { get; set; }
-		//public float bb_b { get; set; }
-		//public float bb_r { get; set; }
-		//public float bb_t { get; set; }
 
 		/// Sensor flag.
 		/// Sensor shapes call collision callbacks but don't produce collisions.
@@ -561,7 +562,6 @@ namespace ChipmunkSharp
 		/// when given a cpShape reference in a callback.
 		public object userData;
 
-		public cpShapeType shapeType;
 
 		/// Collision type of this shape used when picking collision handlers.
 		public string type;
@@ -818,26 +818,6 @@ namespace ChipmunkSharp
 
 
 	};
-	public class cpCollisionInfo
-	{
-		public cpShape a, b;
-		public int id;
-		public cpVect n;
-		public int Count { get { return arr.Length; } }
 
-		// TODO Should this be a unique struct type?
-
-		public ContactPoint[] arr;
-
-		public cpCollisionInfo(cpShape a, cpShape b, int id, cpVect n, ContactPoint[] contacts)
-		{
-			// TODO: Complete member initialization
-			this.a = a;
-			this.b = b;
-			this.id = id;
-			this.n = n;
-			this.arr = contacts;
-		}
-	};
 }
 

@@ -67,6 +67,7 @@ namespace ChipmunkSharp
 		public static int numNodes { get; set; }
 		public static int numPairs { get; set; }
 
+
 		public static int shapeIDCounter = 0;
 		public static int CP_USE_CGPOINTS = 1;
 
