@@ -45,7 +45,7 @@ namespace ChipmunkSharp
 			this.mask = mask;
 		}
 
-		public static bool FilterReject(cpShapeFilter a, cpShapeFilter b)
+		public static bool Reject(cpShapeFilter a, cpShapeFilter b)
 		{
 			// Reject the collision if:
 			return (
@@ -146,12 +146,12 @@ namespace ChipmunkSharp
 			this.shapeType = cpShapeType.Circle;
 		}
 
-		internal override void segmentQuery(cpVect a, cpVect b, float radius, ref cpSegmentQueryInfo info)
+		protected override void segmentQuery(cpVect a, cpVect b, float radius, ref cpSegmentQueryInfo info)
 		{
 			cp.CircleSegmentQuery(this, this.tc, this.r, a, b, radius, ref info);
 		}
 
-		internal override void pointQuery(cpVect p, ref cpPointQueryInfo info)
+		protected override void pointQuery(cpVect p, ref cpPointQueryInfo info)
 		{
 			//	base.pointQuery(p, ref info);
 			cpVect delta = cpVect.cpvsub(p, this.tc);
@@ -167,7 +167,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public cpBB CacheData(cpTransform transform)
+		public override cpBB CacheData(cpTransform transform)
 		{
 			cpVect c = this.tc = cpTransform.cpTransformPoint(transform, this.c);
 			return new cpBB(c, this.r);
@@ -207,7 +207,6 @@ namespace ChipmunkSharp
 		}
 
 		#endregion
-
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
@@ -288,7 +287,7 @@ namespace ChipmunkSharp
 			this.n = cpVect.cpvperp(cpVect.cpvnormalize(cpVect.cpvsub(b, a)));
 		}
 
-		public cpBB CacheData(cpTransform transform)
+		public override cpBB CacheData(cpTransform transform)
 		{
 			this.ta = cpTransform.cpTransformPoint(transform, this.a);
 			this.tb = cpTransform.cpTransformPoint(transform, this.b);
@@ -322,7 +321,7 @@ namespace ChipmunkSharp
 			return new cpBB(l - rad, b - rad, r + rad, t + rad);
 		}
 
-		internal override void pointQuery(cpVect p, ref cpPointQueryInfo info)
+		protected override void pointQuery(cpVect p, ref cpPointQueryInfo info)
 		{
 			cpVect closest = cp.closestPointOnSegment(p, this.ta, this.tb);
 
@@ -339,7 +338,7 @@ namespace ChipmunkSharp
 			info.gradient = (d > cp.MAGIC_EPSILON ? g : this.n);
 		}
 
-		internal override void segmentQuery(cpVect a, cpVect b, float r2, ref cpSegmentQueryInfo info)
+		protected override void segmentQuery(cpVect a, cpVect b, float r2, ref cpSegmentQueryInfo info)
 		{
 			cpVect n = this.tn;
 			float d = cpVect.cpvdot(cpVect.cpvsub(this.ta, a), n);
@@ -635,7 +634,6 @@ namespace ChipmunkSharp
 			filter.group = id;
 		}
 
-
 		public void SetSensor(bool sensor)
 		{
 			this.body.Activate(); this.sensor = sensor;
@@ -659,14 +657,13 @@ namespace ChipmunkSharp
 
 			this.massInfo.m = mass;
 			this.body.AccumulateMassFromShapes();
-			//cpBodyAccumulateMassFromShapes(body);
+
 		}
 
 		public void SetFriction(float value)
 		{
 			u = value;
 		}
-
 
 		#endregion
 
@@ -679,28 +676,31 @@ namespace ChipmunkSharp
 			return new cpBB(this.bb_l, this.bb_b, this.bb_r, this.bb_t);
 		}
 
-		public virtual void CacheBB()
-		{
-			this.Update(this.body.Position, this.body.Rotation);
-		}
-
 		public virtual void SetFilter(cpShapeFilter filter)
 		{
 			body.Activate();
 			this.filter = filter;
 		}
 
-
-
 		#region NEW METHODS
 
-		//public virtual cpBB CacheData(cpTransform transform)
+		public virtual cpBB CacheData(cpTransform transform)
+		{
+			throw new NotImplementedException();
+		}
+
+		//public virtual cpBB Update(cpTransform transform)
 		//{
-		//	throw new NotImplementedException();
+		//	return (this.bb = shape->klass->cacheData(shape, transform));
 		//}
 
+		public cpContactPointSet Collide(cpShape b)
+		{
+			return Collide(this, b);
+		}
+
 		/// Test if a point lies within a shape.
-		public virtual cpContactPointSet Collide(cpShape a, cpShape b)
+		public static cpContactPointSet Collide(cpShape a, cpShape b)
 		{
 			ContactPoint[] contacts = new ContactPoint[cpArbiter.CP_MAX_CONTACTS_PER_ARBITER];
 			cpCollisionInfo info = cpCollision.cpCollide(a, b, 0, contacts);
@@ -726,11 +726,11 @@ namespace ChipmunkSharp
 			return set;
 		}
 
-		internal virtual void pointQuery(cpVect p, ref cpPointQueryInfo info)
+		protected virtual void pointQuery(cpVect p, ref cpPointQueryInfo info)
 		{
 			throw new NotImplementedException();
 		}
-		internal virtual void segmentQuery(cpVect a, cpVect b, float radius, ref cpSegmentQueryInfo info)
+		protected virtual void segmentQuery(cpVect a, cpVect b, float radius, ref cpSegmentQueryInfo info)
 		{
 			throw new NotImplementedException();
 		}
@@ -770,7 +770,14 @@ namespace ChipmunkSharp
 
 		#endregion
 
-		#region OBSOLETE QUERY METHODS
+		#region OBSOLETE
+
+		[Obsolete("This method was obsolete from Chipmunk JS")]
+		public virtual void CacheBB()
+		{
+			this.Update(this.body.Position, this.body.Rotation);
+		}
+
 
 		[Obsolete("This method was obsolete from Chipmunk JS")]
 		public virtual void CacheData(cpVect pos, cpVect rot)
@@ -790,15 +797,16 @@ namespace ChipmunkSharp
 			throw new NotImplementedException();
 		}
 
-		#endregion
-
 		/// Update, cache and return the bounding box of a shape with an explicit transformation.
+		[Obsolete("This method was obsolete from Chipmunk JS")]
 		public virtual void Update(cpVect pos, cpVect rot)
 		{
 			cp.assert(!float.IsNaN(rot.x), "Rotation is NaN");
 			cp.assert(!float.IsNaN(pos.x), "Position is NaN");
 			this.CacheData(pos, rot);
 		}
+		#endregion
+
 
 		public virtual void Draw(cpDebugDraw m_debugDraw)
 		{

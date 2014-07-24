@@ -31,7 +31,7 @@ namespace ChipmunkSharp
 	{
 
 
-		#region OBSOLETE QUERY METHODS
+		#region OBSOLETE
 
 		/// Query the space at a point and call @c func for each shape found.
 		[Obsolete("This method was obsolete from Chipmunk JS")]
@@ -361,5 +361,260 @@ namespace ChipmunkSharp
 
 		#endregion
 
+		/*
+
+		//MARK: Nearest Point Query Functions
+
+		public string NearestPointQuery(PointQueryContext context, cpShape shape, string id, object data)
+		{
+			if (
+				!cpShapeFilter.Reject(shape.filter, context.filter)
+			)
+			{
+				cpPointQueryInfo info = null;
+				shape.PointQuery(context.point, ref info);
+
+				if (info.shape != null && info.distance < context.maxDistance) context.func(shape, info.point, info.distance, info.gradient, data);
+			}
+			return id;
+		}
+
+		public string PointQuery(cpVect point, float maxDistance, cpShapeFilter filter, Action<cpShape, cpVect, float, cpVect, object> func, object data)
+		{
+			PointQueryContext context = new PointQueryContext(point, maxDistance, filter, func);
+			cpBB bb = cpBB.cpBBNewForCircle(point, cp.cpfmax(maxDistance, 0.0f));
+
+			Lock();
+			{
+				this.activeShapes.Query(context, bb, NearestPointQuery, data);
+				//cpSpatialIndexQuery(this.dynamicShapes, &context, bb, NearestPointQuery, data);
+				this.staticShapes.Query(context, bb, NearestPointQuery, data);
+			} Unlock(true);
+		}
+
+		public string NearestPointQueryNearest(PointQueryContext context, cpShape shape, string id, ref cpPointQueryInfo output)
+		{
+			if (
+				!cpShapeFilter.Reject(shape.filter, context.filter) && !shape.sensor
+			)
+			{
+				cpPointQueryInfo info = null;
+				shape.PointQuery(context.point, ref info);
+
+				if (info.distance < output.distance)
+					output = info;
+			}
+
+			return id;
+		}
+
+		//MARK: Segment Query Functions
+
+		public float SegmentQuery(SegmentQueryContext context, cpShape shape, object data)
+		{
+			cpSegmentQueryInfo info = null;
+
+			if (
+				!cpShapeFilter.Reject(shape.filter, context.filter) &&
+				shape.SegmentQuery(context.start, context.end, context.radius, ref info)
+			)
+			{
+				context.func(shape, info.point, info.normal, info.alpha, data);
+			}
+
+			return 1.0f;
+		}
+
+		public void SegmentQuery(cpVect start, cpVect end, float radius, cpShapeFilter filter, Action<cpShape, cpVect, cpVect, float, object> func, object data)
+		{
+			SegmentQueryContext context = new SegmentQueryContext(
+		start, end,
+		radius,
+		filter,
+		func
+	);
+
+			Lock();
+			{
+				this.staticShapes.SegmentQuery(context, start, end, 1.0f, SegmentQuery, data);
+				this.activeShapes.SegmentQuery(context, start, end, 1.0f, SegmentQuery, data);
+				//this.dynamicShapes.SegmentQuery(context, start, end, 1.0f, SegmentQuery, data);
+
+				//cpSpatialIndexSegmentQuery(space->staticShapes, &context, start, end, 1.0f, (cpSpatialIndexSegmentQueryFunc)SegmentQuery, data);
+				//cpSpatialIndexSegmentQuery(space->dynamicShapes, &context, start, end, 1.0f, (cpSpatialIndexSegmentQueryFunc)SegmentQuery, data);
+
+			} Unlock(true);
+		}
+
+		public float SegmentQueryFirst(SegmentQueryContext context, cpShape shape, ref cpSegmentQueryInfo output)
+		{
+			cpSegmentQueryInfo info = null;
+
+			if (
+				!cpShapeFilter.Reject(shape.filter, context.filter) && !shape.sensor &&
+				shape.SegmentQuery(context.start, context.end, context.radius, ref info) &&
+				info.alpha < output.alpha
+			)
+			{
+				output = info;
+			}
+
+			return output.alpha;
+		}
+
+		public cpShape SegmentQueryFirst(cpSpace space, cpVect start, cpVect end, float radius, cpShapeFilter filter, ref cpSegmentQueryInfo output)
+		{
+
+			cpSegmentQueryInfo info = new cpSegmentQueryInfo(null, end, cpVect.Zero, 1.0f);
+			if (output == null)
+				output = info;
+
+			SegmentQueryContext context = new SegmentQueryContext(
+			   start, end,
+			   radius,
+			   filter,
+			   null);
+
+			this.staticShapes.SegmentQuery(context, start, end, 1.0f, SegmentQueryFirst, ref output);
+			//		this.dynamicShapes.SegmentQuery(context, start, end, output.alpha , SegmentQueryFirst, ref output);
+			this.activeShapes.SegmentQuery(context, start, end, output.alpha, SegmentQueryFirst, ref output);
+
+			return output.shape;
+		}
+
+		//MARK: BB Query Functions
+
+		public string BBQuery(BBQueryContext context, cpShape shape, string id, object data)
+		{
+			if (
+				!cpShapeFilter.Reject(shape.filter, context.filter) &&
+				context.bb.Intersects(shape.GetBB())
+			)
+			{
+				context.func(shape, data);
+			}
+
+			return id;
+		}
+
+		public void BBQuery(cpBB bb, cpShapeFilter filter, Action<cpShape, object> func, object data)
+		{
+			BBQueryContext context = new BBQueryContext(bb, filter, func);
+
+			Lock();
+			{
+
+				this.staticShapes.Query(ref context, bb, BBQuery, data);
+				this.activeShapes.Query(ref context, bb, BBQuery, data);
+				//this.dynamicShapes.SegmentQuery(context, start, end, 1.0f, SegmentQuery, data);
+
+				//cpSpatialIndexQuery(space->dynamicShapes, &context, bb, (cpSpatialIndexQueryFunc)BBQuery, data);
+				//cpSpatialIndexQuery(space->staticShapes, &context, bb, (cpSpatialIndexQueryFunc)BBQuery, data);
+			} Unlock(true);
+		}
+
+		public string ShapeQuery(cpShape a, cpShape b, string id, ShapeQueryContext context)
+		{
+			if (cpShapeFilter.Reject(a.filter, b.filter) || a == b) return id;
+
+			cpContactPointSet set = cpShape.Collide(a, b);
+			if (set.Count > 0)
+			{
+				if (context.func != null) context.func(b, set, context.data);
+				context.anyCollision = !(a.sensor || b.sensor);
+			}
+			return id;
+		}
+
+		public bool ShapeQuery(cpShape shape, Action<cpShape, cpContactPointSet, object> func, object data)
+		{
+			cpBody body = shape.body;
+			cpBB bb = (body != null ? shape.Update(body.transform) : shape.GetBB());
+			ShapeQueryContext context = new ShapeQueryContext(func, data, false);
+
+			Lock();
+			{
+				this.staticShapes.Query(shape, bb, ShapeQuery, ref context);
+				this.activeShapes.Query(shape, bb, ShapeQuery, ref context);
+
+				//cpSpatialIndexQuery(space->dynamicShapes, shape, bb, (cpSpatialIndexQueryFunc)ShapeQuery, &context);
+				//cpSpatialIndexQuery(space->staticShapes, shape, bb, (cpSpatialIndexQueryFunc)ShapeQuery, &context);
+			} Unlock(true);
+
+			return context.anyCollision;
+		}
+
+		 */
+
 	}
+
+	public struct BBQueryContext
+	{
+		public cpBB bb;
+		public cpShapeFilter filter;
+		public Action<cpShape, object> func;
+
+
+		public BBQueryContext(cpBB bb1, cpShapeFilter filter1, Action<cpShape, object> func1)
+		{
+			// TODO: Complete member initialization
+			this.bb = bb1;
+			this.filter = filter1;
+			this.func = func1;
+		}
+	};
+
+	public struct ShapeQueryContext
+	{
+		public Action<cpShape, cpContactPointSet, object> func;
+		public object data;
+		public bool anyCollision;
+
+		public ShapeQueryContext(Action<cpShape, cpContactPointSet, object> func, object data, bool anyCollision)
+		{
+			// TODO: Complete member initialization
+			this.func = func;
+			this.data = data;
+			this.anyCollision = anyCollision;
+		}
+	};
+
+	public struct SegmentQueryContext
+	{
+		public cpVect start, end;
+		public float radius;
+		public cpShapeFilter filter;
+		public Action<cpShape, cpVect, cpVect, float, object> func;
+
+
+		public SegmentQueryContext(cpVect start1, cpVect end1, float radius1, cpShapeFilter filter1, Action<cpShape, cpVect, cpVect, float, object> func1)
+		{
+			// TODO: Complete member initialization
+			this.start = start1;
+			this.end = end1;
+			this.radius = radius1;
+			this.filter = filter1;
+			this.func = func1;
+		}
+	};
+
+
+	public struct PointQueryContext
+	{
+
+		public cpVect point;
+		public float maxDistance;
+		public cpShapeFilter filter;
+		public Action<cpShape, cpVect, float, cpVect, object> func;
+
+		public PointQueryContext(cpVect point1, float maxDistance1, cpShapeFilter filter1, Action<cpShape, cpVect, float, cpVect, object> func1)
+		{
+			// TODO: Complete member initialization
+			this.point = point1;
+			this.maxDistance = maxDistance1;
+			this.filter = filter1;
+			this.func = func1;
+		}
+	};
+
 }
