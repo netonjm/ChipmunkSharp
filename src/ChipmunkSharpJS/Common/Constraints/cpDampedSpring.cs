@@ -72,22 +72,22 @@ namespace ChipmunkSharp.Constraints
 			return base.GetStiffness();
 		}
 
-		public override void SetAnchr1(cpVect anchr1)
+		public override void SetAnchorA(cpVect anchr1)
 		{
 			this.anchr1 = anchr1;
 		}
 
-		public override cpVect GetAnchr1()
+		public override cpVect GetAnchorA()
 		{
 			return this.anchr1;
 		}
 
-		public override void SetAnchr2(cpVect anchr2)
+		public override void SetAnchorB(cpVect anchr2)
 		{
 			this.anchr2 = anchr2;
 		}
 
-		public override cpVect GetAnchr2()
+		public override cpVect GetAnchorB()
 		{
 			return anchr2;
 		}

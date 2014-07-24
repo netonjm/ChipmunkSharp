@@ -653,6 +653,13 @@ namespace ChipmunkSharp
 
 
 
+		public static cpBody NewStatic()
+		{
+			cpBody body = new cpBody();
+			//body.SetType()
+			return body;
+		}
+
 		public static cpBody NewKinematic()
 		{
 			cpBody body = new cpBody(0.0f, 0.0f);
@@ -660,9 +667,16 @@ namespace ChipmunkSharp
 			return body;
 		}
 
-		internal void AccumulateMassFromShapes()
+		public void AccumulateMassFromShapes()
 		{
 			throw new NotImplementedException();
+		}
+
+		public cpVect GetPosition()
+		{
+			throw new NotImplementedException();
+			//return cpTransform.cpTransformPoint(transform, cpVect.Zero);
+			//throw new NotImplementedException();
 		}
 	}
 		#endregion

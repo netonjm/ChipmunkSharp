@@ -7,19 +7,21 @@ namespace ChipmunkSharp
 {
 	public class RandomHelper
 	{
-		static Random rand = new Random(DateTime.Now.Millisecond);
+		public static Random random = new Random(DateTime.Now.Millisecond);
 
-		public static float RandFlt(float min, float max)
+		public static int RAND_MAX = 0x7fff;
+
+		public static float next(float min, float max)
 		{
-			return (float)((max - min) * rand.NextDouble() + min);
+			return (float)((max - min) * random.NextDouble() + min);
 		}
 
-		public static int Rand()
+		public static int rand()
 		{
-			return rand.Next();
+			return random.Next();
 		}
 
-		public static float RandBell(float scale)
+		public static float randBell(float scale)
 		{
 			return (float)((scale) * (-(frand(.5f) + frand(.5f) + frand(.5f))));
 		}
@@ -29,7 +31,7 @@ namespace ChipmunkSharp
 		{
 			//double tmp = ((rand.NextDouble() *  f) / ((double) (/*(uint)~0*/ 0xFFFFFFFF /*or is it -1 :P */)));
 			//return tmp < 0 ? (-tmp) : tmp;
-			return (float)(rand.NextDouble());
+			return (float)(random.NextDouble());
 		}
 
 		/// <summary>

@@ -27,9 +27,7 @@ namespace ChipmunkSharp.Constraints
 
 		#region PUBLIC PROPS
 
-		public cpVect anchr1 { get; set; }
-
-		public cpVect anchr2 { get; set; }
+		public cpVect anchorA, anchorB;
 
 		public cpVect r2 { get; set; }
 
@@ -47,24 +45,24 @@ namespace ChipmunkSharp.Constraints
 
 		#endregion
 
-		public override void SetAnchr1(cpVect anchr1)
+		public override void SetAnchorA(cpVect anchr1)
 		{
-			this.anchr1 = anchr1;
+			this.anchorA = anchr1;
 		}
 
-		public override cpVect GetAnchr1()
+		public override cpVect GetAnchorA()
 		{
-			return anchr1;
+			return anchorA;
 		}
 
-		public override void SetAnchr2(cpVect anchr2)
+		public override void SetAnchorB(cpVect anchr2)
 		{
-			this.anchr2 = anchr2;
+			this.anchorB = anchr2;
 		}
 
-		public override cpVect GetAnchr2()
+		public override cpVect GetAnchorB()
 		{
-			return anchr2;
+			return anchorB;
 		}
 
 
@@ -87,8 +85,8 @@ namespace ChipmunkSharp.Constraints
 				anchr2 = (b != null ? b.World2Local(pivot) : pivot);
 			}
 
-			this.anchr1 = anchr1;
-			this.anchr2 = anchr2;
+			this.anchorA = anchr1;
+			this.anchorB = anchr2;
 
 			this.r1 = cpVect.Zero;
 			this.r2 = cpVect.Zero;
@@ -105,8 +103,8 @@ namespace ChipmunkSharp.Constraints
 		public override void PreStep(float dt)
 		{
 
-			this.r1 = anchr1.Rotate(a.Rotation);// cpvrotate();
-			this.r2 = anchr2.Rotate(b.Rotation); // cpvrotate(this.anchr2, b.rot);
+			this.r1 = anchorA.Rotate(a.Rotation);// cpvrotate();
+			this.r2 = anchorB.Rotate(b.Rotation); // cpvrotate(this.anchr2, b.rot);
 
 			// Calculate mass tensor. Result is stored into this.k1 & this.k2.
 			cp.k_tensor(a, b, this.r1, this.r2, this.k1, this.k2);
@@ -146,8 +144,8 @@ namespace ChipmunkSharp.Constraints
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
-			var a = this.a.Local2World(this.anchr1);
-			var b = this.b.Local2World(this.anchr2);
+			var a = this.a.Local2World(this.anchorA);
+			var b = this.b.Local2World(this.anchorB);
 			m_debugDraw.DrawCircle(a, 2, cpColor.Grey);
 			m_debugDraw.DrawCircle(b, 2, cpColor.Grey);
 

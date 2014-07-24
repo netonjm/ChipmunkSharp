@@ -423,6 +423,27 @@ namespace ChipmunkSharp
 			return r * ((float)Math.PI * r + 2 * a.Distance(b));
 		}
 
+		#region OBSOLETE
+
+		[Obsolete("OBSOLETE JS VERSION")]
+		public static int GetPointXIndexFromFloatArrayIndex(int index)
+		{
+			return GetFloatIndex(index);
+		}
+
+		[Obsolete("OBSOLETE JS VERSION")]
+		public static int GetPointYIndexFromFloatArrayIndex(int index)
+		{
+			return GetFloatIndex(index) + 1;
+		}
+
+		[Obsolete("OBSOLETE JS VERSION")]
+		public static int GetFloatIndex(int index)
+		{
+			return (index * 2);
+		}
+
+		[Obsolete("OBSOLETE JS VERSION")]
 		public static float areaForSegment(float m, List<float> verts, cpVect offset)
 		{
 			float sum1 = 0;
@@ -444,6 +465,7 @@ namespace ChipmunkSharp
 			return (m * sum1) / (6 * sum2);
 		}
 
+		[Obsolete("OBSOLETE JS VERSION")]
 		public static float areaForPoly(float[] verts)
 		{
 			float area = 0.0f;
@@ -455,6 +477,7 @@ namespace ChipmunkSharp
 			return -area / 2;
 		}
 
+		[Obsolete("OBSOLETE JS VERSION")]
 		public static cpVect centroidForPoly(float[] verts)
 		{
 			float sum = 0;
@@ -473,6 +496,7 @@ namespace ChipmunkSharp
 			return cpVect.cpvmult(vsum, 1 / (3 * sum));
 		}
 
+		[Obsolete("OBSOLETE JS VERSION")]
 		public static void recenterPoly(float[] verts)
 		{
 			var centroid = centroidForPoly(verts);
@@ -482,6 +506,25 @@ namespace ChipmunkSharp
 				verts[i] -= centroid.x;
 				verts[i + 1] -= centroid.y;
 			}
+		}
+
+		#endregion
+
+		public static float areaForPoly(cpVect[] verts, float r)
+		{
+			float area = 0.0f;
+			float perimeter = 0.0f;
+			int count = verts.Length;
+			for (int i = 0; i < count; i++)
+			{
+				cpVect v1 = verts[i];
+				cpVect v2 = verts[(i + 1) % count];
+
+				area += cpVect.cpvcross(v1, v2);
+				perimeter += cpVect.cpvdist(v1, v2);
+			}
+
+			return r * ((float)Math.PI * cpfabs(r) + perimeter) + area / 2.0f;
 		}
 
 		public static float momentForBox2(float m, cpBB box)
@@ -501,20 +544,6 @@ namespace ChipmunkSharp
 
 		#endregion
 
-		public static int GetPointXIndexFromFloatArrayIndex(int index)
-		{
-			return GetFloatIndex(index);
-		}
-
-		public static int GetPointYIndexFromFloatArrayIndex(int index)
-		{
-			return GetFloatIndex(index) + 1;
-		}
-
-		public static int GetFloatIndex(int index)
-		{
-			return (index * 2);
-		}
 
 		public static void unlinkThread(Pair prev, Node leaf, Pair next)
 		{

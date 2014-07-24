@@ -192,12 +192,12 @@ namespace ChipmunkSharp.Constraints
 
 		#region OverRideMethods
 
-		public virtual cpVect GetAnchr1()
+		public virtual cpVect GetAnchorA()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual cpVect GetAnchr2()
+		public virtual cpVect GetAnchorB()
 		{
 			throw new NotImplementedException();
 		}
@@ -217,12 +217,12 @@ namespace ChipmunkSharp.Constraints
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetAnchr2(cpVect anchr2)
+		public virtual void SetAnchorB(cpVect anchr2)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetAnchr1(cpVect anchr1)
+		public virtual void SetAnchorA(cpVect anchr1)
 		{
 			throw new NotImplementedException();
 		}

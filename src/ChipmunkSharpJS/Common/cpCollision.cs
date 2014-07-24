@@ -34,6 +34,7 @@ namespace ChipmunkSharp
 
 	public class cpCollision
 	{
+
 		#region CONSTANTS
 
 		public const int DRAW_ALL = 0;
@@ -79,10 +80,7 @@ namespace ChipmunkSharp
 
 		#endregion
 
-
-
 		//MARK: Collision Functions
-
 
 		#region  OBSOLETE JS FUNCTIONS
 

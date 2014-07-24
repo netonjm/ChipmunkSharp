@@ -26,39 +26,33 @@ namespace ChipmunkSharp.Constraints
 	{
 
 		#region PUBLIC PROPS
-		public cpVect anchr1 { get; set; }
-		public cpVect anchr2 { get; set; }
-		public float dist { get; set; }
-		public float nMass { get; set; }
-		public float jnMax { get; set; }
-		public float bias { get; set; }
-		public float jnAcc { get; set; }
-		public cpVect r2 { get; set; }
-		public cpVect r1 { get; set; }
+		public cpVect anchorA, anchorB;
+		public cpVect r1, r2;
+
+		public float dist, nMass, jnMax, bias, jnAcc;
+
 		public cpVect n { get; set; }
 
 		#endregion
 
-
-
-		public override cpVect GetAnchr1()
+		public override cpVect GetAnchorA()
 		{
-			return anchr1;
+			return anchorA;
 		}
 
-		public override void SetAnchr1(cpVect anchr)
+		public override void SetAnchorA(cpVect anchr)
 		{
-			anchr1 = anchr;
+			anchorA = anchr;
 		}
 
-		public override cpVect GetAnchr2()
+		public override cpVect GetAnchorB()
 		{
-			return anchr2;
+			return anchorB;
 		}
 
-		public override void SetAnchr2(cpVect anchr)
+		public override void SetAnchorB(cpVect anchr)
 		{
-			anchr2 = anchr;
+			anchorB = anchr;
 		}
 
 
@@ -77,8 +71,8 @@ namespace ChipmunkSharp.Constraints
 		{
 
 
-			this.anchr1 = anchr1;
-			this.anchr2 = anchr2;
+			this.anchorA = anchr1;
+			this.anchorB = anchr2;
 
 			// STATIC_BODY_CHECK
 			var p1 = (a != null ? a.Position.Add(anchr1.Rotate(a.Rotation)) : anchr1);
@@ -108,8 +102,8 @@ namespace ChipmunkSharp.Constraints
 			//var b = this.b;
 
 
-			this.r1 = cpVect.cpvrotate(this.anchr1, a.Rotation);
-			this.r2 = cpVect.cpvrotate(this.anchr2, b.Rotation);
+			this.r1 = cpVect.cpvrotate(this.anchorA, a.Rotation);
+			this.r2 = cpVect.cpvrotate(this.anchorB, b.Rotation);
 
 			var delta = cpVect.cpvsub(cpVect.cpvadd(b.Position, this.r2), cpVect.cpvadd(a.Position, this.r1));
 			var dist = cpVect.cpvlength(delta);
@@ -156,8 +150,8 @@ namespace ChipmunkSharp.Constraints
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
-			var a = this.a.Local2World(this.anchr1);
-			var b = this.b.Local2World(this.anchr2);
+			var a = this.a.Local2World(this.anchorA);
+			var b = this.b.Local2World(this.anchorB);
 			m_debugDraw.DrawSegment(a, b, cpColor.Grey);
 
 		}

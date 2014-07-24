@@ -57,6 +57,8 @@ namespace ChipmunkSharp
 		public float r;
 		public cpSplittingPlane[] planes, tPlanes;
 
+		public int Count { get { return verts.Length; } }
+
 		public int numVerts { get { return verts.Length; } }
 		//int numVerts;
 		public float[] verts, tVerts;
@@ -81,25 +83,34 @@ namespace ChipmunkSharp
 			this.r = radius;
 		}
 
-		public static cpPolyShape BoxShape(cpBody body, float width, float height, float radius)
-		{
-			var hw = width / 2;
-			var hh = height / 2;
 
-			return BoxShape2(body, new cpBB(-hw, -hh, hw, hh), radius);
+		//public override cpBB CacheData(cpTransform transform)
+		//{
+		//	int count = this.Count;
+		//	int dst = 0 ;// = this.planes;
+		//	int src = ; // = new cpSplittingPlane[dst.Length];
 
+		//	float l = cp.Infinity, r = -cp.Infinity;
+		//	float b = cp.Infinity, t = -cp.Infinity;
 
-		}
-		public static cpPolyShape BoxShape2(cpBody body, cpBB box, float radius)
-		{
-			float[] verts = new float[] {
-		box.l, box.b,
-		box.l, box.t,
-		box.r, box.t,
-		box.r, box.b};
+		//	for (int i = 0; i < count; i++)
+		//	{
+		//		cpVect v = cpTransform.cpTransformPoint(transform, src[i].v0);
+		//		cpVect n = cpTransform.cpTransformVect(transform, src[i].n);
 
-			return new cpPolyShape(body, verts, radius);
-		}
+		//		dst[i].v0 = v;
+		//		dst[i].n = n;
+
+		//		l = cp.cpfmin(l, v.x);
+		//		r = cp.cpfmax(r, v.x);
+		//		b = cp.cpfmin(b, v.y);
+		//		t = cp.cpfmax(t, v.y);
+		//	}
+
+		//	float radius = this.r;
+		//	return (this.bb = new cpBB(l - radius, b - radius, r + radius, t + radius));
+		//}
+
 
 		public static float[] GetVertices(cpTransform transform, float[] verts)
 		{
@@ -132,6 +143,7 @@ namespace ChipmunkSharp
 			// the code similar to the C.
 			this.verts = new float[len];
 			this.tVerts = new float[len];
+
 			this.planes = new cpSplittingPlane[numVerts];
 			this.tPlanes = new cpSplittingPlane[numVerts];
 
@@ -283,7 +295,6 @@ namespace ChipmunkSharp
 
 		}
 
-
 		#region OBSOLETE
 
 		[Obsolete("This method was obsolete from Chipmunk JS")]
@@ -380,6 +391,27 @@ namespace ChipmunkSharp
 		public int CollisionCode
 		{
 			get { return 2; }
+		}
+
+
+		public static cpPolyShape BoxShape(cpBody body, float width, float height, float radius)
+		{
+			var hw = width / 2;
+			var hh = height / 2;
+
+			return BoxShape2(body, new cpBB(-hw, -hh, hw, hh), radius);
+
+
+		}
+		public static cpPolyShape BoxShape2(cpBody body, cpBB box, float radius)
+		{
+			float[] verts = new float[] {
+		box.l, box.b,
+		box.l, box.t,
+		box.r, box.t,
+		box.r, box.b};
+
+			return new cpPolyShape(body, verts, radius);
 		}
 
 
