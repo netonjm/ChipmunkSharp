@@ -182,10 +182,10 @@ namespace ChipmunkSharp
 				t = Math.Max(t, vy);
 			}
 
-			this.bb_l = l;
-			this.bb_b = b;
-			this.bb_r = r;
-			this.bb_t = t;
+			this.bb.l = l;
+			this.bb.b = b;
+			this.bb.r = r;
+			this.bb.t = t;
 		}
 
 		public void TransformAxes(cpVect p, cpVect rot)

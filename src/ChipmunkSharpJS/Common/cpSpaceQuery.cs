@@ -89,7 +89,7 @@ namespace ChipmunkSharp
 				shape.Update(body.Position, body.Rotation);
 			}
 
-			var bb = new cpBB(shape.bb_l, shape.bb_b, shape.bb_r, shape.bb_t);
+			var bb = new cpBB(shape.bb.l, shape.bb.b, shape.bb.r, shape.bb.t);
 
 			//shapeQueryContext context = {func, data, false};
 			bool anyCollision = false;
@@ -195,7 +195,7 @@ namespace ChipmunkSharp
 			{
 				if (
 					!(shape.filter.group > 0 && group == shape.filter.group) && (layers != 0) &&
-					 cp.bbIntersects2(bb, shape.bb_l, shape.bb_b, shape.bb_r, shape.bb_t)
+					 cp.bbIntersects2(bb, shape.bb.l, shape.bb.b, shape.bb.r, shape.bb.t)
 				)
 				{
 					func(shape);
@@ -224,7 +224,7 @@ namespace ChipmunkSharp
 				if (
 					// BBoxes must overlap
 					//!bbIntersects(a.bb, b.bb)
-					!(a.bb_l <= b.bb_r && b.bb_l <= a.bb_r && a.bb_b <= b.bb_t && b.bb_b <= a.bb_t)
+					!(a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t)
 					// Don't collide shapes attached to the same body.
 					|| a.body == b.body
 					// Don't collide objects in the same non-zero group

@@ -188,10 +188,10 @@ namespace ChipmunkSharp
 			var c = this.tc = cpVect.cpvrotate(this.c, rot) + p;
 			//this.bb = bbNewForCircle(c, this.r);
 			var r = this.r;
-			this.bb_l = c.x - r;
-			this.bb_b = c.y - r;
-			this.bb_r = c.x + r;
-			this.bb_t = c.y + r;
+			this.bb.l = c.x - r;
+			this.bb.b = c.y - r;
+			this.bb.r = c.x + r;
+			this.bb.t = c.y + r;
 		}
 
 		[Obsolete("This method was obsolete from Chipmunk JS")]
@@ -260,6 +260,7 @@ namespace ChipmunkSharp
 			: base(body, cpShapeMassInfo.cpSegmentShapeMassInfo(0.0f, a, b, r))
 		{
 
+		
 			this.a = a;
 			this.b = b;
 
@@ -423,10 +424,10 @@ namespace ChipmunkSharp
 
 			var rad = this.r;
 
-			this.bb_l = l - rad;
-			this.bb_b = b - rad;
-			this.bb_r = r + rad;
-			this.bb_t = t + rad;
+			this.bb.l = l - rad;
+			this.bb.b = b - rad;
+			this.bb.r = r + rad;
+			this.bb.t = t + rad;
 		}
 
 
@@ -537,12 +538,12 @@ namespace ChipmunkSharp
 
 		public cpShapeMassInfo massInfo;
 
-
+		public cpBB bb { get; set; }
 		/// The current bounding box of the shape.
-		public float bb_l { get; set; }
-		public float bb_b { get; set; }
-		public float bb_r { get; set; }
-		public float bb_t { get; set; }
+		//public float bb_l { get; set; }
+		//public float bb_b { get; set; }
+		//public float bb_r { get; set; }
+		//public float bb_t { get; set; }
 
 		/// Sensor flag.
 		/// Sensor shapes call collision callbacks but don't produce collisions.
@@ -589,7 +590,9 @@ namespace ChipmunkSharp
 
 			/// The current bounding box of the shape.
 			/// The current bounding box of the shape.
-			this.bb_l = this.bb_b = this.bb_r = this.bb_t = 0;
+			/// 
+			//this.bb_l = this.bb_b = this.bb_r = this.bb_t = 0;
+			this.bb = new cpBB(0, 0, 0, 0);
 
 			this.hashid = (cp.shapeIDCounter++).ToString();
 
@@ -671,10 +674,10 @@ namespace ChipmunkSharp
 		{
 			return this.body != null && this.body.shapeList.IndexOf(this) != -1;
 		}
-		public cpBB GetBB()
-		{
-			return new cpBB(this.bb_l, this.bb_b, this.bb_r, this.bb_t);
-		}
+		//public cpBB GetBB()
+		//{
+		//	return new cpBB(this.bb.l, this.bb_b, this.bb_r, this.bb_t);
+		//}
 
 		public virtual void SetFilter(cpShapeFilter filter)
 		{

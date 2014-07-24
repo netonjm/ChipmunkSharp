@@ -86,10 +86,11 @@ namespace ChipmunkSharp
 
 	public interface IObjectBox
 	{
-		float bb_l { get; set; }
-		float bb_b { get; set; }
-		float bb_r { get; set; }
-		float bb_t { get; set; }
+		cpBB bb { get; set; }
+		//float bb_l { get; set; }
+		//float bb_b { get; set; }
+		//float bb_r { get; set; }
+		//float bb_t { get; set; }
 	}
 
 	//MARK: Spatial Index
@@ -119,11 +120,11 @@ namespace ChipmunkSharp
 
 		public IObjectBox obj;
 
-		//public cpBB bb;
-		public float bb_l { get; set; }
-		public float bb_b { get; set; }
-		public float bb_r { get; set; }
-		public float bb_t { get; set; }
+		public cpBB bb { get; set; }
+		//public float bb_l { get; set; }
+		//public float bb_b { get; set; }
+		//public float bb_r { get; set; }
+		//public float bb_t { get; set; }
 
 
 		public Node parent;
@@ -134,10 +135,17 @@ namespace ChipmunkSharp
 		{
 			this.obj = null;
 
-			bb_l = Math.Min(a.bb_l, b.bb_l);
-			bb_b = Math.Min(a.bb_b, b.bb_b);
-			bb_r = Math.Max(a.bb_r, b.bb_r);
-			bb_t = Math.Max(a.bb_t, b.bb_t);
+			bb = new cpBB(
+				Math.Min(a.bb.l, b.bb.l),
+				Math.Min(a.bb.b, b.bb.b),
+				Math.Max(a.bb.r, b.bb.r),
+				Math.Max(a.bb.t, b.bb.t)
+		);
+
+			//bb_l = Math.Min(a.bb_l, b.bb_l);
+			//bb_b = Math.Min(a.bb_b, b.bb_b);
+			//bb_r = Math.Max(a.bb_r, b.bb_r);
+			//bb_t = Math.Max(a.bb_t, b.bb_t);
 
 			parent = null;
 
@@ -148,6 +156,7 @@ namespace ChipmunkSharp
 		public Node()
 		{
 			// TODO: Complete member initialization
+			this.bb = new cpBB(0, 0, 0, 0);
 		}
 
 		public Node OtherChild(Node child)
@@ -177,10 +186,10 @@ namespace ChipmunkSharp
 				var a = node.A;
 				var b = node.B;
 
-				node.bb_l = Math.Min(a.bb_l, b.bb_l);
-				node.bb_b = Math.Min(a.bb_b, b.bb_b);
-				node.bb_r = Math.Max(a.bb_r, b.bb_r);
-				node.bb_t = Math.Max(a.bb_t, b.bb_t);
+				node.bb.l = Math.Min(a.bb.l, b.bb.l);
+				node.bb.b = Math.Min(a.bb.b, b.bb.b);
+				node.bb.r = Math.Max(a.bb.r, b.bb.r);
+				node.bb.t = Math.Max(a.bb.t, b.bb.t);
 
 
 			}
@@ -204,7 +213,7 @@ namespace ChipmunkSharp
 
 		public float bbArea()
 		{
-			return (this.bb_r - this.bb_l) * (this.bb_t - this.bb_b);
+			return (this.bb.r - this.bb.l) * (this.bb.t - this.bb.b);
 		}
 
 		public void SetA(Node value)
@@ -227,7 +236,7 @@ namespace ChipmunkSharp
 
 		public bool IntersectsBB(cpBB bb)
 		{
-			return (this.bb_l <= bb.r && bb.l <= this.bb_r && this.bb_b <= bb.t && bb.b <= this.bb_t);
+			return (this.bb.l <= bb.r && bb.l <= this.bb.r && this.bb.b <= bb.t && bb.b <= this.bb.t);
 		}
 
 	}
@@ -244,6 +253,9 @@ namespace ChipmunkSharp
 		public Leaf(cpBBTree tree, IObjectBox obj)
 			: base()
 		{
+
+
+
 
 			isLeaf = true;
 
@@ -354,7 +366,7 @@ namespace ChipmunkSharp
 			if (obj == null)
 				return false;
 
-			return (this.bb_l <= obj.bb_l && this.bb_r >= obj.bb_r && this.bb_b <= obj.bb_b && this.bb_t >= obj.bb_t);
+			return (this.bb.l <= obj.bb.l && this.bb.r >= obj.bb.r && this.bb.b <= obj.bb.b && this.bb.t >= obj.bb.t);
 		}
 
 		//MARK: Marking Functions
@@ -458,7 +470,9 @@ namespace ChipmunkSharp
 
 				Each((obj) =>
 				{
-					staticIndex.Query(new cpBB(obj.bb_l, obj.bb_b, obj.bb_r, obj.bb_t), func);
+					staticIndex.Query(
+						new cpBB(obj.bb.l, obj.bb.b, obj.bb.r, obj.bb.t),
+						func);
 				});
 			}
 		}
@@ -641,22 +655,22 @@ namespace ChipmunkSharp
 			if (velocityFunc != null)
 			{
 				float coef = 0.1f;
-				float x = (obj.bb_r - obj.bb_l) * coef;
-				float y = (obj.bb_t - obj.bb_b) * coef;
+				float x = (obj.bb.r - obj.bb.l) * coef;
+				float y = (obj.bb.t - obj.bb.b) * coef;
 
 				var v = cpVect.cpvmult(velocityFunc(obj), 0.1f);
 
-				dest.bb_l = obj.bb_l + Math.Min(-x, v.x);
-				dest.bb_b = obj.bb_b + Math.Min(-y, v.y);
-				dest.bb_r = obj.bb_r + Math.Max(x, v.x);
-				dest.bb_t = obj.bb_t + Math.Max(y, v.y);
+				dest.bb.l = obj.bb.l + Math.Min(-x, v.x);
+				dest.bb.b = obj.bb.b + Math.Min(-y, v.y);
+				dest.bb.r = obj.bb.r + Math.Max(x, v.x);
+				dest.bb.t = obj.bb.t + Math.Max(y, v.y);
 			}
 			else
 			{
-				dest.bb_l = obj.bb_l;
-				dest.bb_b = obj.bb_b;
-				dest.bb_r = obj.bb_r;
-				dest.bb_t = obj.bb_t;
+				dest.bb.l = obj.bb.l;
+				dest.bb.b = obj.bb.b;
+				dest.bb.r = obj.bb.r;
+				dest.bb.t = obj.bb.t;
 			}
 
 
@@ -761,14 +775,14 @@ namespace ChipmunkSharp
 		public float NodeSegmentQuery(Node node, cpVect a, cpVect b)
 		{
 			float idx = 1 / (b.x - a.x);
-			float tx1 = (node.bb_l == a.x ? -cp.Infinity : (node.bb_l - a.x) * idx);
-			float tx2 = (node.bb_r == a.x ? cp.Infinity : (node.bb_r - a.x) * idx);
+			float tx1 = (node.bb.l == a.x ? -cp.Infinity : (node.bb.l - a.x) * idx);
+			float tx2 = (node.bb.r == a.x ? cp.Infinity : (node.bb.r - a.x) * idx);
 			float txmin = Math.Min(tx1, tx2);
 			float txmax = Math.Max(tx1, tx2);
 
 			float idy = 1 / (b.y - a.y);
-			float ty1 = (node.bb_b == a.y ? -cp.Infinity : (node.bb_b - a.y) * idy);
-			float ty2 = (node.bb_t == a.y ? cp.Infinity : (node.bb_t - a.y) * idy);
+			float ty1 = (node.bb.b == a.y ? -cp.Infinity : (node.bb.b - a.y) * idy);
+			float ty2 = (node.bb.t == a.y ? cp.Infinity : (node.bb.t - a.y) * idy);
 			float tymin = Math.Min(ty1, ty2);
 			float tymax = Math.Max(ty1, ty2);
 

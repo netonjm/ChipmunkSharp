@@ -569,10 +569,10 @@ namespace ChipmunkSharp
 			// Find the AABB for these nodes
 			//var bb = nodes[offset].bb;
 			Leaf node = nodes[offset];
-			float bb_l = node.bb_l,
-		bb_b = node.bb_b,
-		bb_r = node.bb_r,
-		bb_t = node.bb_t;
+			float bb_l = node.bb.l,
+		bb_b = node.bb.b,
+		bb_r = node.bb.r,
+		bb_t = node.bb.t;
 
 
 			var end = offset + count;
@@ -580,10 +580,10 @@ namespace ChipmunkSharp
 			{
 				//bb = bbMerge(bb, nodes[i].bb);
 				node = nodes[i];
-				bb_l = Math.Min(bb_l, node.bb_l);
-				bb_b = Math.Min(bb_b, node.bb_b);
-				bb_r = Math.Max(bb_r, node.bb_r);
-				bb_t = Math.Max(bb_t, node.bb_t);
+				bb_l = Math.Min(bb_l, node.bb.l);
+				bb_b = Math.Min(bb_b, node.bb.b);
+				bb_r = Math.Max(bb_r, node.bb.r);
+				bb_t = Math.Max(bb_t, node.bb.t);
 			}
 
 			// Split it on it's longest axis
@@ -595,16 +595,16 @@ namespace ChipmunkSharp
 			{
 				for (var i = offset; i < end; i++)
 				{
-					bounds[2 * i + 0] = nodes[i].bb_l;
-					bounds[2 * i + 1] = nodes[i].bb_r;
+					bounds[2 * i + 0] = nodes[i].bb.l;
+					bounds[2 * i + 1] = nodes[i].bb.r;
 				}
 			}
 			else
 			{
 				for (var i = offset; i < end; i++)
 				{
-					bounds[2 * i + 0] = nodes[i].bb_b;
-					bounds[2 * i + 1] = nodes[i].bb_t;
+					bounds[2 * i + 0] = nodes[i].bb.b;
+					bounds[2 * i + 1] = nodes[i].bb.t;
 				}
 			}
 
@@ -658,13 +658,13 @@ namespace ChipmunkSharp
 
 		public static float bbTreeMergedArea2(Node node, float l, float b, float r, float t)
 		{
-			return (Math.Max(node.bb_r, r) - Math.Min(node.bb_l, l)) * (Math.Max(node.bb_t, t) - Math.Min(node.bb_b, b));
+			return (Math.Max(node.bb.r, r) - Math.Min(node.bb.l, l)) * (Math.Max(node.bb.t, t) - Math.Min(node.bb.b, b));
 			//return (Math.Max(node.bb.r, r) - Math.Min(node.bb.l, l)) * (Math.Max(node.bb.t, t) - Math.Min(node.bb.b, b));
 		}
 
 		public static float bbProximity(Node a, Leaf b)
 		{
-			return Math.Abs(a.bb_l + a.bb_r - b.bb_l - b.bb_r) + Math.Abs(a.bb_b + a.bb_t - b.bb_b - b.bb_t);
+			return Math.Abs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + Math.Abs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
 			//return Math.Abs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + Math.Abs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
 		}
 
@@ -682,7 +682,7 @@ namespace ChipmunkSharp
 				str += " ";
 			}
 
-			Trace(str + node.bb_b + " " + node.bb_t);
+			Trace(str + node.bb.b + " " + node.bb.t);
 		}
 
 		public static Node SubtreeRemove(Node subtree, Leaf leaf, cpBBTree tree)
@@ -876,18 +876,18 @@ namespace ChipmunkSharp
 
 		public static float bbProximity(Node a, Node b)
 		{
-			return Math.Abs(a.bb_l + a.bb_r - b.bb_l - b.bb_r) + Math.Abs(a.bb_b + a.bb_t - b.bb_b - b.bb_t);
+			return Math.Abs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + Math.Abs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
 			// return Math.Abs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + Math.Abs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
 		}
 
 		public static float bbTreeMergedArea(Node a, Node b)
 		{
-			return (Math.Max(a.bb_r, b.bb_r) - Math.Min(a.bb_l, b.bb_l)) * (Math.Max(a.bb_t, b.bb_t) - Math.Min(a.bb_b, b.bb_b));
+			return (Math.Max(a.bb.r, b.bb.r) - Math.Min(a.bb.l, b.bb.l)) * (Math.Max(a.bb.t, b.bb.t) - Math.Min(a.bb.b, b.bb.b));
 		}
 
 		public static bool bbTreeIntersectsNode(Node a, Node b)
 		{
-			return (a.bb_l <= b.bb_r && b.bb_l <= a.bb_r && a.bb_b <= b.bb_t && b.bb_b <= a.bb_t);
+			return (a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t);
 			//return (a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t);
 		}
 
@@ -922,10 +922,10 @@ namespace ChipmunkSharp
 				}
 
 				//		subtree.bb = bbMerge(subtree.bb, leaf.bb);
-				subtree.bb_l = Math.Min(subtree.bb_l, leaf.bb_l);
-				subtree.bb_b = Math.Min(subtree.bb_b, leaf.bb_b);
-				subtree.bb_r = Math.Max(subtree.bb_r, leaf.bb_r);
-				subtree.bb_t = Math.Max(subtree.bb_t, leaf.bb_t);
+				subtree.bb.l = Math.Min(subtree.bb.l, leaf.bb.l);
+				subtree.bb.b = Math.Min(subtree.bb.b, leaf.bb.b);
+				subtree.bb.r = Math.Max(subtree.bb.r, leaf.bb.r);
+				subtree.bb.t = Math.Max(subtree.bb.t, leaf.bb.t);
 
 
 				return subtree;
