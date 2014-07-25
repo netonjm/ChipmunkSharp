@@ -19,7 +19,6 @@
   SOFTWARE.
  */
 
-using ChipmunkSharp.Constraints;
 using System;
 using System.Collections.Generic;
 
@@ -56,40 +55,16 @@ namespace ChipmunkSharp
 
 	} ;
 
+	public enum cpBodyType
+	{
+		DYNAMIC,
+		KINEMATIC,
+		STATIC,
+	}
 
 	/// Chipmunk's rigid body struct.
 	public class cpBody
 	{
-
-		#region STATIC VARS
-
-		//public static void cpv_assert_nan(cpVect v, char* message) { cpAssertSoft(v.x == v.x && v.y == v.y, message); }
-		//public static void cpv_assert_infinite(cpVect v, char* message) { cpAssertSoft(cpfabs(v.x) != INFINITY && cpfabs(v.y) != INFINITY, message); }
-		//public static void cpv_assert_sane(cpVect v, string* message) { cpv_assert_nan(v, message); cpv_assert_infinite(v, message); }
-
-		public cpVect Rotation { get { return rot; } }
-		public float AngVel { get { return w; } set { w = value; } }
-		public float Torque { get { return t; } set { t = value; } }
-		public float VelLimit { get { return v_limit; } set { v_limit = value; } }
-		public float AngVelLimit { get { return w_limit; } set { w_limit = value; } }
-		public object UserData { get { return data; } set { data = value; } }
-
-		public cpVect Vel { get { return v; } set { v = value; } }
-		public cpVect Force { get { return f; } set { f = value; } }
-
-		public float Angle { get { return a; } }
-
-		public cpVect Position { get { return p; } set { SetPosition(value); } }
-
-		public float Moment { get { return i; } set { SetMoment(value); } }
-
-		public float Mass { get { return m; } set { SetMass(value); } }
-
-
-
-		//public float Position { get { return p; } }
-
-		#endregion
 
 		#region PROPS
 
@@ -105,12 +80,16 @@ namespace ChipmunkSharp
 		/// Mass inverse.
 		public float m_inv;
 
-
 		/// Moment of inertia of the body.
 		/// Must agree with cpBody.i_inv! Use cpBodySetMoment() when changing the moment for this reason.
 		public float i;
 		/// Moment of inertia inverse.
 		public float i_inv;
+
+		/// Cached unit length vector representing the angle of the body.
+		/// Used for fast rotations using cpvrotate().
+		private cpVect cog;
+
 
 		/// Position of the rigid body's center of gravity.
 		public cpVect p;
@@ -127,14 +106,13 @@ namespace ChipmunkSharp
 		/// Torque applied to the body around it's center of gravity.
 		public float t;
 
-		/// Cached unit length vector representing the angle of the body.
-		/// Used for fast rotations using cpvrotate().
-		private cpVect rot;
+
+		public cpTransform transform;
 
 		/// User definable data pointer.
 		/// Generally this points to your the game object class so you can access it
 		/// when given a cpBody reference in a callback.
-		public object data;
+		public object userData;
 
 		/// Maximum velocity allowed when updating the velocity.
 		float v_limit;
@@ -150,25 +128,40 @@ namespace ChipmunkSharp
 		public cpArbiter arbiterList;
 		public cpConstraint constraintList;
 
-		//public cpComponentNode node;
-
-		#endregion
-
-		#region CONSTRUCTORS
 
 		public cpBody nodeRoot { get; set; }
 		public cpBody nodeNext { get; set; }
-
 		public float nodeIdleTime { get; set; }
 
-		/// <summary>
-		/// CREATES A STATIC BODY
-		/// </summary>
-		public cpBody()
-			: this(cp.Infinity, cp.Infinity)
+		#endregion
+
+		public cpBodyType bodyType
 		{
-			nodeIdleTime = cp.Infinity;
+			get
+			{
+
+				if (this.nodeIdleTime == cp.Infinity)
+				{
+					return cpBodyType.STATIC;
+				}
+				else if (this.m == cp.Infinity)
+				{
+					return cpBodyType.KINEMATIC;
+				}
+				else
+				{
+					return cpBodyType.DYNAMIC;
+				}
+
+			}
+			set
+			{
+				SetBodyType(value);
+
+			}
 		}
+
+		#region CONSTRUCTORS
 
 		/// <summary>
 		/// CREATES A BODY WITH MASS AND INERTIA
@@ -178,21 +171,22 @@ namespace ChipmunkSharp
 		public cpBody(float m, float i)
 		{
 
+			transform = new cpTransform();
 
-			velocity_func = VelocityFunc;
-			position_func = PositionFunc;
+			this.cog = cpVect.Zero;
+			this.space = null;
 
-			/// Mass of the body.
-			/// Must agree with cpBody.m_inv! Use body.setMass() when changing the mass for this reason.
-			//this.m;
-			/// Mass inverse.
-			//this.m_inv;
+			this.shapeList = new List<cpShape>();
+			this.arbiterList = null; // These are both wacky linked lists.
+			this.constraintList = null;
 
-			/// Moment of inertia of the body.
-			/// Must agree with cpBody.i_inv! Use body.setMoment() when changing the moment for this reason.
-			//this.i;
-			/// Moment of inertia inverse.
-			//this.i_inv;
+			velocity_func = (v, f, d) => UpdateVelocity(v, f, d);
+			position_func = (f) => UpdatePosition(f);
+
+			// This stuff is used to track information on the collision graph.
+			this.nodeRoot = null;
+			this.nodeNext = null;
+			this.nodeIdleTime = 0;
 
 			/// Position of the rigid body's center of gravity.
 			this.p = cpVect.Zero;
@@ -201,50 +195,21 @@ namespace ChipmunkSharp
 			/// Force acting on the rigid body's center of gravity.
 			this.f = cpVect.Zero;
 
-			/// Rotation of the body around it's center of gravity in radians.
-			/// Must agree with cpBody.rot! Use cpBodySetAngle() when changing the angle for this reason.
-			//this.a;
+
 			/// Angular velocity of the body around it's center of gravity in radians/second.
 			this.w = 0;
 			/// Torque applied to the body around it's center of gravity.
 			this.t = 0;
 
-			/// Cached unit length vector representing the angle of the body.
-			/// Used for fast rotations using cpvrotate().
-			//cpVect rot;
-
-			/// Maximum velocity allowed when updating the velocity.
-			this.v_limit = cp.Infinity;
-			/// Maximum rotational rate (in radians/second) allowed when updating the angular velocity.
-			this.w_limit = cp.Infinity;
-
 			// This stuff is all private.
 			this.v_bias = cpVect.Zero; //x = this.v_biasy = 0;
 			this.w_bias = 0;
 
-			this.space = null;
+			this.userData = null;
 
-			this.shapeList = new List<cpShape>();
-
-			this.arbiterList = null; // These are both wacky linked lists.
-			this.constraintList = null;
-
-			// This stuff is used to track information on the collision graph.
-			this.nodeRoot = null;
-
-			this.nodeNext = null;
-			this.nodeIdleTime = 0;
-
-			// Set this.m and this.m_inv
 			this.SetMass(m);
-
-			// Set this.i and this.i_inv
 			this.SetMoment(i);
-
-			// Set this.a and this.rot
-			this.rot = cpVect.Zero;
-			this.SetAngle(0);
-
+			this.SetAngle(0.0f);
 
 		}
 
@@ -252,67 +217,180 @@ namespace ChipmunkSharp
 
 		#region PUBLIC METHODS
 
-		public void SanityCheck()
-		{
-			//cp.v_assert_sane(this.p, "Body's position is invalid.");
-			//cp.v_assert_sane(this.f, "Body's force is invalid.");
-			//cp.assert(this.vx == this.vx && Math.abs(this.vx) != Infinity, "Body's velocity is invalid.");
-			//cp.assert(this.vy == this.vy && Math.abs(this.vy) != Infinity, "Body's velocity is invalid.");
-			//cp.assert(this.a == this.a && Math.abs(this.a) != Infinity, "Body's angle is invalid.");
-			//cp.assert(this.w == this.w && Math.abs(this.w) != Infinity, "Body's angular velocity is invalid.");
-			//cp.assert(this.t == this.t && Math.abs(this.t) != Infinity, "Body's torque is invalid.");
-			//cp.v_assert_sane(this.rot, "Body's rotation vector is invalid.");
-
-		}
-
-		public cpVect GetPos() { return this.p; }
-		public cpVect GetVel() { return v; }
-		public float GetAngVel() { return this.w; }
-
-
 		/// Returns true if the body is sleeping.
 		public bool IsSleeping()
 		{
 			return this.nodeRoot != null;
 		}
 
-		/// Returns true if the body is static.
-		public bool IsStatic()
+		public void SetBodyType(cpBodyType type)
 		{
-			return nodeIdleTime == cp.Infinity;
+			cpBodyType oldType = bodyType;
+
+			if (oldType == type) return;
+
+			// Static bodies have their idle timers set to infinity.
+			// Non-static bodies should have their idle timer reset.
+			nodeIdleTime = (type == cpBodyType.STATIC ? cp.Infinity : 0.0f);
+
+			if (type == cpBodyType.DYNAMIC)
+			{
+				this.m = this.i = 0.0f;
+				this.m_inv = this.i_inv = cp.Infinity;
+
+				AccumulateMassFromShapes();
+
+			}
+			else
+			{
+				this.m = this.i = cp.Infinity;
+				this.m_inv = this.i_inv = 0.0f;
+
+				this.v = cpVect.Zero;
+				this.w = 0.0f;
+			}
+
+			// If the body is added to a space already, we'll need to update some space data structures.
+
+			if (space != null)
+			{
+
+				cp.assertSpaceUnlocked(space);
+
+
+				if (oldType == cpBodyType.STATIC)
+				{
+					// TODO This is probably not necessary
+					//			cpBodyActivateStatic(body, NULL);
+				}
+				else
+				{
+					Activate();
+				}
+
+				// Move the bodies to the correct array.
+				List<cpBody> fromArray = space.ArrayForBodyType(oldType);
+				List<cpBody> toArray = space.ArrayForBodyType(type);
+
+				if (fromArray != toArray)
+				{
+					fromArray.Remove(this);
+					toArray.Add(this);
+				}
+
+				// Move the body's shapes to the correct spatial index.
+				cpBBTree fromIndex = (oldType == cpBodyType.STATIC ? space.staticShapes : space.dynamicShapes);
+				cpBBTree toIndex = (type == cpBodyType.STATIC ? space.staticShapes : space.dynamicShapes);
+
+				if (fromIndex != toIndex)
+				{
+					EachShape((s, o) =>
+					{
+						fromIndex.Remove(s.hashid);
+						toIndex.Insert(s.hashid, s);
+
+					}, null);
+
+				}
+			}
+
 		}
 
-		/// Returns true if the body has not been added to a space.
-		/// Note: Static bodies are a subtype of rogue bodies.
-		public bool IsRogue()
+
+		// Should *only* be called when shapes with mass info are modified, added or removed.
+		public void AccumulateMassFromShapes()
 		{
-			return space == null;  //(cpSpace)0));
+			if (bodyType != cpBodyType.DYNAMIC) return;
+
+			// Reset the body's mass data.
+			this.m = this.i = 0.0f;
+
+			this.cog = cpVect.Zero;
+
+			// Cache the position to realign it at the end.
+			cpVect pos = GetPosition();
+
+			// Accumulate mass from shapes.
+
+			EachShape((shape, o) =>
+			{
+				cpShapeMassInfo info = shape.massInfo;
+				float m = info.m;
+
+				if (m > 0.0f)
+				{
+					float msum = this.m + m;
+
+					this.i += m * info.i + cpVect.cpvdistsq(this.cog, info.cog) * (m * this.m) / msum;
+					this.cog = cpVect.cpvlerp(this.cog, info.cog, m / msum);
+					this.m = msum;
+				}
+			}, null);
+
+
+			// Recalculate the inverses.
+			this.m_inv = 1.0f / this.m;
+			this.i_inv = 1.0f / this.i;
+
+			// Realign the body since the CoG has probably moved.
+			SetPosition(pos);
+
+			AssertSaneBody();
+
+		}
+
+		public cpSpace GetSpace()
+		{
+			return this.space;
+		}
+
+		public float GetMass()
+		{
+			return this.m;
 		}
 
 		/// Set the mass of a body.
 		public void SetMass(float mass)
 		{
-			cp.assertHard(mass > 0.0f, "Mass must be positive and non-zero.");
+			cp.assertHard(this.bodyType == cpBodyType.DYNAMIC, "You cannot set the mass of kinematic or static bodies.");
+			cp.assertHard(0.0f <= mass && mass < cp.Infinity, "Mass must be positive and finite.");
 
 			Activate();
 			m = mass;
 			m_inv = 1.0f / mass;
+			AssertSaneBody();
 		}
 
-		//CP_DefineBodyStructGetter(float, i, Moment)
+
+		public float GetMoment()
+		{
+			return this.i;
+		}
+
 		/// Set the moment of a body.
 		public void SetMoment(float moment)
 		{
-			cp.assertHard(moment > 0.0f, "Moment of Inertia must be positive and non-zero.");
+			cp.assertHard(moment >= 0.0f, "Moment of Inertia must be positive and non-zero.");
 
 			Activate();
-			i = moment;
-			i_inv = 1.0f / moment;
+			this.i = moment;
+			this.i_inv = 1.0f / moment;
+			AssertSaneBody();
+		}
+
+		public cpVect GetRotation()
+		{
+			return new cpVect(transform.a, transform.b);
 		}
 
 		public void AddShape(cpShape shape)
 		{
 			this.shapeList.Add(shape);
+
+			if (shape.massInfo.m > 0.0f)
+			{
+				AccumulateMassFromShapes();
+			}
 		}
 
 		public void RemoveShape(cpShape shape)
@@ -322,48 +400,406 @@ namespace ChipmunkSharp
 			// you're constantly editing the shape of a body. I expect most bodies will never
 			// have their shape edited, so I'm just going to use the simplest possible implemention.
 			shapeList.Remove(shape);
-		}
 
+			if (bodyType == cpBodyType.DYNAMIC && shape.massInfo.m > 0.0f)
+			{
+				AccumulateMassFromShapes();
+			}
+
+		}
 
 		public void RemoveConstraint(cpConstraint constraint)
 		{
-			constraintList = cp.filterConstraints(constraintList, this, constraint);
+			this.constraintList = cp.filterConstraints(constraintList, this, constraint);
 		}
 
+
+		// 'p' is the position of the CoG
+		public void SetTransform(cpVect p, float a)
+		{
+			cpVect rot = cpVect.ForAngle(a);
+			cpVect c = this.cog;
+
+			this.transform = cpTransform.cpTransformNewTranspose(
+				rot.x, -rot.y, p.x - (c.x * rot.x - c.y * rot.y),
+				rot.y, rot.x, p.y - (c.x * rot.y + c.y * rot.x)
+			);
+		}
+
+		public static float SetAngle(cpBody body, float angle)
+		{
+			body.a = angle;
+			body.AssertSaneBody();
+			return body.a;
+		}
+
+		public cpVect GetPosition()
+		{
+			return cpTransform.cpTransformPoint(transform, cpVect.Zero);
+		}
 
 		/// Set the position of a body.
-		public void SetPosition(cpVect pos)
+		public void SetPosition(cpVect position)
 		{
 			this.Activate();
-			this.SanityCheck();
-			// If I allow the position to be set to vzero, vzero will get changed.
-			//if (pos == cpVect.ZERO) {
-			//    pos = cp.v(0,0);
-			//}
-			this.p = pos;
+
+			cpVect p = this.p = cpVect.cpvadd(
+				cpTransform.cpTransformVect(this.transform, this.cog)
+				, position);
+
+			AssertSaneBody();
+
+			SetTransform(p, this.a);
 		}
 
-		public void SetAngle(float angle)
+		public cpVect GetCenterOfGravity()
 		{
-			this.Activate();
-			this.SanityCheck();
-			this.SetAngleInternal(angle);
+			return cog;
+		}
+
+		public void SetCenterOfGravity(cpVect cog)
+		{
+			Activate();
+			this.cog = cog;
+			AssertSaneBody();
+		}
+
+		public cpVect GetVelocity()
+		{
+			return v;
 		}
 
 		public void SetVelocity(cpVect velocity)
 		{
 			this.Activate();
-			this.v.x = velocity.x;
-			this.v.y = velocity.y;
+			this.v = velocity;
+			AssertSaneBody();
 		}
 
+		public cpVect GetForce()
+		{
+			return this.f;
+		}
 
-		public void SetAngularVelocity(float w)
+		public void SetForce(cpVect force)
+		{
+			Activate();
+			this.f = force;
+			AssertSaneBody();
+		}
+
+		public float GetAngle()
+		{
+			return this.a;
+		}
+
+		public void SetAngle(float angle)
+		{
+			Activate();
+			SetAngle(this, angle);
+			SetTransform(this.p, angle);
+		}
+
+		public float GetAngularVelocity()
+		{
+			return this.w;
+		}
+		public void SetAngularVelocity(float angularVelocity)
 		{
 			this.Activate();
-			this.w = w;
+			this.w = angularVelocity;
+			AssertSaneBody();
 		}
 
+		public float GetTorque()
+		{
+			return this.t;
+		}
+
+		public void SetTorque(float torque)
+		{
+			Activate();
+			this.t = torque;
+			AssertSaneBody();
+		}
+
+		public object GetUserData()
+		{
+			return this.userData;
+		}
+
+		public void SetUserData(object userData)
+		{
+			this.userData = userData;
+		}
+
+
+		public void SetVelocityUpdateFunc(Action<cpVect, float, float> velocityFunc)
+		{
+			this.velocity_func = velocityFunc;
+		}
+
+		public void SetPositionUpdateFunc(Action<float> positionFunc)
+		{
+			this.position_func = positionFunc;
+		}
+
+		public void UpdateVelocity(cpVect gravity, float damping, float dt)
+		{
+			// Skip kinematic bodies.
+			if (bodyType == cpBodyType.KINEMATIC) return;
+
+			cp.assertSoft(this.m > 0.0f && this.i > 0.0f, string.Format("Body's mass and moment must be positive to simulate. (Mass: {0} Moment: {1})", this.m, this.i));
+
+			this.v = cpVect.cpvadd(cpVect.cpvmult(this.v, damping), cpVect.cpvmult(cpVect.cpvadd(gravity, cpVect.cpvmult(this.f, this.m_inv)), dt));
+			this.w = this.w * damping + this.t * this.i_inv * dt;
+
+			// Reset forces.
+			this.f = cpVect.Zero;
+			this.t = 0.0f;
+
+			AssertSaneBody();
+		}
+
+		public void UpdatePosition(float dt)
+		{
+			cpVect p = this.p = cpVect.cpvadd(this.p, cpVect.cpvmult(cpVect.cpvadd(this.v, this.v_bias), dt));
+			float a = SetAngle(this, this.a + (this.w + this.w_bias) * dt);
+
+			SetTransform(p, a);
+
+			this.v_bias = cpVect.Zero;
+			this.w_bias = 0.0f;
+
+			AssertSaneBody();
+		}
+
+		// Convert body relative/local coordinates to absolute/world coordinates.
+		public cpVect LocalToWorld(cpVect point)
+		{
+			return cpTransform.cpTransformPoint(this.transform, point);
+		}
+
+		public cpVect WorldToLocal(cpVect point)
+		{
+			return cpTransform.cpTransformPoint(
+				cpTransform.cpTransformRigidInverse(this.transform),
+				point);
+		}
+
+
+		public void ApplyForceAtWorldPoint(cpVect force, cpVect point)
+		{
+			Activate();
+			this.f = cpVect.cpvadd(this.f, force);
+
+			cpVect r = cpVect.cpvsub(point, cpTransform.cpTransformPoint(this.transform, this.cog));
+			this.t += cpVect.cpvcross(r, force);
+		}
+
+
+		public void ApplyForceAtLocalPoint(cpVect force, cpVect point)
+		{
+			ApplyForceAtWorldPoint(cpTransform.cpTransformVect(this.transform, force),
+			cpTransform.cpTransformPoint(this.transform, point));
+		}
+
+		public void ApplyImpulseAtWorldPoint(cpVect impulse, cpVect point)
+		{
+			Activate();
+			cpVect r = cpVect.cpvsub(point,
+				cpTransform.cpTransformPoint(this.transform, this.cog));
+
+			cp.apply_impulse(this, impulse, r);
+		}
+
+		public void ApplyImpulseAtLocalPoint(cpVect impulse, cpVect point)
+		{
+			ApplyImpulseAtWorldPoint(
+			 cpTransform.cpTransformVect(this.transform, impulse),
+				cpTransform.cpTransformPoint(this.transform, point));
+		}
+
+		public cpVect GetVelocityAtLocalPoint(cpVect point)
+		{
+			cpVect r = cpTransform.cpTransformVect(
+				this.transform, cpVect.cpvsub(point, this.cog));
+			return cpVect.cpvadd(this.v, cpVect.cpvmult(cpVect.cpvperp(r), this.w));
+		}
+
+		public cpVect cpBodyGetVelocityAtWorldPoint(cpVect point)
+		{
+			cpVect r = cpVect.cpvsub(point, cpTransform.cpTransformPoint(this.transform, this.cog));
+			return cpVect.cpvadd(this.v, cpVect.cpvmult(cpVect.cpvperp(r), this.w));
+		}
+
+		// Get the kinetic energy of a body.
+		public float KineticEnergy()
+		{
+			// Need to do some fudging to avoid NaNs
+			float vsq = cpVect.cpvdot(this.v, this.v);
+			float wsq = this.w * this.w;
+			return (vsq != 0 ? vsq * this.m : 0.0f) + (wsq != 0 ? wsq * this.i : 0.0f);
+		}
+
+		///// Body/shape iterator callback function type. 
+		//public delegate void cpBodyShapeIteratorFunc(cpBody body, cpShape shape, object data);
+		public void EachShape(Action<cpShape, object> func, object data)
+		{
+			for (int i = 0, len = this.shapeList.Count; i < len; i++)
+			{
+				func(this.shapeList[i], data);
+			}
+		}
+
+		///// Body/raint iterator callback function type. 
+		//public delegate void cpBodyConstraintIteratorFunc(cpBody body, cpConstraint raint, object data);
+		public void EachConstraint(Action<cpConstraint, object> func, object data)
+		{
+			var constraint = this.constraintList;
+			while (constraint != null)
+			{
+				var next = constraint.Next(this);
+				func(constraint, data);
+				constraint = next;
+			}
+		}
+
+
+		/// Body/arbiter iterator callback function type. 
+		//public delegate void cpBodyArbiterIteratorFunc(cpBody body, cpArbiter arbiter, object data);
+		public void EachArbiter(Action<cpArbiter, object> func, object data)
+		{
+			var arb = this.arbiterList;
+			while (arb != null)
+			{
+				cpArbiter next = arb.Next(this);
+
+				bool swapped = arb.swapped;
+				{
+					arb.swapped = (this == arb.body_b);
+					func(arb, data);
+				}
+				arb.swapped = swapped;
+				arb = next;
+			}
+		}
+
+
+		// Defined in cpSpace.c
+		// Wake up a sleeping or idle body.
+		public void Activate()
+		{
+
+			if (bodyType == cpBodyType.DYNAMIC)
+			{
+				nodeIdleTime = 0.0f;
+
+				cpBody root = nodeRoot;
+				if (root != null && root.IsSleeping())
+				{
+					// TODO should cpBodyIsSleeping(root) be an assertion?
+					cp.assertSoft(root.bodyType == cpBodyType.DYNAMIC, "Internal Error: Non-dynamic body component root detected.");
+
+					cpSpace space = root.space;
+					cpBody body = root;
+					while (body != null)
+					{
+						cpBody next = body.nodeNext;
+
+						body.nodeIdleTime = 0.0f;
+						body.nodeRoot = null;
+						body.nodeNext = null;
+						space.activateBody(body);
+
+						body = next;
+					}
+
+					space.sleepingComponents.Remove(root);
+
+
+				}
+
+				EachArbiter((arb, o) =>
+				{
+
+					// Reset the idle timer of things the body is touching as well.
+					// That way things don't get left hanging in the air.
+					cpBody other = (arb.body_a == this ? arb.body_b : arb.body_a);
+					if (other.bodyType != cpBodyType.STATIC) other.nodeIdleTime = 0.0f;
+
+				}, null);
+
+
+			}
+
+		}
+
+		// Wake up any sleeping or idle bodies touching a static body.
+		public void ActivateStatic(cpShape filter)
+		{
+			cp.assertHard(bodyType == cpBodyType.STATIC, "Body.activateStatic() called on a non-static body.");
+
+			EachArbiter((arb, o) =>
+			{
+				if (filter == null || filter == arb.a || filter == arb.b)
+				{
+					(arb.body_a == this ? arb.body_b : arb.body_a).Activate();
+				}
+
+			}, null);
+			// TODO should also activate joints!
+		}
+
+		public void PushArbiter(cpArbiter arb)
+		{
+			cpArbiterThread thread;
+			arb.ThreadForBody(this, out thread);
+
+			cp.assertSoft(thread.next == null, "Internal Error: Dangling contact graph pointers detected. (A)");
+			cp.assertSoft(thread.prev == null, "Internal Error: Dangling contact graph pointers detected. (B)");
+
+			cpArbiter next = this.arbiterList;
+
+			cpArbiterThread next_thread;
+			next.ThreadForBody(this, out next_thread);
+
+			cp.assertSoft(next == null || next_thread.prev == null, "Internal Error: Dangling contact graph pointers detected. (C)");
+			thread.next = next;
+
+			if (next != null)
+			{
+				next_thread.prev = arb;
+			}
+
+			this.arbiterList = arb;
+		}
+
+
+
+
+
+
+
+		////////////////////////////////////////////////////////
+
+
+
+		/// Returns true if the body is static.
+		//public bool IsStatic()
+		//{
+		//	return nodeIdleTime == cp.Infinity;
+		//}
+
+		/// Returns true if the body has not been added to a space.
+		/// Note: Static bodies are a subtype of rogue bodies.
+		public bool IsRogue()
+		{
+			return space == null;  //(cpSpace)0));
+		}
+
+		public cpVect GetPos() { return this.p; }
+		public cpVect GetVel() { return v; }
 
 		public void SetAngleInternal(float angle)
 		{
@@ -371,52 +807,8 @@ namespace ChipmunkSharp
 			this.a = angle;//fmod(a, (cpFloat)M_PI*2.0f);
 
 			//this.rot = vforangle(angle);
-			this.rot.x = cp.cpfcos(angle);
-			this.rot.y = cp.cpfsin(angle);
-		}
-
-
-		///// Rigid body velocity update function type.
-		//public delegate void cpBodyVelocityFunc(cpVect gravity, float damping, float dt);
-		///// Rigid body position update function type.
-		//public delegate void cpBodyPositionFunc(cpBody body, float dt);
-
-
-		public void VelocityFunc(cpVect gravity, float damping, float dt)
-		{
-			//this.v = vclamp(vadd(vmult(this.v, damping), vmult(vadd(gravity, vmult(this.f, this.m_inv)), dt)), this.v_limit);
-			var vx = this.v.x * damping + (gravity.x + this.f.x * this.m_inv) * dt;
-			var vy = this.v.y * damping + (gravity.y + this.f.y * this.m_inv) * dt;
-
-			//var v = vclamp(new Vect(vx, vy), this.v_limit);
-			//this.vx = v.x; this.vy = v.y;
-			var v_limit = this.v_limit;
-			var lensq = vx * vx + vy * vy;
-			var scale = (lensq > v_limit * v_limit) ? v_limit / cp.cpfsqrt(lensq) : 1;
-			this.v.x = vx * scale;
-			this.v.y = vy * scale;
-
-			var w_limit = this.w_limit;
-			this.w = cp.cpfclamp(this.w * damping + this.t * this.i_inv * dt, -w_limit, w_limit);
-
-			this.SanityCheck();
-		}
-
-
-		public void PositionFunc(float dt)
-		{
-			//this.p = vadd(this.p, vmult(vadd(this.v, this.v_bias), dt));
-
-			//this.p = this.p + (this.v + this.v_bias) * dt;
-			this.p.x += (this.v.x + this.v_bias.x) * dt;
-			this.p.y += (this.v.y + this.v_bias.y) * dt;
-
-			this.SetAngleInternal(this.a + (this.w + this.w_bias) * dt);
-
-			this.v_bias.x = this.v_bias.y = 0;
-			this.w_bias = 0;
-
-			this.SanityCheck();
+			this.cog.x = cp.cpfcos(angle);
+			this.cog.y = cp.cpfsin(angle);
 		}
 
 		/// Set the forces and torque or a body to zero.
@@ -442,196 +834,40 @@ namespace ChipmunkSharp
 			cp.apply_impulse(this, j, r);
 		}
 
-		public cpVect GetVelAtPoint(cpVect r)
-		{
-			return cpVect.cpvadd(v, cpVect.cpvmult(cpVect.cpvperp(r), w));
-		}
-
-		/// Get the velocity on a body (in world units) at a point on the body in world coordinates.
-		public cpVect GetVelAtWorldPoint(cpVect point)
-		{
-			return GetVelAtPoint(cpVect.cpvsub(point, p));
-		}
 
 
-		/// Get the velocity on a body (in world units) at a point on the body in local coordinates.
-		public cpVect GetVelAtLocalPoint(cpVect point)
-		{
-			return GetVelAtPoint(cpVect.cpvrotate(point, rot));
-		}
-
-
-		//public delegate void cpBodyComponentIteratorFunc(cpBody body, cpBody component, object data);
-
-
-		///// Body/shape iterator callback function type. 
-		//public delegate void cpBodyShapeIteratorFunc(cpBody body, cpShape shape, object data);
-
-
-		public void EachShape(Action<cpShape> func)
-		{
-			for (int i = 0, len = this.shapeList.Count; i < len; i++)
-			{
-				func(this.shapeList[i]);
-			}
-		}
-
-		///// Body/raint iterator callback function type. 
-		//public delegate void cpBodyConstraintIteratorFunc(cpBody body, cpConstraint raint, object data);
-
-
-		public void EachConstraint(Action<cpConstraint> func)
-		{
-			var constraint = this.constraintList;
-			while (constraint != null)
-			{
-				var next = constraint.Next(this);
-				func(constraint);
-				constraint = next;
-			}
-		}
-
-
-		/// Body/arbiter iterator callback function type. 
-		//public delegate void cpBodyArbiterIteratorFunc(cpBody body, cpArbiter arbiter, object data);
-
-		public void EachArbiter(Action<cpArbiter> func)
-		{
-			var arb = this.arbiterList;
-			while (arb != null)
-			{
-				var next = arb.Next(this);
-
-				arb.swapped = (this == arb.body_b);
-				func(arb);
-
-				arb = next;
-			}
-		}
-
-
-		/// Convert body relative/local coordinates to absolute/world coordinates.
-		public cpVect Local2World(cpVect v)
-		{
-			return cpVect.cpvadd(p, cpVect.cpvrotate(v, rot));
-		}
-
-		/// Convert body absolute/world coordinates to  relative/local coordinates.
-		public cpVect World2Local(cpVect v)
-		{
-			return cpVect.cpvunrotate(cpVect.cpvsub(v, p), rot);
-		}
-
-		//        /// Get the kinetic energy of a body.
-		public float KineticEnergy()
-		{
-			// Need to do some fudging to avoid NaNs
-			var vsq = this.v.x * this.v.x + this.v.y * this.v.y;
-			var wsq = this.w * this.w;
-			return (vsq > 0 ? vsq * this.m : 0) + (wsq > 0 ? wsq * this.i : 0);
-		}
-
-
-		//        // Defined in cpSpace.c
-		//        /// Wake up a sleeping or idle body.
-		public void Activate()
-		{
-			if (!this.IsRogue())
-			{
-				this.nodeIdleTime = 0;
-				cp.componentActivate(cp.componentRoot(this));
-			}
-
-		}
-		//        /// Wake up any sleeping or idle bodies touching a static body.
-		public void ActivateStatic(cpShape filter)
-		{
-			cp.assertHard(this.IsStatic(), "Body.activateStatic() called on a non-static body.");
-
-			for (var arb = this.arbiterList; arb != null; arb = arb.Next(this))
-			{
-				if (filter == null || filter == arb.a || filter == arb.b)
-				{
-					(arb.body_a == this ? arb.body_b : arb.body_a).Activate();
-				}
-			}
-
-			// TODO should also activate joints!
-		}
-
-
-
-
-		public void PushArbiter(cpArbiter arb)
-		{
-
-			cp.assertSoft((arb.body_a == this ? arb.thread_a_next : arb.thread_b_next) == null,
-			"Internal Error: Dangling contact graph pointers detected. (A)");
-			cp.assertSoft((arb.body_a == this ? arb.thread_a_prev : arb.thread_b_prev) == null,
-				"Internal Error: Dangling contact graph pointers detected. (B)");
-
-			var next = this.arbiterList;
-
-			cp.assertSoft(next == null || (next.body_a == this ? next.thread_a_prev : next.thread_b_prev) == null,
-				"Internal Error: Dangling contact graph pointers detected. (C)");
-
-			if (arb.body_a == this)
-			{
-				arb.thread_a_next = next;
-			}
-			else
-			{
-				arb.thread_b_next = next;
-			}
-
-			if (next != null)
-			{
-				if (next.body_a == this)
-				{
-					next.thread_a_prev = arb;
-				}
-				else
-				{
-					next.thread_b_prev = arb;
-				}
-			}
-			this.arbiterList = arb;
-		}
-
-
-
-		//        /// Force a body to fall asleep immediately.
+		// Force a body to fall asleep immediately.
 		public void Sleep()
 		{
 			this.SleepWithGroup(null);
 		}
 
 
-		//        /// Force a body to fall asleep immediately along with other bodies in a group.
+		// Force a body to fall asleep immediately along with other bodies in a group.
 		public void SleepWithGroup(cpBody group)
 		{
-			cp.assertSoft(!this.IsStatic() && !this.IsRogue(), "Rogue and static bodies cannot be put to sleep.");
+			cp.assertSoft(bodyType != cpBodyType.STATIC && !this.IsRogue(), "Rogue and static bodies cannot be put to sleep.");
 
 			var space = this.space;
 			cp.assertSoft(space != null, "Cannot put a rogue body to sleep.");
-			cp.assertSoft(space.isLocked, "Bodies cannot be put to sleep during a query or a call to cpSpaceStep(). Put these calls into a post-step callback.");
+			cp.assertSoft(space.IsLocked, "Bodies cannot be put to sleep during a query or a call to cpSpaceStep(). Put these calls into a post-step callback.");
 			cp.assertSoft(group == null || group.IsSleeping(), "Cannot use a non-sleeping body as a group identifier.");
 
 			if (this.IsSleeping())
 			{
-				cp.assertSoft(cp.componentRoot(this) == cp.componentRoot(group), "The body is already sleeping and it's group cannot be reassigned.");
+				cp.assertSoft(cp.ComponentRoot(this) == cp.ComponentRoot(group), "The body is already sleeping and it's group cannot be reassigned.");
 				return;
 			}
 
 			for (var i = 0; i < this.shapeList.Count; i++)
 			{
-				this.shapeList[i].Update(this.p, this.rot);
+				this.shapeList[i].Update(this.p, this.cog);
 			}
 			space.deactivateBody(this);
 
 			if (group != null)
 			{
-				var root = cp.componentRoot(group);
+				var root = cp.ComponentRoot(group);
 
 				this.nodeRoot = root;
 				this.nodeNext = root.nodeNext;
@@ -647,39 +883,173 @@ namespace ChipmunkSharp
 
 				space.sleepingComponents.Add(this);
 			}
-			space.bodies.Remove(this);
+			space.dynamicBodies.Remove(this);
 
 		}
 
+		public void ActivateWrap(object unused)
+		{
+			Activate();
+		}
 
 
+		/// Allocate and initialize a cpBody.
+		public static cpBody New(float mass, float moment)
+		{
+			cpBody tmp = new cpBody(mass, moment);
+			return tmp;
+		}
+
+		/// Allocate and initialize a cpBody, and set it as a static body.
 		public static cpBody NewStatic()
 		{
-			cpBody body = new cpBody();
-			//body.SetType()
+			cpBody body = new cpBody(0.0f, 0.0f);
+			body.bodyType = cpBodyType.STATIC;
 			return body;
 		}
 
+		/// Allocate and initialize a cpBody, and set it as a kinematic body.
 		public static cpBody NewKinematic()
 		{
 			cpBody body = new cpBody(0.0f, 0.0f);
-			//body.SetType()
+			body.bodyType = cpBodyType.KINEMATIC;
 			return body;
 		}
 
-		public void AccumulateMassFromShapes()
+		static void cpv_assert_nan(cpVect v, string message) { cp.assertHard(v.x == v.x && v.y == v.y, message); }
+		static void cpv_assert_infinite(cpVect v, string message) { cp.assertHard(cp.cpfabs(v.x) != cp.Infinity && cp.cpfabs(v.y) != cp.Infinity, message); }
+		static void cpv_assert_sane(cpVect v, string message) { cpv_assert_nan(v, message); cpv_assert_infinite(v, message); }
+		public void SanityCheck()
 		{
-			throw new NotImplementedException();
+			cp.assertHard(m >= 0.0f, "Body's mass is negative.");
+			cp.assertHard(i >= 0.0f, "Body's moment is negative.");
+
+			cpv_assert_sane(p, "Body's position is invalid.");
+			cpv_assert_sane(v, "Body's velocity is invalid.");
+			cpv_assert_sane(f, "Body's force is invalid.");
+
+			cp.assertHard(cp.cpfabs(a) != cp.Infinity, "Body's angle is invalid.");
+			cp.assertHard(cp.cpfabs(w) != cp.Infinity, "Body's angular velocity is invalid.");
+			cp.assertHard(cp.cpfabs(t) != cp.Infinity, "Body's torque is invalid.");
+
+		}
+		private void AssertSaneBody()
+		{
+			SanityCheck();
 		}
 
-		public cpVect GetPosition()
+		#region OBSOLETE
+
+		[Obsolete("OBSOLETE JS CODE")]
+		public cpVect GetVelAtPoint(cpVect r)
 		{
-			throw new NotImplementedException();
-			//return cpTransform.cpTransformPoint(transform, cpVect.Zero);
-			//throw new NotImplementedException();
+			return cpVect.cpvadd(v, cpVect.cpvmult(cpVect.cpvperp(r), w));
 		}
+
+		/// Get the velocity on a body (in world units) at a point on the body in world coordinates.
+		[Obsolete("OBSOLETE JS CODE")]
+		public cpVect GetVelAtWorldPoint(cpVect point)
+		{
+			return GetVelAtPoint(cpVect.cpvsub(point, p));
+		}
+
+		/// Get the velocity on a body (in world units) at a point on the body in local coordinates.
+		[Obsolete("OBSOLETE JS CODE")]
+		public cpVect GetVelAtLocalPoint(cpVect point)
+		{
+			return GetVelAtPoint(cpVect.cpvrotate(point, cog));
+		}
+
+		// Convert body relative/local coordinates to absolute/world coordinates.
+		[Obsolete("OBSOLETE JS CODE")]
+		public cpVect Local2World(cpVect v)
+		{
+			return cpVect.cpvadd(p, cpVect.cpvrotate(v, cog));
+		}
+
+		// Convert body absolute/world coordinates to  relative/local coordinates.
+		[Obsolete("OBSOLETE JS CODE")]
+		public cpVect World2Local(cpVect v)
+		{
+			return cpVect.cpvunrotate(cpVect.cpvsub(v, p), cog);
+		}
+
+		[Obsolete("OBSOLETE JS CODE")]
+		public void VelocityFunc(cpVect gravity, float damping, float dt)
+		{
+			//this.v = vclamp(vadd(vmult(this.v, damping), vmult(vadd(gravity, vmult(this.f, this.m_inv)), dt)), this.v_limit);
+			var vx = this.v.x * damping + (gravity.x + this.f.x * this.m_inv) * dt;
+			var vy = this.v.y * damping + (gravity.y + this.f.y * this.m_inv) * dt;
+
+			//var v = vclamp(new Vect(vx, vy), this.v_limit);
+			//this.vx = v.x; this.vy = v.y;
+			var v_limit = this.v_limit;
+			var lensq = vx * vx + vy * vy;
+			var scale = (lensq > v_limit * v_limit) ? v_limit / cp.cpfsqrt(lensq) : 1;
+			this.v.x = vx * scale;
+			this.v.y = vy * scale;
+
+			var w_limit = this.w_limit;
+			this.w = cp.cpfclamp(this.w * damping + this.t * this.i_inv * dt, -w_limit, w_limit);
+
+			this.SanityCheck();
+		}
+
+		[Obsolete("OBSOLETE JS CODE")]
+		public void PositionFunc(float dt)
+		{
+			//this.p = vadd(this.p, vmult(vadd(this.v, this.v_bias), dt));
+
+			//this.p = this.p + (this.v + this.v_bias) * dt;
+			this.p.x += (this.v.x + this.v_bias.x) * dt;
+			this.p.y += (this.v.y + this.v_bias.y) * dt;
+
+			this.SetAngleInternal(this.a + (this.w + this.w_bias) * dt);
+
+			this.v_bias.x = this.v_bias.y = 0;
+			this.w_bias = 0;
+
+			this.SanityCheck();
+		}
+
+
+		#endregion
+
 	}
 		#endregion
 
 
 }
+
+//public void eachShape(Action<cpShape> func)
+//{
+//	for (int i = 0, len = this.shapeList.Count; i < len; i++)
+//	{
+//		func(this.shapeList[i]);
+//	}
+//}
+
+//public void eachConstraint(Action<cpConstraint> func)
+//{
+//	var constraint = this.constraintList;
+//	while (constraint != null)
+//	{
+//		var next = constraint.Next(this);
+//		func(constraint);
+//		constraint = next;
+//	}
+//}
+
+//public void eachArbiter(Action<cpArbiter> func)
+//{
+//	var arb = this.arbiterList;
+//	while (arb != null)
+//	{
+//		var next = arb.Next(this);
+
+//		arb.swapped = (this == arb.body_b);
+//		func(arb);
+
+//		arb = next;
+//	}
+//}

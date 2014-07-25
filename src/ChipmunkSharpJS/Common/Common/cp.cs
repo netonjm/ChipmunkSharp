@@ -19,8 +19,6 @@
   SOFTWARE.
  */
 
-using ChipmunkSharp.Constraints;
-using ChipmunkSharp.Shapes;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -57,9 +55,9 @@ namespace ChipmunkSharp
 		}
 
 		// Chipmunk 6.2.1
-		public static string CP_VERSION_MAJOR = "6";
-		public static string CP_VERSION_MINOR = "2";
-		public static string CP_VERSION_RELEASE = "1";
+		public static string CP_VERSION_MAJOR = "7";
+		public static string CP_VERSION_MINOR = "0";
+		public static string CP_VERSION_RELEASE = "0";
 
 		public static string cpVersionString = string.Format("{0}.{1}.{2}", CP_VERSION_MAJOR, CP_VERSION_MINOR, CP_VERSION_RELEASE);
 
@@ -367,7 +365,7 @@ namespace ChipmunkSharp
 
 		public static void assertSpaceUnlocked(cpSpace space)
 		{
-			assertSoft(!space.isLocked, "This addition/removal cannot be done safely during a call to cpSpaceStep() or during a query. Put these calls into a post-step callback.");
+			assertSoft(!space.IsLocked, "This addition/removal cannot be done safely during a call to cpSpaceStep() or during a query. Put these calls into a post-step callback.");
 		}
 
 		public static void assertWarn(bool p1, string p2)
@@ -754,39 +752,45 @@ namespace ChipmunkSharp
 			body.w_bias += body.i_inv * cpVect.cpvcross2(r.x, r.y, jx, jy);
 		}
 
-		public static void unthreadHelper(cpArbiter arb, cpBody body, cpArbiter prev, cpArbiter next)
+		public static void UnthreadHelper(cpArbiter arb, cpBody body)
 		{
+
+			cpArbiterThread thread;
+			arb.ThreadForBody(body, out thread);
+			cpArbiter prev = thread.prev;
+			cpArbiter next = thread.next;
+
 			// thread_x_y is quite ugly, but it avoids making unnecessary js objects per arbiter.
 			if (prev != null)
 			{
-				// cpArbiterThreadForBody(prev, body)->next = next;
-				if (prev.body_a == body)
-				{
-					prev.thread_a_next = next;
-				}
-				else
-				{
-					prev.thread_b_next = next;
-				}
+				cpArbiterThread nextPrev;
+				prev.ThreadForBody(body, out nextPrev);
+				nextPrev.next = next;
 			}
-			else
+			else if (body.arbiterList == arb)
 			{
+				// IFF prev is NULL and body->arbiterList == arb, is arb at the head of the list.
+				// This function may be called for an arbiter that was never in a list.
+				// In that case, we need to protect it from wiping out the body->arbiterList pointer.
 				body.arbiterList = next;
 			}
 
 			if (next != null)
 			{
-				// cpArbiterThreadForBody(next, body)->prev = prev;
-				if (next.body_a == body)
-				{
-					next.thread_a_prev = prev;
-				}
-				else
-				{
-					next.thread_b_prev = prev;
-				}
+				cpArbiterThread threadNext;
+				next.ThreadForBody(body, out threadNext);
+				threadNext.prev = prev;
 			}
+
+			thread.prev = null;
+			thread.next = null;
+
 		}
+
+
+
+
+
 
 		public static cpConstraint filterConstraints(cpConstraint node, cpBody body, cpConstraint filter)
 		{
@@ -806,12 +810,12 @@ namespace ChipmunkSharp
 			return node;
 		}
 
-		public static cpBody componentRoot(cpBody body)
+		public static cpBody ComponentRoot(cpBody body)
 		{
 			return (body != null ? body.nodeRoot : null);
 		}
 
-		public static void componentActivate(cpBody root)
+		public static void ComponentActivate(cpBody root)
 		{
 			if (root == null || !root.IsSleeping()) return;
 			cp.assertHard(!root.IsRogue(), "Internal Error: componentActivate() called on a rogue body.");
@@ -831,34 +835,45 @@ namespace ChipmunkSharp
 				body = next;
 			}
 
-
 			space.sleepingComponents.Remove(root);
 		}
 
-		public static void floodFillComponent(cpBody root, cpBody body)
+		public static void FloodFillComponent(cpBody root, cpBody body)
 		{
-			// Rogue bodies cannot be put to sleep and prevent bodies they are touching from sleeping anyway.
-			// Static bodies (which are a type of rogue body) are effectively sleeping all the time.
-			if (!body.IsRogue())
+
+			// Kinematic bodies cannot be put to sleep and prevent bodies they are touching from sleeping.
+			// Static bodies are effectively sleeping all the time.
+			if (body.bodyType == cpBodyType.DYNAMIC)
 			{
-				var other_root = componentRoot(body);
+				cpBody other_root = ComponentRoot(body);
 				if (other_root == null)
 				{
+
 					componentAdd(root, body);
-					for (var arb = body.arbiterList; arb != null; arb = arb.Next(body))
+
+					body.EachArbiter((arb, o) =>
 					{
-						floodFillComponent(root, (body == arb.body_a ? arb.body_b : arb.body_a));
-					}
-					for (var constraint = body.constraintList; constraint != null; constraint = constraint.Next(body))
+
+						FloodFillComponent(root, (body == arb.body_a ?
+							arb.body_b : arb.body_a));
+
+					}, null);
+
+					body.EachConstraint((constraint, o) =>
 					{
-						floodFillComponent(root, (body == constraint.a ? constraint.b : constraint.a));
-					}
+
+						FloodFillComponent(root,
+							(body == constraint.a ? constraint.b : constraint.a));
+
+					}, null);
+
 				}
 				else
 				{
-					assertSoft(other_root == root, "Internal Error: Inconsistency detected in the contact graph.");
+					cp.assertSoft(other_root == root, "Internal Error: Inconsistency dectected in the contact graph.");
 				}
 			}
+
 		}
 
 		public static void componentAdd(cpBody root, cpBody body)
@@ -872,7 +887,7 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public static bool componentActive(cpBody root, float threshold)
+		public static bool ComponentActive(cpBody root, float threshold)
 		{
 			for (var body = root; body != null; body = body.nodeNext)
 			{
@@ -883,12 +898,13 @@ namespace ChipmunkSharp
 			return false;
 		}
 
-		public static CollisionHandler defaultCollisionHandler = new CollisionHandler();
+		public static cpCollisionHandler defaultCollisionHandler = new cpCollisionHandler();
 
+		[Obsolete("DEPRECATED")]
 		public static void updateFunc(cpShape shape)
 		{
 			var body = shape.body;
-			shape.Update(body.Position, body.Rotation);
+			shape.Update(body.GetPosition(), body.GetRotation());
 		}
 
 		//// **** All Important cpSpaceStep() Function
@@ -1067,7 +1083,7 @@ namespace ChipmunkSharp
 			return Math.Min(a, b) - d;
 		}
 
-		public static void findPointsBehindSeg(List<ContactPoint> arr, cpSegmentShape seg, cpPolyShape poly, float pDist, int coef)
+		public static void findPointsBehindSeg(List<cpContact> arr, cpSegmentShape seg, cpPolyShape poly, float pDist, int coef)
 		{
 			var dta = cpVect.cpvcross(seg.tn, seg.ta);
 			var dtb = cpVect.cpvcross(seg.tn, seg.tb);
@@ -1083,7 +1099,7 @@ namespace ChipmunkSharp
 					var dt = cpVect.cpvcross2(seg.tn.x, seg.tn.y, vx, vy);
 					if (dta >= dt && dt >= dtb)
 					{
-						arr.Add(new ContactPoint(new cpVect(vx, vy), n, pDist, hashPair(poly.hashid, i.ToString())));
+						arr.Add(new cpContact(new cpVect(vx, vy), n, pDist, hashPair(poly.hashid, i.ToString())));
 					}
 				}
 			}
@@ -1369,9 +1385,9 @@ namespace ChipmunkSharp
 			return min_index;
 		}
 
-		public static List<ContactPoint> findVerts(cpPolyShape poly1, cpPolyShape poly2, cpVect n, float dist)
+		public static List<cpContact> findVerts(cpPolyShape poly1, cpPolyShape poly2, cpVect n, float dist)
 		{
-			List<ContactPoint> arr = new List<ContactPoint>();
+			List<cpContact> arr = new List<cpContact>();
 
 			var verts1 = poly1.tVerts;
 			for (var i = 0; i < verts1.Length; i += 2)
@@ -1380,7 +1396,7 @@ namespace ChipmunkSharp
 				var vy = verts1[i + 1];
 				if (poly2.ContainsVert(vx, vy))
 				{
-					arr.Add(new ContactPoint(new cpVect(vx, vy), n, dist, cp.hashPair(poly1.hashid, (i >> 1).ToString())));
+					arr.Add(new cpContact(new cpVect(vx, vy), n, dist, cp.hashPair(poly1.hashid, (i >> 1).ToString())));
 				}
 			}
 
@@ -1391,7 +1407,7 @@ namespace ChipmunkSharp
 				var vy = verts2[i + 1];
 				if (poly1.ContainsVert(vx, vy))
 				{
-					arr.Add(new ContactPoint(new cpVect(vx, vy), n, dist, cp.hashPair(poly2.hashid, (i >> 1).ToString())));
+					arr.Add(new cpContact(new cpVect(vx, vy), n, dist, cp.hashPair(poly2.hashid, (i >> 1).ToString())));
 				}
 			}
 
@@ -1401,9 +1417,9 @@ namespace ChipmunkSharp
 
 		}
 
-		public static List<ContactPoint> findVertsFallback(cpPolyShape poly1, cpPolyShape poly2, cpVect n, float dist)
+		public static List<cpContact> findVertsFallback(cpPolyShape poly1, cpPolyShape poly2, cpVect n, float dist)
 		{
-			List<ContactPoint> arr = new List<ContactPoint>();
+			List<cpContact> arr = new List<cpContact>();
 
 
 			var verts1 = poly1.tVerts;
@@ -1413,7 +1429,7 @@ namespace ChipmunkSharp
 				var vy = verts1[i + 1];
 				if (poly2.ContainsVertPartial(vx, vy, cpVect.cpvneg(n)))
 				{
-					arr.Add(new ContactPoint(new cpVect(vx, vy), n, dist, cp.hashPair(poly1.hashid, i.ToString())));
+					arr.Add(new cpContact(new cpVect(vx, vy), n, dist, cp.hashPair(poly1.hashid, i.ToString())));
 				}
 			}
 
@@ -1424,7 +1440,7 @@ namespace ChipmunkSharp
 				var vy = verts2[i + 1];
 				if (poly1.ContainsVertPartial(vx, vy, n))
 				{
-					arr.Add(new ContactPoint(new cpVect(vx, vy), n, dist, cp.hashPair(poly2.hashid, i.ToString())));
+					arr.Add(new cpContact(new cpVect(vx, vy), n, dist, cp.hashPair(poly2.hashid, i.ToString())));
 				}
 			}
 
@@ -1471,10 +1487,9 @@ namespace ChipmunkSharp
 		}
 
 
-
-
-
 		public static int numShapes { get; set; }
+
+
 	}
 
 }

@@ -19,7 +19,6 @@
   SOFTWARE.
  */
 using ChipmunkSharp;
-using ChipmunkSharp.Shapes;
 using System.Linq;
 // // typedef int (*collisionFunc)(cpShape , cpShape , cpContact );
 using System;
@@ -84,25 +83,25 @@ namespace ChipmunkSharp
 
 		#region  OBSOLETE JS FUNCTIONS
 
-		public static List<ContactPoint> circle2circle(cpCircleShape circ1, cpCircleShape circ2)
+		public static List<cpContact> circle2circle(cpCircleShape circ1, cpCircleShape circ2)
 		{
 			return circle2circleQuery(circ1.tc, circ2.tc, circ1.r, circ2.r);
 			//return contact != null ? contact : null;
 		}
 
-		public static List<ContactPoint> circle2circleQuery(cpVect p1, cpVect p2, float r1, float r2)
+		public static List<cpContact> circle2circleQuery(cpVect p1, cpVect p2, float r1, float r2)
 		{
 			var mindist = r1 + r2;
 			var delta = cpVect.cpvsub(p2, p1);
 			var distsq = cpVect.cpvlengthsq(delta);
 
 			if (distsq >= mindist * mindist)
-				return new List<ContactPoint>();
+				return new List<cpContact>();
 
 			var dist = cp.cpfsqrt(distsq);
 
 			// Allocate and initialize the contact.
-			return new List<ContactPoint>() {  new ContactPoint(
+			return new List<cpContact>() {  new cpContact(
                  cpVect.cpvadd(p1, cpVect.cpvmult(delta, 0.5f + (r1 - 0.5f * mindist) / (dist > 0 ? dist : cp.Infinity))),
                 (dist > 0 ? cpVect.cpvmult(delta, 1 / dist) : new cpVect(1, 0)),
                 dist - mindist,
@@ -111,7 +110,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public static List<ContactPoint> circle2segment(cpCircleShape circleShape, cpSegmentShape segmentShape)
+		public static List<cpContact> circle2segment(cpCircleShape circleShape, cpSegmentShape segmentShape)
 		{
 
 			var seg_a = segmentShape.ta;
@@ -125,7 +124,7 @@ namespace ChipmunkSharp
 			var contact = circle2circleQuery(center, closest, circleShape.r, segmentShape.r);
 			if (contact != null && contact.Count > 0)
 			{
-				List<ContactPoint> dev = new List<ContactPoint>();
+				List<cpContact> dev = new List<cpContact>();
 
 				foreach (var item in contact)
 				{
@@ -147,11 +146,11 @@ namespace ChipmunkSharp
 
 			}
 
-			return new List<ContactPoint>();
+			return new List<cpContact>();
 
 		}
 
-		public static List<ContactPoint> circle2poly(cpCircleShape circ, cpPolyShape poly)
+		public static List<cpContact> circle2poly(cpCircleShape circ, cpPolyShape poly)
 		{
 			var planes = poly.tPlanes;
 
@@ -162,7 +161,7 @@ namespace ChipmunkSharp
 				var dist = cpVect.cpvdot(planes[i].n, circ.tc) - planes[i].d - circ.r;
 				if (dist > 0)
 				{
-					return new List<ContactPoint>();
+					return new List<cpContact>();
 				}
 				else if (dist > min)
 				{
@@ -194,7 +193,7 @@ namespace ChipmunkSharp
 			}
 			else if (dt < dta)
 			{
-				return new List<ContactPoint>() {  new ContactPoint(
+				return new List<cpContact>() {  new cpContact(
 			cpVect.cpvsub(circ.tc, cpVect.cpvmult(n, circ.r + min/2)),
 			cpVect.cpvneg(n),
 			min,
@@ -207,10 +206,10 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public static List<ContactPoint> seg2poly(cpSegmentShape seg, cpPolyShape poly)
+		public static List<cpContact> seg2poly(cpSegmentShape seg, cpPolyShape poly)
 		{
 
-			var arr = new List<ContactPoint>();
+			var arr = new List<cpContact>();
 
 			var planes = poly.tPlanes;
 			var numVerts = planes.Length;
@@ -219,19 +218,19 @@ namespace ChipmunkSharp
 			var minNorm = poly.ValueOnAxis(seg.tn, segD) - seg.r;
 			var minNeg = poly.ValueOnAxis(cpVect.cpvneg(seg.tn), -segD) - seg.r;
 			if (minNeg > 0 || minNorm > 0)
-				return new List<ContactPoint>();
+				return new List<cpContact>();
 
 			var mini = 0;
 			var poly_min = cp.segValueOnAxis(seg, planes[0].n, planes[0].d);
 			if (poly_min > 0)
-				return new List<ContactPoint>();
+				return new List<cpContact>();
 
 			for (var i = 0; i < numVerts; i++)
 			{
 				var dist = cp.segValueOnAxis(seg, planes[i].n, planes[i].d);
 				if (dist > 0)
 				{
-					return new List<ContactPoint>();
+					return new List<cpContact>();
 				}
 				else if (dist > poly_min)
 				{
@@ -245,9 +244,9 @@ namespace ChipmunkSharp
 			var va = cpVect.cpvadd(seg.ta, cpVect.cpvmult(poly_n, seg.r));
 			var vb = cpVect.cpvadd(seg.tb, cpVect.cpvmult(poly_n, seg.r));
 			if (poly.ContainsVert(va.x, va.y))
-				arr.Add(new ContactPoint(va, poly_n, poly_min, cp.hashPair(seg.hashid, "0")));
+				arr.Add(new cpContact(va, poly_n, poly_min, cp.hashPair(seg.hashid, "0")));
 			if (poly.ContainsVert(vb.x, vb.y))
-				arr.Add(new ContactPoint(vb, poly_n, poly_min, cp.hashPair(seg.hashid, "1")));
+				arr.Add(new cpContact(vb, poly_n, poly_min, cp.hashPair(seg.hashid, "1")));
 
 			// Floating point precision problems here.
 			// This will have to do for now.
@@ -269,7 +268,7 @@ namespace ChipmunkSharp
 
 				var poly_a = new cpVect(verts[mini2], verts[mini2 + 1]);
 
-				List<ContactPoint> con;
+				List<cpContact> con;
 				if ((con = circle2circleQuery(seg.ta, poly_a, seg.r, 0f)) != null) return con;
 				if ((con = circle2circleQuery(seg.tb, poly_a, seg.r, 0f)) != null) return con;
 
@@ -284,14 +283,14 @@ namespace ChipmunkSharp
 			return arr;
 		}
 
-		public static List<ContactPoint> Poly2Poly(cpPolyShape poly1, cpPolyShape poly2)
+		public static List<cpContact> Poly2Poly(cpPolyShape poly1, cpPolyShape poly2)
 		{
 			float mini1 = cp.findMSA(poly2, poly1.tPlanes);
-			if (mini1 == -1) return new List<ContactPoint>();
+			if (mini1 == -1) return new List<cpContact>();
 			float min1 = cp.last_MSA_min;
 
 			float mini2 = cp.findMSA(poly1, poly2.tPlanes);
-			if (mini2 == -1) return new List<ContactPoint>();
+			if (mini2 == -1) return new List<cpContact>();
 			float min2 = cp.last_MSA_min;
 
 			// There is overlap, find the penetrating verts
@@ -344,7 +343,7 @@ namespace ChipmunkSharp
 
 		public static Action<cpShape, cpShape, cpCollisionInfo>[] CollisionFuncs = BuiltinCollisionFuncs;
 
-		public static cpCollisionInfo cpCollide(cpShape a, cpShape b, int id, ContactPoint[] contacts)
+		public static cpCollisionInfo cpCollide(cpShape a, cpShape b, int id, cpContact[] contacts)
 		{
 			cpCollisionInfo info = new cpCollisionInfo(a, b, id, cpVect.Zero, contacts);
 			// Make sure the shape types are in order.

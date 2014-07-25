@@ -19,8 +19,6 @@
   SOFTWARE.
  */
 
-using ChipmunkSharp.Constraints;
-using ChipmunkSharp.Shapes;
 using System.Collections.Generic;
 using System;
 
@@ -28,7 +26,7 @@ namespace ChipmunkSharp
 {
 	public interface ICollisionShape
 	{
-		Func<object, object, List<ContactPoint>>[] CollisionTable { get; }
+		Func<object, object, List<cpContact>>[] CollisionTable { get; }
 		int CollisionCode { get; }
 	}
 
@@ -50,9 +48,9 @@ namespace ChipmunkSharp
 
 		// TODO Should this be a unique struct type?
 
-		public ContactPoint[] arr;
+		public cpContact[] arr;
 
-		public cpCollisionInfo(cpShape a, cpShape b, int id, cpVect n, ContactPoint[] contacts)
+		public cpCollisionInfo(cpShape a, cpShape b, int id, cpVect n, cpContact[] contacts)
 		{
 			// TODO: Complete member initialization
 			this.a = a;
@@ -231,15 +229,15 @@ namespace ChipmunkSharp
 			m_debugDraw.DrawSolidCircle(new cpVect(tc.x, tc.y), r, cpVect.Zero, color);
 
 			// And draw a little radian so you can see the circle roll.
-			m_debugDraw.DrawSegment(tc, cpVect.Multiply(body.Rotation, this.r).Add(this.tc), color);
+			m_debugDraw.DrawSegment(tc, cpVect.Multiply(body.GetRotation(), this.r).Add(this.tc), color);
 
 		}
 
-		public Func<object, object, List<ContactPoint>>[] CollisionTable
+		public Func<object, object, List<cpContact>>[] CollisionTable
 		{
 			get
 			{
-				return new Func<object, object, List<ContactPoint>>[] {
+				return new Func<object, object, List<cpContact>>[] {
                     (o1,o2) => cpCollision.circle2circle(o1 as cpCircleShape ,o2 as cpCircleShape),
                     (o1,o2) => cpCollision.circle2segment(o1 as cpCircleShape ,o2 as cpSegmentShape),
                     (o1,o2) => cpCollision.circle2poly(o1 as cpCircleShape ,o2 as cpPolyShape)
@@ -508,11 +506,11 @@ namespace ChipmunkSharp
 			m_debugDraw.DrawSegment(ta, tb, lineWidth, color);
 		}
 
-		public Func<object, object, List<ContactPoint>>[] CollisionTable
+		public Func<object, object, List<cpContact>>[] CollisionTable
 		{
 			get
 			{
-				return new Func<object, object, List<ContactPoint>>[] {
+				return new Func<object, object, List<cpContact>>[] {
                     null,
                     (segA, segB) => {  return null; },
                     (o1,o2) => cpCollision.seg2poly(o1 as cpSegmentShape ,o2 as cpPolyShape)
@@ -692,11 +690,6 @@ namespace ChipmunkSharp
 			throw new NotImplementedException();
 		}
 
-		//public virtual cpBB Update(cpTransform transform)
-		//{
-		//	return (this.bb = shape->klass->cacheData(shape, transform));
-		//}
-
 		public cpContactPointSet Collide(cpShape b)
 		{
 			return Collide(this, b);
@@ -705,7 +698,7 @@ namespace ChipmunkSharp
 		/// Test if a point lies within a shape.
 		public static cpContactPointSet Collide(cpShape a, cpShape b)
 		{
-			ContactPoint[] contacts = new ContactPoint[cpArbiter.CP_MAX_CONTACTS_PER_ARBITER];
+			cpContact[] contacts = new cpContact[cpArbiter.CP_MAX_CONTACTS_PER_ARBITER];
 			cpCollisionInfo info = cpCollision.cpCollide(a, b, 0, contacts);
 
 			cpContactPointSet set = new cpContactPointSet();
@@ -771,15 +764,20 @@ namespace ChipmunkSharp
 
 		}
 
+		public cpBB Update(cpTransform transform)
+		{
+			return (this.bb = CacheData(transform));
+		}
+
 		#endregion
 
 		#region OBSOLETE
 
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public virtual void CacheBB()
-		{
-			this.Update(this.body.Position, this.body.Rotation);
-		}
+		//[Obsolete("This method was obsolete from Chipmunk JS")]
+		//public virtual void CacheBB()
+		//{
+		//	this.Update(this.body.Position, this.body.Rotation);
+		//}
 
 
 		[Obsolete("This method was obsolete from Chipmunk JS")]
@@ -815,6 +813,8 @@ namespace ChipmunkSharp
 		{
 			throw new NotImplementedException();
 		}
+
+
 
 
 	};

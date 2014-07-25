@@ -19,7 +19,6 @@
   SOFTWARE.
  */
 
-using ChipmunkSharp.Shapes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -83,6 +82,92 @@ namespace ChipmunkSharp
 			this.r = radius;
 		}
 
+
+		//public void TransformVerts(cpVect p, cpVect rot)
+		//{
+		//	var src = this.verts;
+		//	var dst = this.tVerts;
+
+		//	float l = cp.Infinity, r = -cp.Infinity;
+		//	float b = cp.Infinity, t = -cp.Infinity;
+
+		//	for (var i = 0; i < src.Length; i += 2)
+		//	{
+		//		//var v = vadd(p, vrotate(src[i], rot));
+		//		var x = src[i];
+		//		var y = src[i + 1];
+
+		//		var vx = p.x + x * rot.x - y * rot.y;
+		//		var vy = p.y + x * rot.y + y * rot.x;
+
+		//		//console.log('(' + x + ',' + y + ') -> (' + vx + ',' + vy + ')');
+
+		//		dst[i] = vx;
+		//		dst[i + 1] = vy;
+
+		//		l = Math.Min(l, vx);
+		//		r = Math.Max(r, vx);
+		//		b = Math.Min(b, vy);
+		//		t = Math.Max(t, vy);
+		//	}
+
+		//	this.bb.l = l;
+		//	this.bb.b = b;
+		//	this.bb.r = r;
+		//	this.bb.t = t;
+		//}
+
+		//public void TransformAxes(cpVect p, cpVect rot)
+		//{
+		//	var src = this.planes;
+		//	var dst = this.tPlanes;
+
+		//	for (var i = 0; i < src.Length; i++)
+		//	{
+		//		var n = cpVect.cpvrotate(src[i].n, rot);
+		//		dst[i].n = n;
+		//		dst[i].d = cpVect.cpvdot(p, n) + src[i].d;
+		//	}
+		//}
+
+		public override cpBB CacheData(cpTransform transform)
+		{
+
+
+			//transform.
+
+			//this.TransformAxes(p, rot);
+			//this.TransformVerts(p, rot);
+
+
+			int count = Count;
+
+			cpSplittingPlane[] tmpPlanes = this.planes;
+
+			int dst = 0;
+			int src = dst + count;
+
+			float l = (float)cp.Infinity, r = -cp.Infinity;
+			float b = (float)cp.Infinity, t = -cp.Infinity;
+
+			for (int i = 0; i < count; i++)
+			{
+				cpVect v = cpTransform.cpTransformPoint(transform, tmpPlanes[src + i].v0);
+				cpVect n = cpTransform.cpTransformVect(transform, tmpPlanes[src + i].n);
+
+				tmpPlanes[dst + i].v0 = v;
+				tmpPlanes[dst + i].n = n;
+
+				l = cp.cpfmin(l, v.x);
+				r = cp.cpfmax(r, v.x);
+				b = cp.cpfmin(b, v.y);
+				t = cp.cpfmax(t, v.y);
+			}
+
+			float radius = this.r;
+			return (this.bb = new cpBB(l - radius, b - radius, r + radius, t + radius));
+
+		}
 
 		//public override cpBB CacheData(cpTransform transform)
 		//{
@@ -376,11 +461,11 @@ namespace ChipmunkSharp
 		#endregion
 
 
-		public Func<object, object, List<ContactPoint>>[] CollisionTable
+		public Func<object, object, List<cpContact>>[] CollisionTable
 		{
 			get
 			{
-				return new Func<object, object, List<ContactPoint>>[] {
+				return new Func<object, object, List<cpContact>>[] {
                     null,
                     null,
                     (o1,o2) => cpCollision.Poly2Poly(o1 as cpPolyShape ,o2 as cpPolyShape)

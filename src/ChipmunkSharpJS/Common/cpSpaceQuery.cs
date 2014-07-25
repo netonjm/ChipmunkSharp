@@ -18,7 +18,6 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
  */
-using ChipmunkSharp.Shapes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,7 +56,7 @@ namespace ChipmunkSharp
 			var bb = new cpBB(point.x, point.y, point.x, point.y);
 			Lock();
 			{
-				this.activeShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
+				this.dynamicShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
 				this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
 			} Unlock(true);
 		}
@@ -78,7 +77,7 @@ namespace ChipmunkSharp
 
 		/// Query a space for any shapes overlapping the given shape and call @c func for each shape found.
 		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public bool shapeQuery(cpShape shape, Action<cpShape, List<ContactPoint>> func)
+		public bool shapeQuery(cpShape shape, Action<cpShape, List<cpContact>> func)
 		{
 
 			cpBody body = shape.body;
@@ -86,7 +85,7 @@ namespace ChipmunkSharp
 			//var bb = (body ? shape.update(body.p, body.rot) : shape.bb);
 			if (body != null)
 			{
-				shape.Update(body.Position, body.Rotation);
+				shape.Update(body.GetPosition(), body.GetRotation());
 			}
 
 			var bb = new cpBB(shape.bb.l, shape.bb.b, shape.bb.r, shape.bb.t);
@@ -106,7 +105,7 @@ namespace ChipmunkSharp
 				) return;
 
 
-				List<ContactPoint> contacts = new List<ContactPoint>();
+				List<cpContact> contacts = new List<cpContact>();
 
 				// Shape 'a' should have the lower shape type. (required by collideShapes() )
 				if ((a as ICollisionShape).CollisionCode <= (b as ICollisionShape).CollisionCode)
@@ -116,10 +115,10 @@ namespace ChipmunkSharp
 				else
 				{
 					contacts = collideShapes(b, a);
-					List<ContactPoint> contactsModified = new List<ContactPoint>();
+					List<cpContact> contactsModified = new List<cpContact>();
 					for (var i = 0; i < contacts.Count; i++)
 					{
-						ContactPoint contacto = contacts[i];
+						cpContact contacto = contacts[i];
 						contacto.n = cpVect.cpvneg(contacto.n);
 						contactsModified.Add(contacto);
 					}
@@ -149,7 +148,7 @@ namespace ChipmunkSharp
 
 			Lock();
 			{
-				this.activeShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
+				this.dynamicShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
 				this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
 			}
 			Unlock(true);
@@ -182,7 +181,7 @@ namespace ChipmunkSharp
 			this.Lock();
 			{
 				this.staticShapes.SegmentQuery(start, end, 1, helper);
-				this.activeShapes.SegmentQuery(start, end, 1, helper);
+				this.dynamicShapes.SegmentQuery(start, end, 1, helper);
 			} this.Unlock(true);
 		}
 
@@ -205,7 +204,7 @@ namespace ChipmunkSharp
 
 			Lock();
 			{
-				this.activeShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
+				this.dynamicShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
 				this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
 			} Unlock(true);
 		}
@@ -269,7 +268,7 @@ namespace ChipmunkSharp
 				arb.Update(contacts, handler, a, b);
 
 				// Call the begin function first if it's the first step
-				if (arb.state == cpArbiterState.FirstColl && !handler.begin(arb, this, null))
+				if (arb.state == cpArbiterState.FirstCollision && !handler.beginFunc(arb, this, null))
 				{
 					arb.Ignore(); // permanently ignore the collision until separation
 				}
@@ -278,7 +277,7 @@ namespace ChipmunkSharp
 					// Ignore the arbiter if it has been flagged
 					(arb.state != cpArbiterState.Ignore) &&
 					// Call preSolve
-					handler.preSolve(arb, this, null) &&
+					handler.preSolveFunc(arb, this, null) &&
 					// Process, but don't add collisions for sensors.
 					!sensor
 				)
@@ -327,7 +326,7 @@ namespace ChipmunkSharp
 				);
 
 			this.staticShapes.SegmentQuery(start, end, 1f, helper);
-			this.activeShapes.SegmentQuery(start, end, output != null ? output.alpha : 1, helper);
+			this.dynamicShapes.SegmentQuery(start, end, output != null ? output.alpha : 1, helper);
 
 			return output;
 		}
@@ -353,7 +352,7 @@ namespace ChipmunkSharp
 
 			cpBB bb = cp.bbNewForCircle(point, maxDistance);
 
-			this.activeShapes.Query(bb, helper);
+			this.dynamicShapes.Query(bb, helper);
 			this.staticShapes.Query(bb, helper);
 
 			return output.shape;

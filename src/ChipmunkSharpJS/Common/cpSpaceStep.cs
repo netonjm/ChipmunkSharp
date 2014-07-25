@@ -19,7 +19,6 @@
   SOFTWARE.
  */
 
-using ChipmunkSharp.Constraints;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,7 +42,7 @@ namespace ChipmunkSharp
 		// **** Post Step Callback Functions
 		public void addPostStepCallback(Action func)
 		{
-			cp.assertSoft(this.isLocked,
+			cp.assertSoft(this.IsLocked,
 		 "Adding a post-step callback when the space is not locked is unnecessary. " +
 		 "Post-step callbacks will not called until the end of the next call to cpSpaceStep() or the next query.");
 

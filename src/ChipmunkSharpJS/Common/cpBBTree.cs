@@ -845,6 +845,12 @@ namespace ChipmunkSharp
 			return null;
 		}
 
+
+		public void SetVelocityFunc(Func<object, cpVect> func)
+		{
+			this.velocityFunc = func;
+
+		}
 	}
 
 }

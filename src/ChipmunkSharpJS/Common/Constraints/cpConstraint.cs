@@ -21,7 +21,7 @@
 
 // TODO: Comment me!
 using System;
-namespace ChipmunkSharp.Constraints
+namespace ChipmunkSharp
 {
 	public class cpConstraint
 	{
