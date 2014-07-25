@@ -141,61 +141,100 @@ namespace ChipmunkSharp
 
 		}
 
-		//MARK: Collision Detection Functions
 
-		public bool QueryRejectConstraint(cpBody a, cpBody b)
+		public void CollideShapes(cpShape a, cpShape b)
 		{
-			bool returnValue = false;
-			a.EachConstraint(
 
-				(constraint, o) =>
-				{
-					if (!constraint.collideBodies && ((constraint.a == a && constraint.b == b) || (constraint.a == b && constraint.b == a)))
-						returnValue = true;
+			// It would be nicer to use .bind() or something, but this is faster.
+			//return new Action<object, object>((obj1, obj2) =>
+			//{
 
-				}
-
-				, null);
-
-			return returnValue;
-		}
-
-		public bool QueryReject(cpShape a, cpShape b)
-		{
-			return (
-				// BBoxes must overlap
-		!a.bb.Intersects(b.bb)
-				// Don't collide shapes attached to the same body.
-		|| a.body == b.body
-				// Don't collide shapes that are filtered.
-		|| a.filter.Reject(b.filter)
-				// Don't collide bodies if they have a constraint with collideBodies == cpFalse.
-		|| QueryRejectConstraint(a.body, b.body)
-	);
-
-		}
-
-		//TODO: THIS METHOD NEEDS A REVISION FROM ORIGIAL
-		public List<cpContact> CollideShapes(cpShape a, cpShape b)
-		{
+			//var a = obj1 as cpShape;
+			//var b = obj2 as cpShape;
 
 			// Reject any of the simple cases
-			if (QueryReject(a, b))
-				return new List<cpContact>();
+			if (
+				// BBoxes must overlap
+				//!bbIntersects(a.bb, b.bb)
+				!(a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t)
+				// Don't collide shapes attached to the same body.
+				|| a.body == b.body
+				// Don't collide objects in the same non-zero group
+				|| (a.filter.group != 0 && a.filter.group == b.filter.group)
+				// Don't collide objects that don't share at least on layer.
+				//|| !(a.filter.categories != 0 & b.filter.categories != 0
+				//)
+			) return;
+
+			var handler = lookupHandler(a.type, b.type, defaultHandler);
+
+			var sensor = a.sensor || b.sensor;
+			if (sensor && handler == cp.defaultCollisionHandler) return;
+
+			// Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
+			if ((a as ICollisionShape).CollisionCode > (b as ICollisionShape).CollisionCode)
+			{
+				var temp = a;
+				a = b;
+				b = temp;
+			}
 
 			// Narrow-phase collision detection.
-			//cpCollisionInfo info = cpCollide(a, b);
+			//cpContact *contacts = cpContactBufferGetArray(space);
+			//int numContacts = cpCollideShapes(a, b, contacts);
+			var contacts = cpCollision.cpCollide(a, b);
+			if (contacts == null || contacts.Count == 0)
+				return; // Shapes are not colliding.
+			//cpSpacePushContacts(space, numContacts);
 
-			if ((int)a.shapeType > (int)b.shapeType)
+			// Get an arbiter from space.arbiterSet for the two shapes.
+			// This is where the persistant contact magic comes from.
+			var arbHash = cp.hashPair(a.hashid, b.hashid);
+
+			cpArbiter arb;
+			if (!cachedArbiters.TryGetValue(arbHash, out arb))
 			{
-				var tmp = a;
-				a = b;
-				b = tmp;
+				arb = new cpArbiter(a, b);
+				cachedArbiters.Add(arbHash, arb);
 			}
-			//cp.assert((a as ICollisionShape).CollisionCode <= (b as ICollisionShape).CollisionCode, "Collided shapes must be sorted by type");
-			return (a as ICollisionShape).CollisionTable[(b as ICollisionShape).CollisionCode](a, b);
+
+			arb.Update(contacts, handler, a, b);
+
+			// Call the begin function first if it's the first step
+			if (arb.state == cpArbiterState.FirstCollision && !handler.beginFunc(arb, this, null))
+			{
+				arb.Ignore(); // permanently ignore the collision until separation
+			}
+
+			if (
+				// Ignore the arbiter if it has been flagged
+				(arb.state != cpArbiterState.Ignore) &&
+				// Call preSolve
+				handler.preSolveFunc(arb, this, null) &&
+				// Process, but don't add collisions for sensors.
+				!sensor
+			)
+			{
+				this.arbiters.Add(arb);
+			}
+			else
+			{
+				//cpSpacePopContacts(space, numContacts);
+
+				arb.contacts = null;
+
+				// Normally arbiters are set as used after calling the post-solve callback.
+				// However, post-solve callbacks are not called for sensors or arbiters rejected from pre-solve.
+				if (arb.state != cpArbiterState.Ignore) arb.state = cpArbiterState.Normal;
+			}
+
+			// Time stamp the arbiter so we know it was used recently.
+			arb.stamp = this.stamp;
+			//	});
 
 		}
+
+
 
 		// Hashset filter func to throw away old arbiters.
 		public bool ArbiterSetFilter(cpArbiter arb)

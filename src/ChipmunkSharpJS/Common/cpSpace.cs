@@ -706,8 +706,21 @@ namespace ChipmunkSharp
 			} this.Unlock(true);
 		}
 
-		
+		public void UncacheArbiter(cpArbiter arb)
+		{
+			cachedArbiters.Remove(arb.Key);
+			arbiters.Remove(arb);
+		}
 
+		/// Update the collision detection info for the static shapes in the space.
+		public void ReindexStatic()
+		{
+			cp.assertSoft(!this.IsLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
+
+			this.staticShapes.Each(s => cpShape.UpdateFunc((s as cpShape), null));
+			this.staticShapes.Reindex();
+
+		}
 
 		/// /////////////////////////////////////////////////////////
 
@@ -746,46 +759,8 @@ namespace ChipmunkSharp
 		#endregion
 
 
-
-		//MARK: All Important cpSpaceStep() Function
-
-		public void useSpatialHash(int dim, int count)
-		{
-
-			throw new NotImplementedException("Spatial Hash not implemented.");
-
-			//var staticShapes = new SpaceHash(dim, count, null);
-			//var activeShapes = new SpaceHash(dim, count, staticShapes);
-
-			//this.staticShapes.each(function(shape){
-			//    staticShapes.insert(shape, shape.hashid);
-			//});
-			//this.activeShapes.each(function(shape){
-			//    activeShapes.insert(shape, shape.hashid);
-			//});
-
-			//this.staticShapes = staticShapes;
-			//this.activeShapes = activeShapes;
-		}
-
-
-		/// Update the collision detection info for the static shapes in the space.
-		public void reindexStatic()
-		{
-			cp.assertSoft(!this.IsLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
-
-			this.staticShapes.Each(s =>
-			{
-				var shape = s as cpShape;
-				var body = shape.body;
-				shape.Update(body.GetPosition(), body.GetRotation());
-			});
-			this.staticShapes.Reindex();
-
-		}
-
 		/// Update the collision detection data for a specific shape in the space.
-		public void reindexShape(cpShape shape)
+		public void ReindexShape(cpShape shape)
 		{
 			cp.assertHard(!IsLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
 
@@ -798,23 +773,18 @@ namespace ChipmunkSharp
 		}
 
 		/// Update the collision detection data for all shapes attached to a body.
-		public void reindexShapesForBody(cpBody body)
+		public void ReindexShapesForBody(cpBody body)
 		{
 
 			foreach (var shape in body.shapeList)
 			{
-				this.reindexShape(shape);
+				this.ReindexShape(shape);
 			}
 
 			//for (var shape = body.shapeList; shape != null; shape = shape.next)
 			//    this.reindexShape(shape);
 		}
 
-		public void uncacheArbiter(cpArbiter arb)
-		{
-			cachedArbiters.Remove(arb.Key);
-			arbiters.Remove(arb);
-		}
 
 
 		/// Remove a collision shape added using cpSpaceAddStaticShape() from the simulation.
@@ -938,7 +908,7 @@ namespace ChipmunkSharp
 				var bodyA = arb.body_a;
 				if (body == bodyA || bodyA.bodyType == cpBodyType.STATIC)
 				{
-					this.uncacheArbiter(arb);
+					this.UncacheArbiter(arb);
 
 					// Save contact values to a new block of memory so they won't time out
 					//size_t bytes = arb.numContacts*sizeof(cpContact);
@@ -1077,7 +1047,7 @@ namespace ChipmunkSharp
 			}
 
 			m_debugDraw.DrawString(0, 15, string.Format("Step: {0}", stamp));
-			m_debugDraw.DrawString(0, 50, string.Format("Bodies : {0}/{1}", dynamicBodies.Count, dynamicBodies.Capacity));
+			m_debugDraw.DrawString(0, 50, string.Format("Bodies : {0}/{1}", dynamicBodies.Count + staticBodies.Count, dynamicBodies.Capacity));
 			m_debugDraw.DrawString(0, 80, string.Format("Arbiters: {0}/{1}", arbiters.Count, arbiters.Capacity));
 
 			if (m_debugDraw.Flags == cpDrawFlags.All || m_debugDraw.Flags == cpDrawFlags.Shapes)

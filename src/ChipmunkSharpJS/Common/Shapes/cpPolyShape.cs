@@ -163,7 +163,7 @@ namespace ChipmunkSharp
 
 		public void SetVerts(float[] verts, cpVect offset)
 		{
-			cp.assert(verts.Length >= 4, "Polygons require some verts");
+			//cp.assert(verts.Length >= 4, "Polygons require some verts");
 			//cpEnvironment.assert(typeof(verts[0]) == 'number',
 			//        'Polygon verticies should be specified in a flattened list (eg [x1,y1,x2,y2,x3,y3,...])');
 
@@ -183,6 +183,7 @@ namespace ChipmunkSharp
 
 			for (var i = 0; i < len; i += 2)
 			{
+
 				//var a = vadd(offset, verts[i]);
 				//var b = vadd(offset, verts[(i+1)%numVerts]);
 				var ax = verts[i] + offset.x;
@@ -444,10 +445,10 @@ namespace ChipmunkSharp
 		public static cpPolyShape BoxShape2(cpBody body, cpBB box, float radius)
 		{
 			float[] verts = new float[] {
-		box.l, box.b,
-		box.l, box.t,
+		box.r, box.b,
 		box.r, box.t,
-		box.r, box.b};
+		box.l, box.t,
+		box.l, box.b};
 
 			return new cpPolyShape(body, verts, radius);
 		}

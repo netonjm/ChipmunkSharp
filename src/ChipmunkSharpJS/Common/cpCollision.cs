@@ -355,7 +355,67 @@ namespace ChipmunkSharp
 			int idSelected = (int)info.a.shapeType + (int)info.b.shapeType * (int)cpShapeType.NumShapes;
 			CollisionFuncs[idSelected](info.a, info.b, info);
 			return info;
+
 		}
+
+		public static bool QueryReject(cpShape a, cpShape b)
+		{
+			return (
+				// BBoxes must overlap
+		!a.bb.Intersects(b.bb)
+				// Don't collide shapes attached to the same body.
+		|| a.body == b.body
+				// Don't collide shapes that are filtered.
+		|| a.filter.Reject(b.filter)
+				// Don't collide bodies if they have a constraint with collideBodies == cpFalse.
+		|| QueryRejectConstraint(a.body, b.body)
+	);
+
+		}
+
+		//MARK: Collision Detection Functions
+
+		public static bool QueryRejectConstraint(cpBody a, cpBody b)
+		{
+			bool returnValue = false;
+			a.EachConstraint(
+
+				(constraint, o) =>
+				{
+					if (!constraint.collideBodies && ((constraint.a == a && constraint.b == b) || (constraint.a == b && constraint.b == a)))
+						returnValue = true;
+
+				}
+
+				, null);
+
+			return returnValue;
+		}
+
+
+		//TODO: THIS METHOD NEEDS A REVISION FROM ORIGIAL
+		public static List<cpContact> cpCollide(cpShape a, cpShape b)
+		{
+			// Reject any of the simple cases
+			if (QueryReject(a, b))
+				return new List<cpContact>();
+
+			// Narrow-phase collision detection.
+			//cpCollisionInfo info = cpCollide(a, b);
+
+			if ((int)a.shapeType > (int)b.shapeType)
+			{
+				var tmp = a;
+				a = b;
+				b = tmp;
+			}
+			//cp.assert((a as ICollisionShape).CollisionCode <= (b as ICollisionShape).CollisionCode, "Collided shapes must be sorted by type");
+			return (a as ICollisionShape).CollisionTable[(b as ICollisionShape).CollisionCode](a, b);
+
+		}
+
+
+
 	}
 
 

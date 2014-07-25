@@ -110,11 +110,11 @@ namespace ChipmunkSharp
 				// Shape 'a' should have the lower shape type. (required by collideShapes() )
 				if ((a as ICollisionShape).CollisionCode <= (b as ICollisionShape).CollisionCode)
 				{
-					contacts = CollideShapes(a, b);
+					contacts = cpCollision.cpCollide(a, b);
 				}
 				else
 				{
-					contacts = CollideShapes(b, a);
+					contacts = cpCollision.cpCollide(b, a);
 					List<cpContact> contactsModified = new List<cpContact>();
 					for (var i = 0; i < contacts.Count; i++)
 					{
@@ -209,96 +209,96 @@ namespace ChipmunkSharp
 			} Unlock(true);
 		}
 
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public Action<object, object> makeCollideShapes()
-		{
-			// It would be nicer to use .bind() or something, but this is faster.
-			return new Action<object, object>((obj1, obj2) =>
-			{
+		//[Obsolete("This method was obsolete from Chipmunk JS")]
+		//public Action<object, object> makeCollideShapes()
+		//{
+		//	// It would be nicer to use .bind() or something, but this is faster.
+		//	return new Action<object, object>((obj1, obj2) =>
+		//	{
 
-				var a = obj1 as cpShape;
-				var b = obj2 as cpShape;
+		//		var a = obj1 as cpShape;
+		//		var b = obj2 as cpShape;
 
-				// Reject any of the simple cases
-				if (
-					// BBoxes must overlap
-					//!bbIntersects(a.bb, b.bb)
-					!(a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t)
-					// Don't collide shapes attached to the same body.
-					|| a.body == b.body
-					// Don't collide objects in the same non-zero group
-					|| (a.filter.group != 0 && a.filter.group == b.filter.group)
-					// Don't collide objects that don't share at least on layer.
-					//|| !(a.filter.categories != 0 & b.filter.categories != 0
-					//)
-				) return;
+		//		// Reject any of the simple cases
+		//		if (
+		//			// BBoxes must overlap
+		//			//!bbIntersects(a.bb, b.bb)
+		//			!(a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t)
+		//			// Don't collide shapes attached to the same body.
+		//			|| a.body == b.body
+		//			// Don't collide objects in the same non-zero group
+		//			|| (a.filter.group != 0 && a.filter.group == b.filter.group)
+		//			// Don't collide objects that don't share at least on layer.
+		//			//|| !(a.filter.categories != 0 & b.filter.categories != 0
+		//			//)
+		//		) return;
 
-				var handler = lookupHandler(a.type, b.type, defaultHandler);
+		//		var handler = lookupHandler(a.type, b.type, defaultHandler);
 
-				var sensor = a.sensor || b.sensor;
-				if (sensor && handler == cp.defaultCollisionHandler) return;
+		//		var sensor = a.sensor || b.sensor;
+		//		if (sensor && handler == cp.defaultCollisionHandler) return;
 
-				// Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
-				if ((a as ICollisionShape).CollisionCode > (b as ICollisionShape).CollisionCode)
-				{
-					var temp = a;
-					a = b;
-					b = temp;
-				}
+		//		// Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
+		//		if ((a as ICollisionShape).CollisionCode > (b as ICollisionShape).CollisionCode)
+		//		{
+		//			var temp = a;
+		//			a = b;
+		//			b = temp;
+		//		}
 
-				// Narrow-phase collision detection.
-				//cpContact *contacts = cpContactBufferGetArray(space);
-				//int numContacts = cpCollideShapes(a, b, contacts);
-				var contacts = CollideShapes(a, b);
-				if (contacts == null || contacts.Count == 0)
-					return; // Shapes are not colliding.
-				//cpSpacePushContacts(space, numContacts);
+		//		// Narrow-phase collision detection.
+		//		//cpContact *contacts = cpContactBufferGetArray(space);
+		//		//int numContacts = cpCollideShapes(a, b, contacts);
+		//		var contacts = cpCollision.cpCollide(a, b);
+		//		if (contacts == null || contacts.Count == 0)
+		//			return; // Shapes are not colliding.
+		//		//cpSpacePushContacts(space, numContacts);
 
-				// Get an arbiter from space.arbiterSet for the two shapes.
-				// This is where the persistant contact magic comes from.
-				var arbHash = cp.hashPair(a.hashid, b.hashid);
+		//		// Get an arbiter from space.arbiterSet for the two shapes.
+		//		// This is where the persistant contact magic comes from.
+		//		var arbHash = cp.hashPair(a.hashid, b.hashid);
 
-				cpArbiter arb;
-				if (!cachedArbiters.TryGetValue(arbHash, out arb))
-				{
-					arb = new cpArbiter(a, b);
-					cachedArbiters.Add(arbHash, arb);
-				}
+		//		cpArbiter arb;
+		//		if (!cachedArbiters.TryGetValue(arbHash, out arb))
+		//		{
+		//			arb = new cpArbiter(a, b);
+		//			cachedArbiters.Add(arbHash, arb);
+		//		}
 
-				arb.Update(contacts, handler, a, b);
+		//		arb.Update(contacts, handler, a, b);
 
-				// Call the begin function first if it's the first step
-				if (arb.state == cpArbiterState.FirstCollision && !handler.beginFunc(arb, this, null))
-				{
-					arb.Ignore(); // permanently ignore the collision until separation
-				}
+		//		// Call the begin function first if it's the first step
+		//		if (arb.state == cpArbiterState.FirstCollision && !handler.beginFunc(arb, this, null))
+		//		{
+		//			arb.Ignore(); // permanently ignore the collision until separation
+		//		}
 
-				if (
-					// Ignore the arbiter if it has been flagged
-					(arb.state != cpArbiterState.Ignore) &&
-					// Call preSolve
-					handler.preSolveFunc(arb, this, null) &&
-					// Process, but don't add collisions for sensors.
-					!sensor
-				)
-				{
-					this.arbiters.Add(arb);
-				}
-				else
-				{
-					//cpSpacePopContacts(space, numContacts);
+		//		if (
+		//			// Ignore the arbiter if it has been flagged
+		//			(arb.state != cpArbiterState.Ignore) &&
+		//			// Call preSolve
+		//			handler.preSolveFunc(arb, this, null) &&
+		//			// Process, but don't add collisions for sensors.
+		//			!sensor
+		//		)
+		//		{
+		//			this.arbiters.Add(arb);
+		//		}
+		//		else
+		//		{
+		//			//cpSpacePopContacts(space, numContacts);
 
-					arb.contacts = null;
+		//			arb.contacts = null;
 
-					// Normally arbiters are set as used after calling the post-solve callback.
-					// However, post-solve callbacks are not called for sensors or arbiters rejected from pre-solve.
-					if (arb.state != cpArbiterState.Ignore) arb.state = cpArbiterState.Normal;
-				}
+		//			// Normally arbiters are set as used after calling the post-solve callback.
+		//			// However, post-solve callbacks are not called for sensors or arbiters rejected from pre-solve.
+		//			if (arb.state != cpArbiterState.Ignore) arb.state = cpArbiterState.Normal;
+		//		}
 
-				// Time stamp the arbiter so we know it was used recently.
-				arb.stamp = this.stamp;
-			});
-		}
+		//		// Time stamp the arbiter so we know it was used recently.
+		//		arb.stamp = this.stamp;
+		//	});
+		//}
 
 		[Obsolete("This method was obsolete from Chipmunk JS")]
 		public cpSegmentQueryInfo segmentQueryFirst(cpVect start, cpVect end, int layers, int group)
