@@ -108,7 +108,7 @@ namespace ChipmunkSharp
 		public cpCollisionHandler defaultHandler;
 
 		public bool skipPostStep;
-		public List<Action> postStepCallbacks;
+		public List<cpPostStepCallback> postStepCallbacks;
 
 		/// The designated static body for this space.
 		/// You can modify this body, or replace it with your own static body.
@@ -244,7 +244,7 @@ namespace ChipmunkSharp
 
 			this.collisionHandlers = new Dictionary<string, cpCollisionHandler>();
 
-			this.postStepCallbacks = new List<Action>();
+			this.postStepCallbacks = new List<cpPostStepCallback>();
 
 			this.skipPostStep = false;
 
@@ -706,8 +706,7 @@ namespace ChipmunkSharp
 			} this.Unlock(true);
 		}
 
-
-
+		
 
 
 		/// /////////////////////////////////////////////////////////
@@ -746,186 +745,9 @@ namespace ChipmunkSharp
 
 		#endregion
 
-		public List<cpContact> collideShapes(cpShape a, cpShape b)
-		{
 
-			cp.assert((a as ICollisionShape).CollisionCode <= (b as ICollisionShape).CollisionCode, "Collided shapes must be sorted by type");
-			return (a as ICollisionShape).CollisionTable[(b as ICollisionShape).CollisionCode](a, b);
-
-		}
-
-		// Hashset filter func to throw away old arbiters.
-		public bool arbiterSetFilter(cpArbiter arb)
-		{
-			var ticks = this.stamp - arb.stamp;
-
-			cpBody a = arb.body_a, b = arb.body_b;
-
-			// TODO should make an arbiter state for this so it doesn't require filtering arbiters for
-			// dangling body pointers on body removal.
-			// Preserve arbiters on sensors and rejected arbiters for sleeping objects.
-			// This prevents errant separate callbacks from happenening.
-			if (
-				(a.bodyType == cpBodyType.STATIC || a.IsSleeping()) &&
-				(b.bodyType == cpBodyType.STATIC || b.IsSleeping())
-			)
-			{
-				return true;
-			}
-
-			// Arbiter was used last frame, but not this one
-			if (ticks >= 1 && arb.state != cpArbiterState.Cached)
-			{
-				arb.CallSeparate(this);
-				arb.state = cpArbiterState.Cached;
-			}
-
-			if (ticks >= this.collisionPersistence)
-			{
-				arb.contacts = null;
-
-				//cpArrayPush(this.pooledArbiters, arb);
-				return false;
-			}
-
-			return true;
-		}
 
 		//MARK: All Important cpSpaceStep() Function
-
-		public void step(float dt)
-		{
-			// don't step if the timestep is 0!
-			if (dt == 0) return;
-
-			//assert(vzero.x == 0 && vzero.y == 0, "vzero is invalid");
-
-			this.stamp++;
-
-			var prev_dt = this.curr_dt;
-			this.curr_dt = dt;
-
-			int i;
-			int j;
-
-
-			var bodies = this.dynamicBodies;
-			var constraints = this.constraints;
-			var arbiters = this.arbiters;
-
-
-			// Reset and empty the arbiter lists.
-			for (i = 0; i < arbiters.Count; i++)
-			{
-				//var arb = ;
-				arbiters[i].state = cpArbiterState.Normal;
-
-				// If both bodies are awake, unthread the arbiter from the contact graph.
-				if (!arbiters[i].body_a.IsSleeping() && !arbiters[i].body_b.IsSleeping())
-				{
-					arbiters[i].Unthread();
-				}
-			}
-
-			arbiters.Clear();
-
-			Lock();
-			{
-
-				// Integrate positions
-				for (i = 0; i < bodies.Count; i++)
-				{
-					bodies[i].position_func(dt);
-				}
-
-				// Find colliding pairs.
-				this.dynamicShapes.Each(s => cp.updateFunc(s as cpShape));
-				this.dynamicShapes.ReindexQuery(makeCollideShapes());
-
-			} Unlock(false);
-
-			// Rebuild the contact graph (and detect sleeping components if sleeping is enabled)
-			this.processComponents(dt);
-
-			Lock();
-			{
-
-				List<string> safeDelete = new List<string>();
-				// Clear out old cached arbiters and call separate callbacks
-				foreach (var hash in this.cachedArbiters)
-				{
-					if (!this.arbiterSetFilter(hash.Value))
-						safeDelete.Add(hash.Key);
-				}
-
-				foreach (var item in safeDelete)
-					cachedArbiters.Remove(item);
-
-				// Prestep the arbiters and constraints.
-				var slop = this.collisionSlop;
-				var biasCoef = 1 - cp.cpfpow(this.collisionBias, dt);
-				for (i = 0; i < arbiters.Count; i++)
-				{
-					arbiters[i].PreStep(dt, slop, biasCoef);
-				}
-
-				for (i = 0; i < constraints.Count; i++)
-				{
-					var constraint = constraints[i];
-
-					constraint.preSolve(this);
-					constraint.PreStep(dt);
-				}
-
-				// Integrate velocities.
-				var damping = cp.cpfpow(this.damping, dt);
-				var gravity = this.gravity;
-				for (i = 0; i < bodies.Count; i++)
-				{
-					bodies[i].velocity_func(gravity, damping, dt);
-				}
-
-				// Apply cached impulses
-				var dt_coef = (prev_dt == 0 ? 0 : dt / prev_dt);
-				for (i = 0; i < arbiters.Count; i++)
-				{
-					arbiters[i].ApplyCachedImpulse(dt_coef);
-				}
-
-				for (i = 0; i < constraints.Count; i++)
-				{
-					constraints[i].ApplyCachedImpulse(dt_coef);
-				}
-
-				// Run the impulse solver.
-				for (i = 0; i < this.iterations; i++)
-				{
-					for (j = 0; j < arbiters.Count; j++)
-					{
-						arbiters[j].ApplyImpulse(dt);
-					}
-
-					for (j = 0; j < constraints.Count; j++)
-					{
-						constraints[j].ApplyImpulse(dt);
-					}
-				}
-
-				// Run the constraint post-solve callbacks
-				for (i = 0; i < constraints.Count; i++)
-				{
-					constraints[i].postSolve(this);
-				}
-
-				// run the post-solve callbacks
-				for (i = 0; i < arbiters.Count; i++)
-				{
-					arbiters[i].handler.postSolveFunc(arbiters[i], this, null);
-				}
-			}
-			this.Unlock(true);
-		}
-
 
 		public void useSpatialHash(int dim, int count)
 		{

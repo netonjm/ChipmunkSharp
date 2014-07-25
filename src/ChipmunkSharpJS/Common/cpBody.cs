@@ -166,9 +166,9 @@ namespace ChipmunkSharp
 		/// <summary>
 		/// CREATES A BODY WITH MASS AND INERTIA
 		/// </summary>
-		/// <param name="m"></param>
-		/// <param name="i"></param>
-		public cpBody(float m, float i)
+		/// <param name="mass"></param>
+		/// <param name="moment"></param>
+		public cpBody(float mass, float moment)
 		{
 
 			transform = new cpTransform();
@@ -207,8 +207,8 @@ namespace ChipmunkSharp
 
 			this.userData = null;
 
-			this.SetMass(m);
-			this.SetMoment(i);
+			this.SetMass(mass);
+			this.SetMoment(moment);
 			this.SetAngle(0.0f);
 
 		}

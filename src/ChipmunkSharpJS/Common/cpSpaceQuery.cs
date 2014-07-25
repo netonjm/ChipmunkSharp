@@ -110,11 +110,11 @@ namespace ChipmunkSharp
 				// Shape 'a' should have the lower shape type. (required by collideShapes() )
 				if ((a as ICollisionShape).CollisionCode <= (b as ICollisionShape).CollisionCode)
 				{
-					contacts = collideShapes(a, b);
+					contacts = CollideShapes(a, b);
 				}
 				else
 				{
-					contacts = collideShapes(b, a);
+					contacts = CollideShapes(b, a);
 					List<cpContact> contactsModified = new List<cpContact>();
 					for (var i = 0; i < contacts.Count; i++)
 					{
@@ -249,7 +249,7 @@ namespace ChipmunkSharp
 				// Narrow-phase collision detection.
 				//cpContact *contacts = cpContactBufferGetArray(space);
 				//int numContacts = cpCollideShapes(a, b, contacts);
-				var contacts = collideShapes(a, b);
+				var contacts = CollideShapes(a, b);
 				if (contacts == null || contacts.Count == 0)
 					return; // Shapes are not colliding.
 				//cpSpacePushContacts(space, numContacts);

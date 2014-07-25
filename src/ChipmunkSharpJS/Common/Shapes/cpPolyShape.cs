@@ -83,80 +83,29 @@ namespace ChipmunkSharp
 		}
 
 
-		//public void TransformVerts(cpVect p, cpVect rot)
-		//{
-		//	var src = this.verts;
-		//	var dst = this.tVerts;
-
-		//	float l = cp.Infinity, r = -cp.Infinity;
-		//	float b = cp.Infinity, t = -cp.Infinity;
-
-		//	for (var i = 0; i < src.Length; i += 2)
-		//	{
-		//		//var v = vadd(p, vrotate(src[i], rot));
-		//		var x = src[i];
-		//		var y = src[i + 1];
-
-		//		var vx = p.x + x * rot.x - y * rot.y;
-		//		var vy = p.y + x * rot.y + y * rot.x;
-
-		//		//console.log('(' + x + ',' + y + ') -> (' + vx + ',' + vy + ')');
-
-		//		dst[i] = vx;
-		//		dst[i + 1] = vy;
-
-		//		l = Math.Min(l, vx);
-		//		r = Math.Max(r, vx);
-		//		b = Math.Min(b, vy);
-		//		t = Math.Max(t, vy);
-		//	}
-
-		//	this.bb.l = l;
-		//	this.bb.b = b;
-		//	this.bb.r = r;
-		//	this.bb.t = t;
-		//}
-
-		//public void TransformAxes(cpVect p, cpVect rot)
-		//{
-		//	var src = this.planes;
-		//	var dst = this.tPlanes;
-
-		//	for (var i = 0; i < src.Length; i++)
-		//	{
-		//		var n = cpVect.cpvrotate(src[i].n, rot);
-		//		dst[i].n = n;
-		//		dst[i].d = cpVect.cpvdot(p, n) + src[i].d;
-		//	}
-		//}
 
 		public override cpBB CacheData(cpTransform transform)
 		{
-
-
 			//transform.
-
+			var src = this.verts;
+			var dst = this.tVerts;
 			//this.TransformAxes(p, rot);
 			//this.TransformVerts(p, rot);
 
-
-			int count = Count;
+			int count = src.Length;
 
 			cpSplittingPlane[] tmpPlanes = this.planes;
-
-			int dst = 0;
-			int src = dst + count;
 
 			float l = (float)cp.Infinity, r = -cp.Infinity;
 			float b = (float)cp.Infinity, t = -cp.Infinity;
 
-			for (int i = 0; i < count; i++)
+			for (int i = 0; i < tmpPlanes.Length - 1; i++)
 			{
-				cpVect v = cpTransform.cpTransformPoint(transform, tmpPlanes[src + i].v0);
-				cpVect n = cpTransform.cpTransformVect(transform, tmpPlanes[src + i].n);
+				cpVect v = cpTransform.cpTransformPoint(transform, tmpPlanes[i].v0);
+				cpVect n = cpTransform.cpTransformVect(transform, tmpPlanes[i + 1].n);
 
-				tmpPlanes[dst + i].v0 = v;
-				tmpPlanes[dst + i].n = n;
+				tmpPlanes[i].v0 = v;
+				tmpPlanes[i + 1].n = n;
 
 				l = cp.cpfmin(l, v.x);
 				r = cp.cpfmax(r, v.x);
@@ -238,6 +187,7 @@ namespace ChipmunkSharp
 				//var b = vadd(offset, verts[(i+1)%numVerts]);
 				var ax = verts[i] + offset.x;
 				var ay = verts[i + 1] + offset.y;
+
 				var bx = verts[(i + 2) % len] + offset.x;
 				var by = verts[(i + 3) % len] + offset.y;
 
@@ -247,6 +197,9 @@ namespace ChipmunkSharp
 				this.verts[i] = ax;
 				this.verts[i + 1] = ay;
 				this.planes[i >> 1] = new cpSplittingPlane(n, cpVect.cpvdot2(n.x, n.y, ax, ay));
+
+				this.planes[i >> 1].v0 = new cpVect(ax, ay);
+
 				this.tPlanes[i >> 1] = new cpSplittingPlane(new cpVect(0, 0), 0);
 			}
 		}

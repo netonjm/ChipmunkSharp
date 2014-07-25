@@ -79,6 +79,11 @@ namespace ChipmunkSharp
 			this.mask = mask;
 		}
 
+		public bool Reject(cpShapeFilter b)
+		{
+			return Reject(this, b);
+		}
+
 		public static bool Reject(cpShapeFilter a, cpShapeFilter b)
 		{
 			// Reject the collision if:
@@ -271,7 +276,7 @@ namespace ChipmunkSharp
 			this.a = a;
 			this.b = b;
 
-			this.n = cpVect.cpvperp(cpVect.vnormalize(cpVect.cpvsub(b, a)));
+			this.n = cpVect.cpvrperp(cpVect.vnormalize(cpVect.cpvsub(b, a)));
 
 			this.r = r;
 
@@ -579,7 +584,7 @@ namespace ChipmunkSharp
 		public cpShape(cpBody body, cpShapeMassInfo massInfo)
 		{
 
-			filter = new cpShapeFilter();
+
 
 			/// The rigid body this collision shape is attached to.
 			this.body = body;
@@ -597,6 +602,9 @@ namespace ChipmunkSharp
 			/// Sensor flag.
 			/// Sensor shapes call collision callbacks but don't produce collisions.
 			this.sensor = false;
+
+			filter = new cpShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, cp.ALL_CATEGORIES);
+
 
 			/// Coefficient of restitution. (elasticity)
 			this.e = 0;
@@ -684,6 +692,12 @@ namespace ChipmunkSharp
 		}
 
 		#region NEW METHODS
+
+		public virtual cpBB CacheBB()
+		{
+			return Update(body.transform);
+
+		}
 
 		public virtual cpBB CacheData(cpTransform transform)
 		{
@@ -815,6 +829,10 @@ namespace ChipmunkSharp
 		}
 
 
+		public static void UpdateFunc(cpShape shape, object unused)
+		{
+			shape.CacheBB();
+		}
 
 
 	};

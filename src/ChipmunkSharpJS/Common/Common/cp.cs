@@ -900,6 +900,9 @@ namespace ChipmunkSharp
 
 		public static cpCollisionHandler defaultCollisionHandler = new cpCollisionHandler();
 
+
+
+
 		[Obsolete("DEPRECATED")]
 		public static void updateFunc(cpShape shape)
 		{

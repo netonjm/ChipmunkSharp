@@ -65,7 +65,7 @@ namespace ChipmunkSharp
 		/// when given a cpConstraint reference in a callback.
 		//public cpDataPointer data;
 
-		bool collideBodies;
+		public bool collideBodies;
 
 		public cpConstraint(cpBody a, cpBody b)
 		{
