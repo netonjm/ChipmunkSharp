@@ -45,25 +45,28 @@ namespace ChipmunkSharp
 	public class cpPolyShape : cpShape
 	{
 
+		public const int CP_POLY_SHAPE_INLINE_ALLOC = 6;
+
 		internal float r;
 		internal cpSplittingPlane[] planes;
 
-		public int Count { get { return planes.Length; } }
+		public int Count;
 
 		public override cpBB CacheData(cpTransform transform)
 		{
-			cpSplittingPlane[] dst = this.planes;
+			int count = this.Count;
+			int dst = 0;
+			int src = dst + count;
 
 			float l = cp.Infinity, r = -cp.Infinity;
 			float b = cp.Infinity, t = -cp.Infinity;
 
-			for (int i = 0; i < Count; i++)
+			for (int i = 0; i < count; i++)
 			{
-				cpVect v = cpTransform.cpTransformPoint(transform, dst[i].v0);
-				cpVect n = cpTransform.cpTransformVect(transform, dst[i].n);
+				cpVect v = cpTransform.cpTransformPoint(transform, this.planes[src + i].v0);
+				cpVect n = cpTransform.cpTransformVect(transform, this.planes[src + i].n);
 
-				dst[i].v0 = v;
-				dst[i].n = n;
+				this.planes[i + dst] = new cpSplittingPlane(n, v);
 
 				l = cp.cpfmin(l, v.x);
 				r = cp.cpfmax(r, v.x);
@@ -168,7 +171,6 @@ namespace ChipmunkSharp
 
 		}
 
-
 		public static cpShapeMassInfo MassInfo(float mass, cpVect[] verts, float radius)
 		{
 			// TODO moment is approximate due to radius.
@@ -211,18 +213,23 @@ namespace ChipmunkSharp
 
 		public void SetVerts(cpVect[] verts)
 		{
+			Count = verts.Length;
 
-			var count = verts.Length;
+			if (Count <= CP_POLY_SHAPE_INLINE_ALLOC)
+				this.planes = new cpSplittingPlane[2 * CP_POLY_SHAPE_INLINE_ALLOC];
+			else
+				this.planes = new cpSplittingPlane[2 * Count];
+
 			// This a pretty bad way to do this in javascript. As a first pass, I want to keep
 			// the code similar to the C.
-			this.planes = new cpSplittingPlane[count];
 
-			for (int i = 0; i < count; i++)
+			for (int i = 0; i < Count; i++)
 			{
-				cpVect a = verts[(i - 1 + count) % count];
+				cpVect a = verts[(i - 1 + Count) % Count];
 				cpVect b = verts[i];
 				cpVect n = cpVect.cpvnormalize(cpVect.cpvrperp(cpVect.cpvsub(b, a)));
-				this.planes[i] = new cpSplittingPlane(n, b);
+
+				this.planes[i + Count] = new cpSplittingPlane(n, b);
 			}
 		}
 
@@ -262,23 +269,15 @@ namespace ChipmunkSharp
 		}
 
 
-		/// /////////////////////////////////////////////////////////////
-
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
-
-			var len = planes.Count();
-
-			var lastPoint = planes[len - 1].v0;
-
 			cpColor color = cp.GetShapeColor(this);
+			int count = Count;
+			List<cpVect> verts = new List<cpVect>();
+			for (int i = 0; i < count; i++)
+				verts.Add(this.planes[i].v0);
 
-			for (var i = 0; i < len; i++)
-			{
-				m_debugDraw.DrawSegment(lastPoint, planes[i].v0, color);
-				lastPoint = planes[i].v0;
-			}
-
+			m_debugDraw.DrawPolygon(verts, count, color);
 		}
 
 		public static cpPolyShape BoxShape(cpBody body, float width, float height, float radius)
@@ -290,6 +289,7 @@ namespace ChipmunkSharp
 
 
 		}
+
 		public static cpPolyShape BoxShape2(cpBody body, cpBB box, float radius)
 		{
 
@@ -304,6 +304,8 @@ namespace ChipmunkSharp
 		}
 
 
+
+		/// /////////////////////////////////////////////////////////////
 	}
 
 }
