@@ -564,7 +564,7 @@ namespace ChipmunkSharp
 			this.b = b; this.body_b = b.body;
 
 			// Iterate over the possible pairs to look for hash value matches.
-			for (int i = 0; i < info.count ; i++)
+			for (int i = 0; i < info.count; i++)
 			{
 				cpContact con = info.arr[i];
 

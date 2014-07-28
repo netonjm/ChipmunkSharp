@@ -45,8 +45,8 @@ namespace ChipmunkSharp
 	public class cpPolyShape : cpShape
 	{
 
-		public float r;
-		public cpSplittingPlane[] planes;
+		internal float r;
+		internal cpSplittingPlane[] planes;
 
 		public int Count { get { return planes.Length; } }
 

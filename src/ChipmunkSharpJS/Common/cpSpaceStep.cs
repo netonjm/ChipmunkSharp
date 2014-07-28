@@ -290,7 +290,6 @@ namespace ChipmunkSharp
 			if (ticks >= this.collisionPersistence)
 			{
 				arb.contacts = null;
-
 				//cpArrayPush(this.pooledArbiters, arb);
 				return false;
 			}

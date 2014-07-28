@@ -149,8 +149,8 @@ namespace ChipmunkSharp
 
 	public class cpCircleShape : cpShape
 	{
-		public cpVect c, tc;
-		public float r;
+		internal cpVect c, tc;
+		internal float r;
 
 		public cpCircleShape(cpBody body, float radius, cpVect offset)
 			: base(body, cpShapeMassInfo.cpCircleShapeMassInfo(0.0f, radius, offset))
@@ -188,6 +188,38 @@ namespace ChipmunkSharp
 			return new cpBB(c, this.r);
 		}
 
+		public float GetRadius()
+		{
+			return this.r;
+		}
+
+		public void SetRadius(float radius)
+		{
+			this.r = radius;
+
+			float mass = this.massInfo.m;
+			this.massInfo = cpShapeMassInfo.cpCircleShapeMassInfo(mass, this.r, this.c);
+			if (mass > 0.0f)
+				this.body.AccumulateMassFromShapes();
+		}
+
+
+		public cpVect GetOffset()
+		{
+			return this.c;
+		}
+
+		public void SetOffset(cpVect offset)
+		{
+			this.c = offset;
+
+			float mass = this.massInfo.m;
+			this.massInfo = cpShapeMassInfo.cpCircleShapeMassInfo(mass, this.r, this.c);
+			if (mass > 0.0f)
+				this.body.AccumulateMassFromShapes();
+		}
+
+
 
 
 		public override void Draw(cpDebugDraw m_debugDraw)
@@ -207,44 +239,11 @@ namespace ChipmunkSharp
 	public class cpSegmentShape : cpShape
 	{
 
-		public cpVect a, b, n;
-		public cpVect ta, tb, tn;
-		public float r;
+		internal cpVect a, b, n;
+		internal cpVect ta, tb, tn;
+		internal float r;
 
 		public cpVect a_tangent, b_tangent;
-
-
-		public cpSegmentShape(cpBody body, cpVect a, cpVect b, float r)
-			: base(body, cpShapeMassInfo.cpSegmentShapeMassInfo(0.0f, a, b, r))
-		{
-
-
-			this.a = a;
-			this.b = b;
-
-			this.n = cpVect.cpvrperp(cpVect.vnormalize(cpVect.cpvsub(b, a)));
-
-			this.r = r;
-
-			this.a_tangent = cpVect.Zero;
-			this.b_tangent = cpVect.Zero;
-
-			this.shapeType = cpShapeType.Segment;
-
-		}
-
-		public void setNeighbors(cpVect prev, cpVect next)
-		{
-			this.a_tangent = cpVect.cpvsub(prev, this.a);
-			this.b_tangent = cpVect.cpvsub(next, this.b);
-		}
-
-		public void setEndpoints(cpVect a, cpVect b)
-		{
-			this.a = a;
-			this.b = b;
-			this.n = cpVect.cpvperp(cpVect.cpvnormalize(cpVect.cpvsub(b, a)));
-		}
 
 		public override cpBB CacheData(cpTransform transform)
 		{
@@ -346,6 +345,84 @@ namespace ChipmunkSharp
 			}
 		}
 
+		public cpSegmentShape(cpBody body, cpVect a, cpVect b, float r)
+			: base(body, cpShapeMassInfo.cpSegmentShapeMassInfo(0.0f, a, b, r))
+		{
+
+
+			this.a = a;
+			this.b = b;
+
+			this.n = cpVect.cpvrperp(cpVect.vnormalize(cpVect.cpvsub(b, a)));
+
+			this.r = r;
+
+			this.a_tangent = cpVect.Zero;
+			this.b_tangent = cpVect.Zero;
+
+			this.shapeType = cpShapeType.Segment;
+
+		}
+
+
+		public cpVect GetA()
+		{
+			return this.a;
+		}
+
+		public cpVect GetB()
+		{
+			return this.b;
+		}
+
+		public cpVect GetNormal()
+		{
+			return this.n;
+		}
+
+		public float GetRadius()
+		{
+			return this.r;
+		}
+
+		public void SetRadius(float radius)
+		{
+
+			this.r = radius;
+
+			float mass = this.massInfo.m;
+			this.massInfo = cpShapeMassInfo.cpSegmentShapeMassInfo(this.massInfo.m, this.a, this.b, this.r);
+			if (mass > 0.0f)
+				this.body.AccumulateMassFromShapes();
+		}
+
+
+		public void SetNeighbors(cpVect prev, cpVect next)
+		{
+			this.a_tangent = cpVect.cpvsub(prev, this.a);
+			this.b_tangent = cpVect.cpvsub(next, this.b);
+		}
+
+		public void SetEndpoints(cpVect a, cpVect b)
+		{
+			this.a = a;
+			this.b = b;
+			this.n = cpVect.cpvperp(cpVect.cpvnormalize(cpVect.cpvsub(b, a)));
+
+			float mass = this.massInfo.m;
+			this.massInfo = cpShapeMassInfo.cpSegmentShapeMassInfo(massInfo.m, this.a, this.b, this.r);
+			if (mass > 0.0f)
+				this.body.AccumulateMassFromShapes();
+
+		}
+
+
+
+		/// ///////////////////////////////////////////////////////////
+
+
+
+
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
@@ -443,33 +520,88 @@ namespace ChipmunkSharp
 			this.type = "0";
 
 			this.space = null;
-
-
-
 		}
 
-		#region SETTERS
 
-
-		public void SetElasticity(float value)
+		public cpSpace GetSpace()
 		{
-			// throw new NotImplementedException();
-			this.e = value;
+			return this.space;
 		}
+
+		public cpBody GetBody()
+		{
+			return this.body;
+		}
+
 		public void SetBody(cpBody body)
 		{
 			cp.assertHard(!Active(), "You cannot change the body on an active shape. You must remove the shape from the space before changing the body.");
 			this.body = body;
 		}
 
-		public void SetGroup(int id)
+		public float GetMass()
 		{
-			filter.group = id;
+			return this.massInfo.m;
+		}
+
+		public void SetMass(float mass)
+		{
+			this.body.Activate();
+
+			this.massInfo.m = mass;
+			this.body.AccumulateMassFromShapes();
+		}
+
+		public float GetMoment()
+		{
+			return this.massInfo.m / this.massInfo.area;
+		}
+
+		public float GetArea() { return this.massInfo.area; }
+		public cpVect GetCenterOfGravity() { return this.massInfo.cog; }
+
+		public cpBB GetBB()
+		{
+			return this.bb;
+		}
+
+		public bool GetSensor()
+		{
+			return this.sensor;
 		}
 
 		public void SetSensor(bool sensor)
 		{
-			this.body.Activate(); this.sensor = sensor;
+			this.body.Activate();
+			this.sensor = sensor;
+		}
+
+		public float GetElasticity()
+		{
+			return this.e;
+		}
+
+		public void SetElasticity(float elasticity)
+		{
+			cp.assertHard(elasticity >= 0.0f, "Elasticity must be positive and non-zero.");
+			this.body.Activate();
+			// throw new NotImplementedException();
+			this.e = elasticity;
+		}
+
+		public object GetUserData()
+		{
+			return this.userData;
+		}
+
+		public void SetUserData(object userData)
+		{
+			this.userData = userData;
+		}
+
+		public string GetCollisionType()
+		{
+			return this.type;
 		}
 
 		public void SetCollisionType(string collisionType)
@@ -478,92 +610,25 @@ namespace ChipmunkSharp
 			this.type = collisionType;
 		}
 
-		public void SetDensity(float density)
+		public cpShapeFilter GetFilter()
 		{
-			SetMass(density * this.massInfo.area);
+			return this.filter;
 		}
 
-		public void SetMass(float mass)
-		{
-
-			this.body.Activate();
-
-			this.massInfo.m = mass;
-			this.body.AccumulateMassFromShapes();
-
-		}
-
-		public void SetFriction(float value)
-		{
-			u = value;
-		}
-
-		#endregion
-
-		public bool Active()
-		{
-			return this.body != null && this.body.shapeList.IndexOf(this) != -1;
-		}
-
-
-		public virtual void SetFilter(cpShapeFilter filter)
+		public void SetFilter(cpShapeFilter filter)
 		{
 			body.Activate();
 			this.filter = filter;
 		}
-
-		#region NEW METHODS
 
 		public virtual cpBB CacheBB()
 		{
 			return Update(body.transform);
 
 		}
-
-		public virtual cpBB CacheData(cpTransform transform)
+		public cpBB Update(cpTransform transform)
 		{
-			throw new NotImplementedException();
-		}
-
-		public cpContactPointSet Collide(cpShape b, ref List<cpContact> contacts)
-		{
-			return Collide(this, b, ref contacts);
-		}
-
-		/// Test if a point lies within a shape.
-		public static cpContactPointSet Collide(cpShape a, cpShape b, ref List<cpContact> contacts)
-		{
-			//cpContact[] contacts = new cpContact[cpArbiter.CP_MAX_CONTACTS_PER_ARBITER];
-			cpCollisionInfo info = cpCollision.cpCollide(a, b, ref contacts);
-
-			cpContactPointSet set = new cpContactPointSet();
-			//set.count = info.count;
-
-			// cpCollideShapes() may have swapped the contact order. Flip the normal.
-			bool swapped = (a != info.a);
-			set.normal = (swapped ? cpVect.cpvneg(info.n) : info.n);
-
-			for (int i = 0; i < info.count; i++)
-			{
-				// cpCollideShapesInfo() returns contacts with absolute positions.
-				cpVect p1 = contacts[i].r1;
-				cpVect p2 = contacts[i].r2;
-
-				set.points[i].pointA = (swapped ? p2 : p1);
-				set.points[i].pointB = (swapped ? p1 : p2);
-				set.points[i].distance = cpVect.cpvdot(cpVect.cpvsub(p2, p1), set.normal);
-			}
-
-			return set;
-		}
-
-		protected virtual void pointQuery(cpVect p, ref cpPointQueryInfo info)
-		{
-			throw new NotImplementedException();
-		}
-		protected virtual void segmentQuery(cpVect a, cpVect b, float radius, ref cpSegmentQueryInfo info)
-		{
-			throw new NotImplementedException();
+			return (this.bb = CacheData(transform));
 		}
 
 		public float PointQuery(cpVect p, ref cpPointQueryInfo info)
@@ -599,65 +664,96 @@ namespace ChipmunkSharp
 
 		}
 
-		public cpBB Update(cpTransform transform)
-		{
-			return (this.bb = CacheData(transform));
-		}
-
-		#endregion
-
-
-
-		public virtual void Draw(cpDebugDraw m_debugDraw)
+		protected virtual void pointQuery(cpVect p, ref cpPointQueryInfo info)
 		{
 			throw new NotImplementedException();
 		}
+		protected virtual void segmentQuery(cpVect a, cpVect b, float radius, ref cpSegmentQueryInfo info)
+		{
+			throw new NotImplementedException();
+		}
+		public cpContactPointSet Collide(cpShape b, ref List<cpContact> contacts)
+		{
+			return Collide(this, b, ref contacts);
+		}
+		/// Test if a point lies within a shape.
+		public static cpContactPointSet Collide(cpShape a, cpShape b, ref List<cpContact> contacts)
+		{
+			//cpContact[] contacts = new cpContact[cpArbiter.CP_MAX_CONTACTS_PER_ARBITER];
+			cpCollisionInfo info = cpCollision.cpCollide(a, b, ref contacts);
 
+			cpContactPointSet set = new cpContactPointSet();
+			//set.count = info.count;
+
+			// cpCollideShapes() may have swapped the contact order. Flip the normal.
+			bool swapped = (a != info.a);
+			set.normal = (swapped ? cpVect.cpvneg(info.n) : info.n);
+
+			for (int i = 0; i < info.count; i++)
+			{
+				// cpCollideShapesInfo() returns contacts with absolute positions.
+				cpVect p1 = contacts[i].r1;
+				cpVect p2 = contacts[i].r2;
+
+				set.points[i].pointA = (swapped ? p2 : p1);
+				set.points[i].pointB = (swapped ? p1 : p2);
+				set.points[i].distance = cpVect.cpvdot(cpVect.cpvsub(p2, p1), set.normal);
+			}
+
+			return set;
+		}
+
+		public void SetDensity(float density)
+		{
+			SetMass(density * this.massInfo.area);
+		}
+
+		public float GetFriction()
+		{
+			return this.u;
+		}
+		public void SetFriction(float friction)
+		{
+			cp.assertHard(friction >= 0.0f, "Friction must be postive and non-zero.");
+			this.body.Activate();
+			this.u = friction;
+		}
+
+		public cpVect GetSurfaceVelocity()
+		{
+			return this.surfaceV;
+		}
+
+		public void SetSurfaceVelocity(cpVect surfaceVelocity)
+		{
+			this.body.Activate();
+			this.surfaceV = surfaceVelocity;
+		}
+
+		public bool Active()
+		{
+			return (this.prev != null && this.body != null && this.body.shapeList.Contains(this));
+			//return this.body != null && this.body.shapeList.IndexOf(this) != -1;
+		}
 
 		public static void UpdateFunc(cpShape shape, object unused)
 		{
 			shape.CacheBB();
 		}
 
+		public virtual cpBB CacheData(cpTransform transform)
+		{
+			throw new NotImplementedException();
+		}
+
+		public virtual void Draw(cpDebugDraw m_debugDraw)
+		{
+			throw new NotImplementedException();
+		}
+		/// /////////////////////////////////////////////////////////////////////////
+
+
 
 	};
 
 }
-/*
-	#region OBSOLETE
-
-		//[Obsolete("This method was obsolete from Chipmunk JS")]
-		//public virtual void CacheBB()
-		//{
-		//	this.Update(this.body.Position, this.body.Rotation);
-		//}
-
-
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public virtual void CacheData(cpVect pos, cpVect rot)
-		{
-			throw new NotImplementedException();
-		}
-
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public virtual cpSegmentQueryInfo SegmentQuery(cpVect a, cpVect b)
-		{
-			throw new NotImplementedException();
-		}
-
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public virtual cpPointQueryInfo NearestPointQuery(cpVect p)
-		{
-			throw new NotImplementedException();
-		}
-
-		/// Update, cache and return the bounding box of a shape with an explicit transformation.
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public virtual void Update(cpVect pos, cpVect rot)
-		{
-			cp.assert(!float.IsNaN(rot.x), "Rotation is NaN");
-			cp.assert(!float.IsNaN(pos.x), "Position is NaN");
-			this.CacheData(pos, rot);
-		}
-		#endregion
-*/
