@@ -76,7 +76,7 @@ namespace ChipmunkSharp
 
 		/// Mass of the body.
 		/// Must agree with cpBody.m_inv! Use cpBodySetMass() when changing the mass for this reason.
-		private float m;
+		internal float m;
 		/// Mass inverse.
 		public float m_inv;
 
@@ -685,6 +685,13 @@ namespace ChipmunkSharp
 			}
 		}
 
+		public void EachComponent(Func<cpBody, object, bool> func, object data)
+		{
+			for (cpBody body = nodeRoot; body != null; body = body.nodeNext)
+			{
+				func(this, data);
+			}
+		}
 
 		// Defined in cpSpace.c
 		// Wake up a sleeping or idle body.
@@ -710,7 +717,7 @@ namespace ChipmunkSharp
 						body.nodeIdleTime = 0.0f;
 						body.nodeRoot = null;
 						body.nodeNext = null;
-						space.activateBody(body);
+						space.ActivateBody(body);
 
 						body = next;
 					}
@@ -759,6 +766,7 @@ namespace ChipmunkSharp
 			cp.assertSoft(thread.next == null, "Internal Error: Dangling contact graph pointers detected. (A)");
 			cp.assertSoft(thread.prev == null, "Internal Error: Dangling contact graph pointers detected. (B)");
 
+
 			cpArbiter next = this.arbiterList;
 
 			cpArbiterThread next_thread;
@@ -798,7 +806,6 @@ namespace ChipmunkSharp
 			return space == null;  //(cpSpace)0));
 		}
 
-		public cpVect GetPos() { return this.p; }
 		public cpVect GetVel() { return v; }
 
 		public void SetAngleInternal(float angle)
@@ -846,12 +853,12 @@ namespace ChipmunkSharp
 		// Force a body to fall asleep immediately along with other bodies in a group.
 		public void SleepWithGroup(cpBody group)
 		{
-			cp.assertSoft(bodyType != cpBodyType.STATIC && !this.IsRogue(), "Rogue and static bodies cannot be put to sleep.");
+			cp.assertHard(bodyType != cpBodyType.STATIC && !this.IsRogue(), "Rogue and static bodies cannot be put to sleep.");
 
 			var space = this.space;
-			cp.assertSoft(space != null, "Cannot put a rogue body to sleep.");
-			cp.assertSoft(space.IsLocked, "Bodies cannot be put to sleep during a query or a call to cpSpaceStep(). Put these calls into a post-step callback.");
-			cp.assertSoft(group == null || group.IsSleeping(), "Cannot use a non-sleeping body as a group identifier.");
+			cp.assertHard(!space.IsLocked, "Bodies cannot be put to sleep during a query or a call to cpSpaceStep(). Put these calls into a post-step callback.");
+			cp.assertHard(space.GetSleepTimeThreshold() < cp.Infinity, "Sleeping is not enabled on the space. You cannot sleep a body without setting a sleep time threshold on the space.");
+			cp.assertHard(group == null || group.IsSleeping(), "Cannot use a non-sleeping body as a group identifier.");
 
 			if (this.IsSleeping())
 			{
@@ -859,11 +866,10 @@ namespace ChipmunkSharp
 				return;
 			}
 
-			for (var i = 0; i < this.shapeList.Count; i++)
-			{
-				this.shapeList[i].Update(this.p, this.cog);
-			}
-			space.deactivateBody(this);
+			EachShape((shape, o) => shape.CacheBB(), null);
+
+
+			space.DeactivateBody(this);
 
 			if (group != null)
 			{
@@ -938,82 +944,82 @@ namespace ChipmunkSharp
 			SanityCheck();
 		}
 
-		#region OBSOLETE
+		//#region OBSOLETE
 
-		[Obsolete("OBSOLETE JS CODE")]
-		public cpVect GetVelAtPoint(cpVect r)
-		{
-			return cpVect.cpvadd(v, cpVect.cpvmult(cpVect.cpvperp(r), w));
-		}
+		//[Obsolete("OBSOLETE JS CODE")]
+		//public cpVect GetVelAtPoint(cpVect r)
+		//{
+		//	return cpVect.cpvadd(v, cpVect.cpvmult(cpVect.cpvperp(r), w));
+		//}
 
-		/// Get the velocity on a body (in world units) at a point on the body in world coordinates.
-		[Obsolete("OBSOLETE JS CODE")]
-		public cpVect GetVelAtWorldPoint(cpVect point)
-		{
-			return GetVelAtPoint(cpVect.cpvsub(point, p));
-		}
+		///// Get the velocity on a body (in world units) at a point on the body in world coordinates.
+		//[Obsolete("OBSOLETE JS CODE")]
+		//public cpVect GetVelAtWorldPoint(cpVect point)
+		//{
+		//	return GetVelAtPoint(cpVect.cpvsub(point, p));
+		//}
 
-		/// Get the velocity on a body (in world units) at a point on the body in local coordinates.
-		[Obsolete("OBSOLETE JS CODE")]
-		public cpVect GetVelAtLocalPoint(cpVect point)
-		{
-			return GetVelAtPoint(cpVect.cpvrotate(point, cog));
-		}
+		///// Get the velocity on a body (in world units) at a point on the body in local coordinates.
+		//[Obsolete("OBSOLETE JS CODE")]
+		//public cpVect GetVelAtLocalPoint(cpVect point)
+		//{
+		//	return GetVelAtPoint(cpVect.cpvrotate(point, cog));
+		//}
 
-		// Convert body relative/local coordinates to absolute/world coordinates.
-		[Obsolete("OBSOLETE JS CODE")]
-		public cpVect Local2World(cpVect v)
-		{
-			return cpVect.cpvadd(p, cpVect.cpvrotate(v, cog));
-		}
+		//// Convert body relative/local coordinates to absolute/world coordinates.
+		//[Obsolete("OBSOLETE JS CODE")]
+		//public cpVect Local2World(cpVect v)
+		//{
+		//	return cpVect.cpvadd(p, cpVect.cpvrotate(v, cog));
+		//}
 
-		// Convert body absolute/world coordinates to  relative/local coordinates.
-		[Obsolete("OBSOLETE JS CODE")]
-		public cpVect World2Local(cpVect v)
-		{
-			return cpVect.cpvunrotate(cpVect.cpvsub(v, p), cog);
-		}
+		//// Convert body absolute/world coordinates to  relative/local coordinates.
+		//[Obsolete("OBSOLETE JS CODE")]
+		//public cpVect World2Local(cpVect v)
+		//{
+		//	return cpVect.cpvunrotate(cpVect.cpvsub(v, p), cog);
+		//}
 
-		[Obsolete("OBSOLETE JS CODE")]
-		public void VelocityFunc(cpVect gravity, float damping, float dt)
-		{
-			//this.v = vclamp(vadd(vmult(this.v, damping), vmult(vadd(gravity, vmult(this.f, this.m_inv)), dt)), this.v_limit);
-			var vx = this.v.x * damping + (gravity.x + this.f.x * this.m_inv) * dt;
-			var vy = this.v.y * damping + (gravity.y + this.f.y * this.m_inv) * dt;
+		//[Obsolete("OBSOLETE JS CODE")]
+		//public void VelocityFunc(cpVect gravity, float damping, float dt)
+		//{
+		//	//this.v = vclamp(vadd(vmult(this.v, damping), vmult(vadd(gravity, vmult(this.f, this.m_inv)), dt)), this.v_limit);
+		//	var vx = this.v.x * damping + (gravity.x + this.f.x * this.m_inv) * dt;
+		//	var vy = this.v.y * damping + (gravity.y + this.f.y * this.m_inv) * dt;
 
-			//var v = vclamp(new Vect(vx, vy), this.v_limit);
-			//this.vx = v.x; this.vy = v.y;
-			var v_limit = this.v_limit;
-			var lensq = vx * vx + vy * vy;
-			var scale = (lensq > v_limit * v_limit) ? v_limit / cp.cpfsqrt(lensq) : 1;
-			this.v.x = vx * scale;
-			this.v.y = vy * scale;
+		//	//var v = vclamp(new Vect(vx, vy), this.v_limit);
+		//	//this.vx = v.x; this.vy = v.y;
+		//	var v_limit = this.v_limit;
+		//	var lensq = vx * vx + vy * vy;
+		//	var scale = (lensq > v_limit * v_limit) ? v_limit / cp.cpfsqrt(lensq) : 1;
+		//	this.v.x = vx * scale;
+		//	this.v.y = vy * scale;
 
-			var w_limit = this.w_limit;
-			this.w = cp.cpfclamp(this.w * damping + this.t * this.i_inv * dt, -w_limit, w_limit);
+		//	var w_limit = this.w_limit;
+		//	this.w = cp.cpfclamp(this.w * damping + this.t * this.i_inv * dt, -w_limit, w_limit);
 
-			this.SanityCheck();
-		}
+		//	this.SanityCheck();
+		//}
 
-		[Obsolete("OBSOLETE JS CODE")]
-		public void PositionFunc(float dt)
-		{
-			//this.p = vadd(this.p, vmult(vadd(this.v, this.v_bias), dt));
+		//[Obsolete("OBSOLETE JS CODE")]
+		//public void PositionFunc(float dt)
+		//{
+		//	//this.p = vadd(this.p, vmult(vadd(this.v, this.v_bias), dt));
 
-			//this.p = this.p + (this.v + this.v_bias) * dt;
-			this.p.x += (this.v.x + this.v_bias.x) * dt;
-			this.p.y += (this.v.y + this.v_bias.y) * dt;
+		//	//this.p = this.p + (this.v + this.v_bias) * dt;
+		//	this.p.x += (this.v.x + this.v_bias.x) * dt;
+		//	this.p.y += (this.v.y + this.v_bias.y) * dt;
 
-			this.SetAngleInternal(this.a + (this.w + this.w_bias) * dt);
+		//	this.SetAngleInternal(this.a + (this.w + this.w_bias) * dt);
 
-			this.v_bias.x = this.v_bias.y = 0;
-			this.w_bias = 0;
+		//	this.v_bias.x = this.v_bias.y = 0;
+		//	this.w_bias = 0;
 
-			this.SanityCheck();
-		}
+		//	this.SanityCheck();
+		//}
 
 
-		#endregion
+		//	#endregion
 
 	}
 		#endregion

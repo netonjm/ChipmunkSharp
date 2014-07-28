@@ -50,6 +50,21 @@ namespace ChipmunkSharp
 			return new cpBB(p.x - r, p.y - r, p.x + r, p.y + r);
 		}
 
+		public float Proximity(cpBB b)
+		{
+			return Proximity(this, b);
+		}
+
+		public static float Proximity(Node a, Leaf b)
+		{
+			return Proximity(a.bb, b.bb);
+		}
+
+		public static float Proximity(cpBB a, cpBB b)
+		{
+			return Math.Abs(a.l + a.r - b.l - b.r) + Math.Abs(a.b + a.t - b.b - b.t);
+		}
+
 		/// Returns true if @c a and @c b intersect.
 		public bool Intersects(cpBB a)
 		{

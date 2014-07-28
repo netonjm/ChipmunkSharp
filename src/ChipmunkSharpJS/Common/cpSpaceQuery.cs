@@ -30,340 +30,6 @@ namespace ChipmunkSharp
 	{
 
 
-		#region OBSOLETE
-
-		/// Query the space at a point and call @c func for each shape found.
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public void pointQuery(cpVect point, int layers, int group, Action<cpShape> func)
-		{
-
-			if (point == null)
-				return;
-
-			var helper = new Action<cpShape>(shape =>
-			{
-				if (
-					!(shape.filter.group != 0
-					&& group == shape.filter.group)
-					&& (layers != 0)
-					&& shape.NearestPointQuery(point) != null
-				)
-				{
-					func(shape);
-				}
-			});
-
-			var bb = new cpBB(point.x, point.y, point.x, point.y);
-			Lock();
-			{
-				this.dynamicShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
-				this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
-			} Unlock(true);
-		}
-
-		/// Query the space at a point and return the first shape found. Returns null if no shapes were found.
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public cpShape pointQueryFirst(cpVect point, int layers, int group, Action<cpShape> func)
-		{
-			cpShape outShape = null;
-
-			this.pointQuery(point, layers, group, new Action<cpShape>(shape =>
-			{
-				if (!shape.sensor)
-					outShape = shape;
-			}));
-			return outShape;
-		}
-
-		/// Query a space for any shapes overlapping the given shape and call @c func for each shape found.
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public bool shapeQuery(cpShape shape, Action<cpShape, List<cpContact>> func)
-		{
-
-			cpBody body = shape.body;
-
-			//var bb = (body ? shape.update(body.p, body.rot) : shape.bb);
-			if (body != null)
-			{
-				shape.Update(body.GetPosition(), body.GetRotation());
-			}
-
-			var bb = new cpBB(shape.bb.l, shape.bb.b, shape.bb.r, shape.bb.t);
-
-			//shapeQueryContext context = {func, data, false};
-			bool anyCollision = false;
-
-			Action<cpShape> helper = (b) =>
-			{
-
-				var a = shape;
-				// Reject any of the simple cases
-				if (
-					(a.filter.group != 0 && a.filter.group == b.filter.group) ||
-
-					a == b
-				) return;
-
-
-				List<cpContact> contacts = new List<cpContact>();
-
-				// Shape 'a' should have the lower shape type. (required by collideShapes() )
-				if ((a as ICollisionShape).CollisionCode <= (b as ICollisionShape).CollisionCode)
-				{
-					contacts = cpCollision.cpCollide(a, b);
-				}
-				else
-				{
-					contacts = cpCollision.cpCollide(b, a);
-					List<cpContact> contactsModified = new List<cpContact>();
-					for (var i = 0; i < contacts.Count; i++)
-					{
-						cpContact contacto = contacts[i];
-						contacto.n = cpVect.cpvneg(contacto.n);
-						contactsModified.Add(contacto);
-					}
-					contacts = contactsModified;
-				}
-
-				if (contacts.Count > 0)
-				{
-					anyCollision = !(a.sensor || b.sensor);
-
-					if (func != null)
-					{
-						//List<ContactPoint> set = new List<ContactPoint>();
-						//ContactPoint tmp;
-						//for (var i = 0; i < contacts.Count; i++)
-						//{
-						//    tmp = new ContactPoint(contacts[i].p, contacts[i].n, contacts[i].dist, 0); // contacts[i].p, contacts[i].n, contacts[i].dist);
-						//    set.Add(tmp);
-						//}
-
-						func(b, contacts);
-					}
-				}
-
-
-			};
-
-			Lock();
-			{
-				this.dynamicShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
-				this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
-			}
-			Unlock(true);
-
-			return anyCollision;
-		}
-
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public void segmentQuery(cpVect start, cpVect end, int layers, int group, Action<cpShape, float, cpVect> func)
-		{
-			var helper = new Func<object, float>(obj1 =>
-		{
-
-			cpShape shape = obj1 as cpShape;
-
-			var info = shape.SegmentQuery(start, end);
-
-			if (
-				!(shape.filter.group != 0 && group == shape.filter.group)
-				&& (layers != 0)
-				&& info != null
-			)
-			{
-				func(shape, info.alpha, info.normal);
-			}
-			return 1;
-
-		});
-
-			this.Lock();
-			{
-				this.staticShapes.SegmentQuery(start, end, 1, helper);
-				this.dynamicShapes.SegmentQuery(start, end, 1, helper);
-			} this.Unlock(true);
-		}
-
-		/// Perform a fast rectangle query on the space calling @c func for each shape found.
-		/// Only the shape's bounding boxes are checked for overlap, not their full shape.
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public void bbQuery(cpBB bb, int layers, int group, Action<cpShape> func)
-		{
-			var helper = new Action<cpShape>(shape =>
-			{
-				if (
-					!(shape.filter.group > 0 && group == shape.filter.group) && (layers != 0) &&
-					 cp.bbIntersects2(bb, shape.bb.l, shape.bb.b, shape.bb.r, shape.bb.t)
-				)
-				{
-					func(shape);
-				}
-			});
-
-
-			Lock();
-			{
-				this.dynamicShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
-				this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
-			} Unlock(true);
-		}
-
-		//[Obsolete("This method was obsolete from Chipmunk JS")]
-		//public Action<object, object> makeCollideShapes()
-		//{
-		//	// It would be nicer to use .bind() or something, but this is faster.
-		//	return new Action<object, object>((obj1, obj2) =>
-		//	{
-
-		//		var a = obj1 as cpShape;
-		//		var b = obj2 as cpShape;
-
-		//		// Reject any of the simple cases
-		//		if (
-		//			// BBoxes must overlap
-		//			//!bbIntersects(a.bb, b.bb)
-		//			!(a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t)
-		//			// Don't collide shapes attached to the same body.
-		//			|| a.body == b.body
-		//			// Don't collide objects in the same non-zero group
-		//			|| (a.filter.group != 0 && a.filter.group == b.filter.group)
-		//			// Don't collide objects that don't share at least on layer.
-		//			//|| !(a.filter.categories != 0 & b.filter.categories != 0
-		//			//)
-		//		) return;
-
-		//		var handler = lookupHandler(a.type, b.type, defaultHandler);
-
-		//		var sensor = a.sensor || b.sensor;
-		//		if (sensor && handler == cp.defaultCollisionHandler) return;
-
-		//		// Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
-		//		if ((a as ICollisionShape).CollisionCode > (b as ICollisionShape).CollisionCode)
-		//		{
-		//			var temp = a;
-		//			a = b;
-		//			b = temp;
-		//		}
-
-		//		// Narrow-phase collision detection.
-		//		//cpContact *contacts = cpContactBufferGetArray(space);
-		//		//int numContacts = cpCollideShapes(a, b, contacts);
-		//		var contacts = cpCollision.cpCollide(a, b);
-		//		if (contacts == null || contacts.Count == 0)
-		//			return; // Shapes are not colliding.
-		//		//cpSpacePushContacts(space, numContacts);
-
-		//		// Get an arbiter from space.arbiterSet for the two shapes.
-		//		// This is where the persistant contact magic comes from.
-		//		var arbHash = cp.hashPair(a.hashid, b.hashid);
-
-		//		cpArbiter arb;
-		//		if (!cachedArbiters.TryGetValue(arbHash, out arb))
-		//		{
-		//			arb = new cpArbiter(a, b);
-		//			cachedArbiters.Add(arbHash, arb);
-		//		}
-
-		//		arb.Update(contacts, handler, a, b);
-
-		//		// Call the begin function first if it's the first step
-		//		if (arb.state == cpArbiterState.FirstCollision && !handler.beginFunc(arb, this, null))
-		//		{
-		//			arb.Ignore(); // permanently ignore the collision until separation
-		//		}
-
-		//		if (
-		//			// Ignore the arbiter if it has been flagged
-		//			(arb.state != cpArbiterState.Ignore) &&
-		//			// Call preSolve
-		//			handler.preSolveFunc(arb, this, null) &&
-		//			// Process, but don't add collisions for sensors.
-		//			!sensor
-		//		)
-		//		{
-		//			this.arbiters.Add(arb);
-		//		}
-		//		else
-		//		{
-		//			//cpSpacePopContacts(space, numContacts);
-
-		//			arb.contacts = null;
-
-		//			// Normally arbiters are set as used after calling the post-solve callback.
-		//			// However, post-solve callbacks are not called for sensors or arbiters rejected from pre-solve.
-		//			if (arb.state != cpArbiterState.Ignore) arb.state = cpArbiterState.Normal;
-		//		}
-
-		//		// Time stamp the arbiter so we know it was used recently.
-		//		arb.stamp = this.stamp;
-		//	});
-		//}
-
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public cpSegmentQueryInfo segmentQueryFirst(cpVect start, cpVect end, int layers, int group)
-		{
-			cpSegmentQueryInfo output = null;
-
-			var helper = new Func<object, float>(o1 =>
-			{
-				cpShape shape = o1 as cpShape;
-
-				cpSegmentQueryInfo info = shape.SegmentQuery(start, end);
-
-
-				if (
-					!(shape.filter.group != 0 && group == shape.filter.group) &&
-					!shape.sensor && info != null &&
-					(output == null)
-				)
-				{
-					output = info;
-				}
-
-				return output != null ? output.alpha : 1;
-			}
-				);
-
-			this.staticShapes.SegmentQuery(start, end, 1f, helper);
-			this.dynamicShapes.SegmentQuery(start, end, output != null ? output.alpha : 1, helper);
-
-			return output;
-		}
-
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public cpShape NearestPointQuery(cpVect point, int maxDistance, int layers, int group)
-		{
-
-			cpPointQueryInfo output = null;
-
-			var helper = new Action<object, object>((o1, o2) =>
-			{
-				cpShape shape = o1 as cpShape;
-
-				if (!(shape.filter.group > 0 && group == shape.filter.group) && !shape.sensor)
-				{
-					cpPointQueryInfo info = shape.NearestPointQuery(point);
-
-					if (info.distance < maxDistance && (output == null || info.distance < output.distance))
-						output = info;
-				}
-			});
-
-			cpBB bb = cp.bbNewForCircle(point, maxDistance);
-
-			this.dynamicShapes.Query(bb, helper);
-			this.staticShapes.Query(bb, helper);
-
-			return output.shape;
-		}
-
-		#endregion
-
-		/*
-
-		//MARK: Nearest Point Query Functions
-
 		public string NearestPointQuery(PointQueryContext context, cpShape shape, string id, object data)
 		{
 			if (
@@ -378,16 +44,15 @@ namespace ChipmunkSharp
 			return id;
 		}
 
-		public string PointQuery(cpVect point, float maxDistance, cpShapeFilter filter, Action<cpShape, cpVect, float, cpVect, object> func, object data)
+		public void PointQuery(cpVect point, float maxDistance, cpShapeFilter filter, Action<cpShape, cpVect, float, cpVect, object> func, object data)
 		{
 			PointQueryContext context = new PointQueryContext(point, maxDistance, filter, func);
 			cpBB bb = cpBB.cpBBNewForCircle(point, cp.cpfmax(maxDistance, 0.0f));
 
 			Lock();
 			{
-				this.activeShapes.Query(context, bb, NearestPointQuery, data);
-				//cpSpatialIndexQuery(this.dynamicShapes, &context, bb, NearestPointQuery, data);
-				this.staticShapes.Query(context, bb, NearestPointQuery, data);
+				this.staticShapes.Query(context, bb, (ctx, shape, colid, o) => NearestPointQuery((PointQueryContext)ctx, shape as cpShape, colid, o), data);
+				this.dynamicShapes.Query(context, bb, (ctx, shape, colid, o) => NearestPointQuery((PointQueryContext)ctx, shape as cpShape, colid, o), data);
 			} Unlock(true);
 		}
 
@@ -409,7 +74,7 @@ namespace ChipmunkSharp
 
 		//MARK: Segment Query Functions
 
-		public float SegmentQuery(SegmentQueryContext context, cpShape shape, object data)
+		public float SegmentQueryFunc(SegmentQueryContext context, cpShape shape, object data)
 		{
 			cpSegmentQueryInfo info = null;
 
@@ -435,17 +100,17 @@ namespace ChipmunkSharp
 
 			Lock();
 			{
-				this.staticShapes.SegmentQuery(context, start, end, 1.0f, SegmentQuery, data);
-				this.activeShapes.SegmentQuery(context, start, end, 1.0f, SegmentQuery, data);
-				//this.dynamicShapes.SegmentQuery(context, start, end, 1.0f, SegmentQuery, data);
-
-				//cpSpatialIndexSegmentQuery(space->staticShapes, &context, start, end, 1.0f, (cpSpatialIndexSegmentQueryFunc)SegmentQuery, data);
-				//cpSpatialIndexSegmentQuery(space->dynamicShapes, &context, start, end, 1.0f, (cpSpatialIndexSegmentQueryFunc)SegmentQuery, data);
+				this.staticShapes.SegmentQuery(context, start, end, 1.0f,
+					(o1, o2, o3) => SegmentQueryFunc((SegmentQueryContext)o1, o2 as cpShape, o3)
+				, data);
+				this.dynamicShapes.SegmentQuery(context, start, end, 1.0f,
+					(o1, o2, o3) => SegmentQueryFunc((SegmentQueryContext)o1, o2 as cpShape, o3)
+					, data);
 
 			} Unlock(true);
 		}
 
-		public float SegmentQueryFirst(SegmentQueryContext context, cpShape shape, ref cpSegmentQueryInfo output)
+		public float SegmentQueryFirstFunc(SegmentQueryContext context, cpShape shape, cpSegmentQueryInfo output)
 		{
 			cpSegmentQueryInfo info = null;
 
@@ -474,20 +139,24 @@ namespace ChipmunkSharp
 			   filter,
 			   null);
 
-			this.staticShapes.SegmentQuery(context, start, end, 1.0f, SegmentQueryFirst, ref output);
+			this.staticShapes.SegmentQuery(context, start, end, 1.0f,
+			 (o1, o2, o3) => SegmentQueryFirstFunc((SegmentQueryContext)o1, o2 as cpShape, (cpSegmentQueryInfo)o3)
+				 , output);
 			//		this.dynamicShapes.SegmentQuery(context, start, end, output.alpha , SegmentQueryFirst, ref output);
-			this.activeShapes.SegmentQuery(context, start, end, output.alpha, SegmentQueryFirst, ref output);
+			this.dynamicShapes.SegmentQuery(context, start, end, output.alpha,
+				 (o1, o2, o3) => SegmentQueryFirstFunc((SegmentQueryContext)o1, o2 as cpShape, (cpSegmentQueryInfo)o3)
+				, output);
 
 			return output.shape;
 		}
 
 		//MARK: BB Query Functions
 
-		public string BBQuery(BBQueryContext context, cpShape shape, string id, object data)
+		public string BBQueryFunc(BBQueryContext context, cpShape shape, string id, object data)
 		{
 			if (
 				!cpShapeFilter.Reject(shape.filter, context.filter) &&
-				context.bb.Intersects(shape.GetBB())
+				context.bb.Intersects(shape.bb)
 			)
 			{
 				context.func(shape, data);
@@ -503,20 +172,26 @@ namespace ChipmunkSharp
 			Lock();
 			{
 
-				this.staticShapes.Query(ref context, bb, BBQuery, data);
-				this.activeShapes.Query(ref context, bb, BBQuery, data);
-				//this.dynamicShapes.SegmentQuery(context, start, end, 1.0f, SegmentQuery, data);
+				this.staticShapes.Query(context, bb, (o1, o2, s, o3) =>
 
-				//cpSpatialIndexQuery(space->dynamicShapes, &context, bb, (cpSpatialIndexQueryFunc)BBQuery, data);
-				//cpSpatialIndexQuery(space->staticShapes, &context, bb, (cpSpatialIndexQueryFunc)BBQuery, data);
+					BBQueryFunc((BBQueryContext)o1, o2 as cpShape, s, o3)
+				, data);
+
+				this.dynamicShapes.Query(context, bb, (o1, o2, s, o3) =>
+
+					BBQueryFunc((BBQueryContext)o1, o2 as cpShape, s, o3)
+				, data);
+
 			} Unlock(true);
 		}
 
-		public string ShapeQuery(cpShape a, cpShape b, string id, ShapeQueryContext context)
+		public string ShapeQueryFunc(cpShape a, cpShape b, string id, ShapeQueryContext context)
 		{
 			if (cpShapeFilter.Reject(a.filter, b.filter) || a == b) return id;
 
-			cpContactPointSet set = cpShape.Collide(a, b);
+			List<cpContact> contacts = new List<cpContact>();
+			cpContactPointSet set = cpShape.Collide(a, b, ref contacts);
+
 			if (set.Count > 0)
 			{
 				if (context.func != null) context.func(b, set, context.data);
@@ -527,23 +202,26 @@ namespace ChipmunkSharp
 
 		public bool ShapeQuery(cpShape shape, Action<cpShape, cpContactPointSet, object> func, object data)
 		{
+
 			cpBody body = shape.body;
-			cpBB bb = (body != null ? shape.Update(body.transform) : shape.GetBB());
+			cpBB bb = (body != null ? shape.Update(body.transform) : shape.bb);
 			ShapeQueryContext context = new ShapeQueryContext(func, data, false);
 
 			Lock();
 			{
-				this.staticShapes.Query(shape, bb, ShapeQuery, ref context);
-				this.activeShapes.Query(shape, bb, ShapeQuery, ref context);
 
-				//cpSpatialIndexQuery(space->dynamicShapes, shape, bb, (cpSpatialIndexQueryFunc)ShapeQuery, &context);
-				//cpSpatialIndexQuery(space->staticShapes, shape, bb, (cpSpatialIndexQueryFunc)ShapeQuery, &context);
+				this.staticShapes.Query(shape, bb,
+					(o1, o2, s, o3) => ShapeQueryFunc(o1 as cpShape, o2 as cpShape, s, (ShapeQueryContext)o3)
+				, context);
+
+				this.dynamicShapes.Query(shape, bb,
+					(o1, o2, s, o3) => ShapeQueryFunc(o1 as cpShape, o2 as cpShape, s, (ShapeQueryContext)o3)
+				, context);
+
 			} Unlock(true);
 
 			return context.anyCollision;
 		}
-
-		 */
 
 	}
 
@@ -617,3 +295,336 @@ namespace ChipmunkSharp
 	};
 
 }
+//#region OBSOLETE
+
+///// Query the space at a point and call @c func for each shape found.
+//[Obsolete("This method was obsolete from Chipmunk JS")]
+//public void pointQuery(cpVect point, int layers, int group, Action<cpShape> func)
+//{
+
+//	if (point == null)
+//		return;
+
+//	var helper = new Action<cpShape>(shape =>
+//	{
+//		if (
+//			!(shape.filter.group != 0
+//			&& group == shape.filter.group)
+//			&& (layers != 0)
+//			&& shape.NearestPointQuery(point) != null
+//		)
+//		{
+//			func(shape);
+//		}
+//	});
+
+//	var bb = new cpBB(point.x, point.y, point.x, point.y);
+//	Lock();
+//	{
+//		this.dynamicShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
+//		this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
+//	} Unlock(true);
+//}
+
+///// Query the space at a point and return the first shape found. Returns null if no shapes were found.
+////[Obsolete("This method was obsolete from Chipmunk JS")]
+////public cpShape pointQueryFirst(cpVect point, int layers, int group, Action<cpShape> func)
+////{
+////	cpShape outShape = null;
+
+////	this.pointQuery(point, layers, group, new Action<cpShape>(shape =>
+////	{
+////		if (!shape.sensor)
+////			outShape = shape;
+////	}));
+////	return outShape;
+////}
+
+///// Query a space for any shapes overlapping the given shape and call @c func for each shape found.
+////[Obsolete("This method was obsolete from Chipmunk JS")]
+////public bool shapeQuery(cpShape shape, Action<cpShape, List<cpContact>> func)
+////{
+
+////	cpBody body = shape.body;
+
+////	//var bb = (body ? shape.update(body.p, body.rot) : shape.bb);
+////	if (body != null)
+////	{
+////		shape.Update(body.GetPosition(), body.GetRotation());
+////	}
+
+////	var bb = new cpBB(shape.bb.l, shape.bb.b, shape.bb.r, shape.bb.t);
+
+////	//shapeQueryContext context = {func, data, false};
+////	bool anyCollision = false;
+
+////	Action<cpShape> helper = (b) =>
+////	{
+
+////		var a = shape;
+////		// Reject any of the simple cases
+////		if (
+////			(a.filter.group != 0 && a.filter.group == b.filter.group) ||
+
+////			a == b
+////		) return;
+
+
+////		List<cpContact> contacts = new List<cpContact>();
+
+////		// Shape 'a' should have the lower shape type. (required by collideShapes() )
+////		if ((a as ICollisionShape).CollisionCode <= (b as ICollisionShape).CollisionCode)
+////		{
+////			contacts = cpShape.Collide(a, b).;
+////		}
+////		else
+////		{
+////			contacts =  cpShape.Collide(b, a);
+////			List<cpContact> contactsModified = new List<cpContact>();
+////			for (var i = 0; i < contacts.Count; i++)
+////			{
+////				cpContact contacto = contacts[i];
+////				contacto.n = cpVect.cpvneg(contacto.n);
+////				contactsModified.Add(contacto);
+////			}
+////			contacts = contactsModified;
+////		}
+
+////		if (contacts.Count > 0)
+////		{
+////			anyCollision = !(a.sensor || b.sensor);
+
+////			if (func != null)
+////			{
+////				//List<ContactPoint> set = new List<ContactPoint>();
+////				//ContactPoint tmp;
+////				//for (var i = 0; i < contacts.Count; i++)
+////				//{
+////				//    tmp = new ContactPoint(contacts[i].p, contacts[i].n, contacts[i].dist, 0); // contacts[i].p, contacts[i].n, contacts[i].dist);
+////				//    set.Add(tmp);
+////				//}
+
+////				func(b, contacts);
+////			}
+////		}
+
+
+////	};
+
+////	Lock();
+////	{
+////		this.dynamicShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
+////		this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
+////	}
+////	Unlock(true);
+
+////	return anyCollision;
+////}
+
+////[Obsolete("This method was obsolete from Chipmunk JS")]
+////public void segmentQuery(cpVect start, cpVect end, int layers, int group, Action<cpShape, float, cpVect> func)
+////{
+////	var helper = new Func<object, float>(obj1 =>
+////{
+
+////	cpShape shape = obj1 as cpShape;
+
+////	var info = shape.SegmentQuery(start, end);
+
+////	if (
+////		!(shape.filter.group != 0 && group == shape.filter.group)
+////		&& (layers != 0)
+////		&& info != null
+////	)
+////	{
+////		func(shape, info.alpha, info.normal);
+////	}
+////	return 1;
+
+////});
+
+////	this.Lock();
+////	{
+////		this.staticShapes.SegmentQuery(start, end, 1, helper);
+////		this.dynamicShapes.SegmentQuery(start, end, 1, helper);
+////	} this.Unlock(true);
+////}
+
+///// Perform a fast rectangle query on the space calling @c func for each shape found.
+///// Only the shape's bounding boxes are checked for overlap, not their full shape.
+////[Obsolete("This method was obsolete from Chipmunk JS")]
+////public void bbQuery(cpBB bb, int layers, int group, Action<cpShape> func)
+////{
+////	var helper = new Action<cpShape>(shape =>
+////	{
+////		if (
+////			!(shape.filter.group > 0 && group == shape.filter.group) && (layers != 0) &&
+////			 cp.bbIntersects2(bb, shape.bb.l, shape.bb.b, shape.bb.r, shape.bb.t)
+////		)
+////		{
+////			func(shape);
+////		}
+////	});
+
+
+////	Lock();
+////	{
+////		this.dynamicShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
+////		this.staticShapes.Query(bb, (o1, o2) => { helper(o1 as cpShape); });
+////	} Unlock(true);
+////}
+
+////[Obsolete("This method was obsolete from Chipmunk JS")]
+////public Action<object, object> makeCollideShapes()
+////{
+////	// It would be nicer to use .bind() or something, but this is faster.
+////	return new Action<object, object>((obj1, obj2) =>
+////	{
+
+////		var a = obj1 as cpShape;
+////		var b = obj2 as cpShape;
+
+////		// Reject any of the simple cases
+////		if (
+////			// BBoxes must overlap
+////			//!bbIntersects(a.bb, b.bb)
+////			!(a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t)
+////			// Don't collide shapes attached to the same body.
+////			|| a.body == b.body
+////			// Don't collide objects in the same non-zero group
+////			|| (a.filter.group != 0 && a.filter.group == b.filter.group)
+////			// Don't collide objects that don't share at least on layer.
+////			//|| !(a.filter.categories != 0 & b.filter.categories != 0
+////			//)
+////		) return;
+
+////		var handler = lookupHandler(a.type, b.type, defaultHandler);
+
+////		var sensor = a.sensor || b.sensor;
+////		if (sensor && handler == cp.defaultCollisionHandler) return;
+
+////		// Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
+////		if ((a as ICollisionShape).CollisionCode > (b as ICollisionShape).CollisionCode)
+////		{
+////			var temp = a;
+////			a = b;
+////			b = temp;
+////		}
+
+////		// Narrow-phase collision detection.
+////		//cpContact *contacts = cpContactBufferGetArray(space);
+////		//int numContacts = cpCollideShapes(a, b, contacts);
+////		var contacts = cpCollision.cpCollide(a, b);
+////		if (contacts == null || contacts.Count == 0)
+////			return; // Shapes are not colliding.
+////		//cpSpacePushContacts(space, numContacts);
+
+////		// Get an arbiter from space.arbiterSet for the two shapes.
+////		// This is where the persistant contact magic comes from.
+////		var arbHash = cp.hashPair(a.hashid, b.hashid);
+
+////		cpArbiter arb;
+////		if (!cachedArbiters.TryGetValue(arbHash, out arb))
+////		{
+////			arb = new cpArbiter(a, b);
+////			cachedArbiters.Add(arbHash, arb);
+////		}
+
+////		arb.Update(contacts, handler, a, b);
+
+////		// Call the begin function first if it's the first step
+////		if (arb.state == cpArbiterState.FirstCollision && !handler.beginFunc(arb, this, null))
+////		{
+////			arb.Ignore(); // permanently ignore the collision until separation
+////		}
+
+////		if (
+////			// Ignore the arbiter if it has been flagged
+////			(arb.state != cpArbiterState.Ignore) &&
+////			// Call preSolve
+////			handler.preSolveFunc(arb, this, null) &&
+////			// Process, but don't add collisions for sensors.
+////			!sensor
+////		)
+////		{
+////			this.arbiters.Add(arb);
+////		}
+////		else
+////		{
+////			//cpSpacePopContacts(space, numContacts);
+
+////			arb.contacts = null;
+
+////			// Normally arbiters are set as used after calling the post-solve callback.
+////			// However, post-solve callbacks are not called for sensors or arbiters rejected from pre-solve.
+////			if (arb.state != cpArbiterState.Ignore) arb.state = cpArbiterState.Normal;
+////		}
+
+////		// Time stamp the arbiter so we know it was used recently.
+////		arb.stamp = this.stamp;
+////	});
+////}
+
+////[Obsolete("This method was obsolete from Chipmunk JS")]
+////public cpSegmentQueryInfo segmentQueryFirst(cpVect start, cpVect end, int layers, int group)
+////{
+////	cpSegmentQueryInfo output = null;
+
+////	var helper = new Func<object, float>(o1 =>
+////	{
+////		cpShape shape = o1 as cpShape;
+
+////		cpSegmentQueryInfo info = shape.SegmentQuery(start, end);
+
+
+////		if (
+////			!(shape.filter.group != 0 && group == shape.filter.group) &&
+////			!shape.sensor && info != null &&
+////			(output == null)
+////		)
+////		{
+////			output = info;
+////		}
+
+////		return output != null ? output.alpha : 1;
+////	}
+////		);
+
+////	this.staticShapes.SegmentQuery(start, end, 1f, helper);
+////	this.dynamicShapes.SegmentQuery(start, end, output != null ? output.alpha : 1, helper);
+
+////	return output;
+////}
+
+////[Obsolete("This method was obsolete from Chipmunk JS")]
+////public cpShape NearestPointQuery(cpVect point, int maxDistance, int layers, int group)
+////{
+
+////	cpPointQueryInfo output = null;
+
+////	var helper = new Action<object, object>((o1, o2) =>
+////	{
+////		cpShape shape = o1 as cpShape;
+
+////		if (!(shape.filter.group > 0 && group == shape.filter.group) && !shape.sensor)
+////		{
+////			cpPointQueryInfo info = shape.NearestPointQuery(point);
+
+////			if (info.distance < maxDistance && (output == null || info.distance < output.distance))
+////				output = info;
+////		}
+////	});
+
+////	cpBB bb = cp.bbNewForCircle(point, maxDistance);
+
+////	this.dynamicShapes.Query(bb, helper);
+////	this.staticShapes.Query(bb, helper);
+
+////	return output.shape;
+////}
+
+//#endregion
+
+
+
+//MARK: Nearest Point Query Functions

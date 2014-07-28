@@ -21,22 +21,17 @@
 
 using System.Collections.Generic;
 using System;
-
+using System.Linq;
 namespace ChipmunkSharp
 {
-	public interface ICollisionShape
-	{
-		Func<object, object, List<cpContact>>[] CollisionTable { get; }
-		int CollisionCode { get; }
-	}
+
 
 	public enum cpShapeType
 	{
-		Circle = 1,
-		Segment = 2,
-		Polygon = 3,
-		Shapes = 4,
-		NumShapes = 5
+		Circle,
+		Segment,
+		Polygon,
+		NumShapes
 	};
 
 	public class cpCollisionInfo
@@ -44,22 +39,24 @@ namespace ChipmunkSharp
 		public cpShape a, b;
 		public int id;
 		public cpVect n;
-		public int Count { get { return arr.Length; } }
+		public int count;
 
 		// TODO Should this be a unique struct type?
 
-		public cpContact[] arr;
+		public List<cpContact> arr;
 
-		public cpCollisionInfo(cpShape a, cpShape b, int id, cpVect n, cpContact[] contacts)
+		public cpCollisionInfo(cpShape a, cpShape b, int id, cpVect n, List<cpContact> contacts)
 		{
 			// TODO: Complete member initialization
 			this.a = a;
 			this.b = b;
 			this.id = id;
 			this.n = n;
+
 			this.arr = contacts;
 		}
 	};
+
 
 	public class cpShapeFilter
 	{
@@ -117,10 +114,10 @@ namespace ChipmunkSharp
 		public static cpShapeMassInfo cpSegmentShapeMassInfo(float mass, cpVect a, cpVect b, float r)
 		{
 			var info = new cpShapeMassInfo(
-		mass, cp.momentForBox(1.0f, cpVect.cpvdist(a, b) + 2.0f * r, 2.0f * r), // TODO is an approximation.
-		cpVect.cpvlerp(a, b, 0.5f),
-		cp.areaForSegment(a, b, r)
-	);
+	mass, cp.momentForBox(1.0f, cpVect.cpvdist(a, b) + 2.0f * r, 2.0f * r), // TODO is an approximation.
+	cpVect.cpvlerp(a, b, 0.5f),
+	cp.areaForSegment(a, b, r)
+);
 			return info;
 		}
 
@@ -135,14 +132,14 @@ namespace ChipmunkSharp
 
 		}
 
-		public static cpShapeMassInfo cpPolyShapeMassInfo(float mass, float[] verts, float radius)
+		public static cpShapeMassInfo cpPolyShapeMassInfo(float mass, cpVect[] verts, float radius)
 		{
 
 			cpVect centroid = cp.centroidForPoly(verts);
 
 			var info = new cpShapeMassInfo(
 				mass,
-				cp.momentForPoly(1.0f, verts, cpVect.cpvneg(centroid), radius),
+				cp.MomentForPoly(1.0f, verts, cpVect.cpvneg(centroid), radius),
 				centroid,
 				cp.areaForCircle(0.0f, radius)
 			);
@@ -150,7 +147,7 @@ namespace ChipmunkSharp
 		}
 	};
 
-	public class cpCircleShape : cpShape, ICollisionShape
+	public class cpCircleShape : cpShape
 	{
 		public cpVect c, tc;
 		public float r;
@@ -191,40 +188,7 @@ namespace ChipmunkSharp
 			return new cpBB(c, this.r);
 		}
 
-		#region OBSOLETE
 
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public override cpSegmentQueryInfo SegmentQuery(cpVect a, cpVect b)
-		{
-			return cp.circleSegmentQuery(this, this.tc, this.r, a, b);
-		}
-
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public override void CacheData(cpVect p, cpVect rot)
-		{
-			//var c = this.tc = vadd(p, vrotate(this.c, rot));
-			var c = this.tc = cpVect.cpvrotate(this.c, rot) + p;
-			//this.bb = bbNewForCircle(c, this.r);
-			var r = this.r;
-			this.bb.l = c.x - r;
-			this.bb.b = c.y - r;
-			this.bb.r = c.x + r;
-			this.bb.t = c.y + r;
-		}
-
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public override cpPointQueryInfo NearestPointQuery(cpVect p)
-		{
-			var deltax = p.x - this.tc.x;
-			var deltay = p.y - this.tc.y;
-			var d = cpVect.cplength2(deltax, deltay);
-			var r = this.r;
-
-			var nearestp = new cpVect(this.tc.x + deltax * r / d, this.tc.y + deltay * r / d);
-			return new cpPointQueryInfo(this, nearestp, d - r, cpVect.Zero);
-		}
-
-		#endregion
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
@@ -238,27 +202,9 @@ namespace ChipmunkSharp
 
 		}
 
-		public Func<object, object, List<cpContact>>[] CollisionTable
-		{
-			get
-			{
-				return new Func<object, object, List<cpContact>>[] {
-                    (o1,o2) => cpCollision.circle2circle(o1 as cpCircleShape ,o2 as cpCircleShape),
-                    (o1,o2) => cpCollision.circle2segment(o1 as cpCircleShape ,o2 as cpSegmentShape),
-                    (o1,o2) => cpCollision.circle2poly(o1 as cpCircleShape ,o2 as cpPolyShape)
-                };
-			}
-		}
-		//(
-		public int CollisionCode
-		{
-			get { return 0; }
-		}
-
-
 	}
 
-	public class cpSegmentShape : cpShape, ICollisionShape
+	public class cpSegmentShape : cpShape
 	{
 
 		public cpVect a, b, n;
@@ -401,131 +347,11 @@ namespace ChipmunkSharp
 		}
 
 
-		#region OBSOLETE
-
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public override void CacheData(cpVect p, cpVect rot)
-		{
-			this.ta = cpVect.cpvadd(p, cpVect.cpvrotate(this.a, rot));
-			this.tb = cpVect.cpvadd(p, cpVect.cpvrotate(this.b, rot));
-			this.tn = cpVect.cpvrotate(this.n, rot);
-
-			float l, r, b, t;
-
-			if (this.ta.x < this.tb.x)
-			{
-				l = this.ta.x;
-				r = this.tb.x;
-			}
-			else
-			{
-				l = this.tb.x;
-				r = this.ta.x;
-			}
-
-			if (this.ta.y < this.tb.y)
-			{
-				b = this.ta.y;
-				t = this.tb.y;
-			}
-			else
-			{
-				b = this.tb.y;
-				t = this.ta.y;
-			}
-
-			var rad = this.r;
-
-			this.bb.l = l - rad;
-			this.bb.b = b - rad;
-			this.bb.r = r + rad;
-			this.bb.t = t + rad;
-		}
-
-
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public override cpPointQueryInfo NearestPointQuery(cpVect p)
-		{
-			cpVect closest = cp.closestPointOnSegment(p, this.ta, this.tb);
-
-			var deltax = p.x - closest.x;
-			var deltay = p.y - closest.y;
-			var d = cpVect.cplength2(deltax, deltay);
-			var r = this.r;
-
-			var nearestp = (d > 0 ? cpVect.cpvadd(closest, cpVect.cpvmult(new cpVect(deltax, deltay), r / d)) : closest);
-			return new cpPointQueryInfo(this, nearestp, d - r, cpVect.Zero);
-
-		}
-
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public override cpSegmentQueryInfo SegmentQuery(cpVect a, cpVect b)
-		{
-			var n = this.tn;
-			var d = cpVect.cpvdot(cpVect.cpvsub(this.ta, a), n);
-			var r = this.r;
-
-			var flipped_n = (d > 0 ? cpVect.cpvneg(n) : n);
-			var n_offset = cpVect.cpvsub(cpVect.cpvmult(flipped_n, r), a);
-
-			var seg_a = cpVect.cpvadd(this.ta, n_offset);
-			var seg_b = cpVect.cpvadd(this.tb, n_offset);
-			var delta = cpVect.cpvsub(b, a);
-
-			if (cpVect.cpvcross(delta, seg_a) * cpVect.cpvcross(delta, seg_b) <= 0)
-			{
-				var d_offset = d + (d > 0 ? -r : r);
-				var ad = -d_offset;
-				var bd = cpVect.cpvdot(delta, n) - d_offset;
-
-				if (ad * bd < 0)
-				{
-					return new cpSegmentQueryInfo(this, flipped_n, cpVect.Zero, ad / (ad - bd));
-				}
-			}
-			else if (r != 0)
-			{
-				cpSegmentQueryInfo info1 = cp.circleSegmentQuery(this, this.ta, this.r, a, b);
-				cpSegmentQueryInfo info2 = cp.circleSegmentQuery(this, this.tb, this.r, a, b);
-
-				if (info1 != null)
-				{
-					return info2 != null && info2.alpha < info1.alpha ? info2 : info1;
-				}
-				else
-				{
-					return info2;
-				}
-			}
-
-			return null;
-
-		}
-
-		#endregion
-
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
 			cpColor color = cp.GetShapeColor(this);
 			var lineWidth = Math.Max(1, this.r);  // take a look if we need to apply scale for radius
 			m_debugDraw.DrawSegment(ta, tb, lineWidth, color);
-		}
-
-		public Func<object, object, List<cpContact>>[] CollisionTable
-		{
-			get
-			{
-				return new Func<object, object, List<cpContact>>[] {
-                    null,
-                    (segA, segB) => {  return null; },
-                    (o1,o2) => cpCollision.seg2poly(o1 as cpSegmentShape ,o2 as cpPolyShape)
-                };
-			}
-		}
-		//(o1,o2) => cpCollision.Circle2Circle(o1 as cpCircleShape ,o2 as cpCircleShape),
-		public int CollisionCode
-		{
-			get { return 1; }
 		}
 
 	}
@@ -618,9 +444,7 @@ namespace ChipmunkSharp
 
 			this.space = null;
 
-			// Copy the collision code from the prototype into the actual object. This makes collision
-			// function lookups slightly faster.
-			//this.collisionCode = this.collisionCode;
+
 
 		}
 
@@ -680,10 +504,7 @@ namespace ChipmunkSharp
 		{
 			return this.body != null && this.body.shapeList.IndexOf(this) != -1;
 		}
-		//public cpBB GetBB()
-		//{
-		//	return new cpBB(this.bb.l, this.bb_b, this.bb_r, this.bb_t);
-		//}
+
 
 		public virtual void SetFilter(cpShapeFilter filter)
 		{
@@ -704,16 +525,16 @@ namespace ChipmunkSharp
 			throw new NotImplementedException();
 		}
 
-		public cpContactPointSet Collide(cpShape b)
+		public cpContactPointSet Collide(cpShape b, ref List<cpContact> contacts)
 		{
-			return Collide(this, b);
+			return Collide(this, b, ref contacts);
 		}
 
 		/// Test if a point lies within a shape.
-		public static cpContactPointSet Collide(cpShape a, cpShape b)
+		public static cpContactPointSet Collide(cpShape a, cpShape b, ref List<cpContact> contacts)
 		{
-			cpContact[] contacts = new cpContact[cpArbiter.CP_MAX_CONTACTS_PER_ARBITER];
-			cpCollisionInfo info = cpCollision.cpCollide(a, b, 0, contacts);
+			//cpContact[] contacts = new cpContact[cpArbiter.CP_MAX_CONTACTS_PER_ARBITER];
+			cpCollisionInfo info = cpCollision.cpCollide(a, b, ref contacts);
 
 			cpContactPointSet set = new cpContactPointSet();
 			//set.count = info.count;
@@ -722,7 +543,7 @@ namespace ChipmunkSharp
 			bool swapped = (a != info.a);
 			set.normal = (swapped ? cpVect.cpvneg(info.n) : info.n);
 
-			for (int i = 0; i < info.Count; i++)
+			for (int i = 0; i < info.count; i++)
 			{
 				// cpCollideShapesInfo() returns contacts with absolute positions.
 				cpVect p1 = contacts[i].r1;
@@ -785,7 +606,25 @@ namespace ChipmunkSharp
 
 		#endregion
 
-		#region OBSOLETE
+
+
+		public virtual void Draw(cpDebugDraw m_debugDraw)
+		{
+			throw new NotImplementedException();
+		}
+
+
+		public static void UpdateFunc(cpShape shape, object unused)
+		{
+			shape.CacheBB();
+		}
+
+
+	};
+
+}
+/*
+	#region OBSOLETE
 
 		//[Obsolete("This method was obsolete from Chipmunk JS")]
 		//public virtual void CacheBB()
@@ -821,21 +660,4 @@ namespace ChipmunkSharp
 			this.CacheData(pos, rot);
 		}
 		#endregion
-
-
-		public virtual void Draw(cpDebugDraw m_debugDraw)
-		{
-			throw new NotImplementedException();
-		}
-
-
-		public static void UpdateFunc(cpShape shape, object unused)
-		{
-			shape.CacheBB();
-		}
-
-
-	};
-
-}
-
+*/

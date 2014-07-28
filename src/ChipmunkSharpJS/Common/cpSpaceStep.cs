@@ -46,10 +46,6 @@ namespace ChipmunkSharp
 	public partial class cpSpace
 	{
 
-		// **** Post Step Callback Functions
-
-		static void PostStepDoNothing(cpSpace space, object obj, object data) { }
-
 
 		public cpPostStepCallback GetPostStepCallback(object key)
 		{
@@ -63,6 +59,7 @@ namespace ChipmunkSharp
 
 			return null;
 		}
+
 
 		public bool AddPostStepCallback(Action<cpSpace, object, object> func, object key, object data)
 		{
@@ -88,7 +85,6 @@ namespace ChipmunkSharp
 			}
 		}
 
-
 		//MARK: Locking Functions
 
 		public void Lock()
@@ -108,12 +104,12 @@ namespace ChipmunkSharp
 
 				for (int i = 0, count = waking.Count; i < count; i++)
 				{
-					this.activateBody(waking[i]);
+					this.ActivateBody(waking[i]);
 					waking[i] = null;
 				}
 
+				waking.Clear();
 				this.rousedBodies.Clear();
-
 
 				if (this.locked == 0 && runPostStep && !this.skipPostStep)
 				{
@@ -142,50 +138,66 @@ namespace ChipmunkSharp
 		}
 
 
-		public void CollideShapes(cpShape a, cpShape b)
+		public static bool QueryRejectConstraint(cpBody a, cpBody b)
+		{
+
+			bool returnValue = false;
+			a.EachConstraint((constraint, o) =>
+			{
+
+				if (
+					!constraint.collideBodies && (
+			(constraint.a == a && constraint.b == b) ||
+			(constraint.a == b && constraint.b == a)
+		))
+					returnValue = true;
+
+			}, null);
+
+			return returnValue;
+		}
+
+		public static bool QueryReject(cpShape a, cpShape b)
+		{
+			return (
+				// BBoxes must overlap
+				!a.bb.Intersects(b.bb)
+				// Don't collide shapes attached to the same body.
+				|| a.body == b.body
+				// Don't collide shapes that are filtered.
+				|| a.filter.Reject(b.filter)
+				// Don't collide bodies if they have a constraint with collideBodies == cpFalse.
+				|| QueryRejectConstraint(a.body, b.body)
+			);
+		}
+
+		public string CollideShapes(cpShape a, cpShape b, string id)
 		{
 
 			// It would be nicer to use .bind() or something, but this is faster.
 			//return new Action<object, object>((obj1, obj2) =>
+			//{// Reject any of the simple cases
+			if (QueryReject(a, b)) return id;
+
+			var handler = LookupHandler(a.type, b.type, defaultHandler);
+
+			//var sensor = a.sensor || b.sensor;
+			//if (sensor && handler == cp.defaultCollisionHandler) return;
+
+			//// Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
+			//if ((a as ICollisionShape).CollisionCode > (b as ICollisionShape).CollisionCode)
 			//{
-
-			//var a = obj1 as cpShape;
-			//var b = obj2 as cpShape;
-
-			// Reject any of the simple cases
-			if (
-				// BBoxes must overlap
-				//!bbIntersects(a.bb, b.bb)
-				!(a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t)
-				// Don't collide shapes attached to the same body.
-				|| a.body == b.body
-				// Don't collide objects in the same non-zero group
-				|| (a.filter.group != 0 && a.filter.group == b.filter.group)
-				// Don't collide objects that don't share at least on layer.
-				//|| !(a.filter.categories != 0 & b.filter.categories != 0
-				//)
-			) return;
-
-			var handler = lookupHandler(a.type, b.type, defaultHandler);
-
-			var sensor = a.sensor || b.sensor;
-			if (sensor && handler == cp.defaultCollisionHandler) return;
-
-			// Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
-			if ((a as ICollisionShape).CollisionCode > (b as ICollisionShape).CollisionCode)
-			{
-				var temp = a;
-				a = b;
-				b = temp;
-			}
+			//	var temp = a;
+			//	a = b;
+			//	b = temp;
+			//}
 
 			// Narrow-phase collision detection.
-			//cpContact *contacts = cpContactBufferGetArray(space);
 			//int numContacts = cpCollideShapes(a, b, contacts);
-			var contacts = cpCollision.cpCollide(a, b);
-			if (contacts == null || contacts.Count == 0)
-				return; // Shapes are not colliding.
-			//cpSpacePushContacts(space, numContacts);
+			cpCollisionInfo info = cpCollision.cpCollide(a, b, ref this.contactsBuffer);
+
+			if (contactsBuffer.Count == 0)
+				return info.id.ToString(); // Shapes are not colliding.
 
 			// Get an arbiter from space.arbiterSet for the two shapes.
 			// This is where the persistant contact magic comes from.
@@ -198,7 +210,7 @@ namespace ChipmunkSharp
 				cachedArbiters.Add(arbHash, arb);
 			}
 
-			arb.Update(contacts, handler, a, b);
+			arb.Update(info, this);
 
 			// Call the begin function first if it's the first step
 			if (arb.state == cpArbiterState.FirstCollision && !handler.beginFunc(arb, this, null))
@@ -210,9 +222,11 @@ namespace ChipmunkSharp
 				// Ignore the arbiter if it has been flagged
 				(arb.state != cpArbiterState.Ignore) &&
 				// Call preSolve
-				handler.preSolveFunc(arb, this, null) &&
+				handler.preSolveFunc(arb, this, handler.userData) &&
+				arb.state != cpArbiterState.Ignore &&
+				!(a.sensor || b.sensor) &&
 				// Process, but don't add collisions for sensors.
-				!sensor
+				!(a.body.m == cp.Infinity && b.body.m == cp.Infinity)
 			)
 			{
 				this.arbiters.Add(arb);
@@ -231,8 +245,17 @@ namespace ChipmunkSharp
 			// Time stamp the arbiter so we know it was used recently.
 			arb.stamp = this.stamp;
 			//	});
+			return info.id.ToString();
 
 		}
+
+
+		/// ///////////////////////////////////////////////////////////////////////////
+
+
+		// **** Post Step Callback Functions
+
+		static void PostStepDoNothing(cpSpace space, object obj, object data) { }
 
 
 
@@ -276,7 +299,7 @@ namespace ChipmunkSharp
 		}
 
 
-		public void step(float dt)
+		public void Step(float dt)
 		{
 			// don't step if the timestep is 0!
 			if (dt == 0) return;
@@ -292,7 +315,6 @@ namespace ChipmunkSharp
 			var constraints = this.constraints;
 			var arbiters = this.arbiters;
 
-
 			// Reset and empty the arbiter lists.
 			for (i = 0; i < arbiters.Count; i++)
 			{
@@ -306,7 +328,8 @@ namespace ChipmunkSharp
 				}
 			}
 
-			arbiters.Clear();
+			this.contactsBuffer.Clear();
+			this.arbiters.Clear();
 
 			Lock();
 			{
@@ -319,7 +342,7 @@ namespace ChipmunkSharp
 
 				// Find colliding pairs.
 				this.dynamicShapes.Each(s => cpShape.UpdateFunc(s as cpShape, null));
-				this.dynamicShapes.ReindexQuery((a, b) => CollideShapes(a as cpShape, b as cpShape));
+				//this.dynamicShapes.ReindexQuery((a, b, s, o) => CollideShapes(a as cpShape, b as cpShape, s), null);
 
 			} Unlock(false);
 

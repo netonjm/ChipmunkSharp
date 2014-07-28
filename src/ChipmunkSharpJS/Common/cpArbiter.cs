@@ -564,7 +564,7 @@ namespace ChipmunkSharp
 			this.b = b; this.body_b = b.body;
 
 			// Iterate over the possible pairs to look for hash value matches.
-			for (int i = 0; i < info.Count; i++)
+			for (int i = 0; i < info.count ; i++)
 			{
 				cpContact con = info.arr[i];
 
@@ -602,7 +602,7 @@ namespace ChipmunkSharp
 
 			string typeA = info.a.type, typeB = info.b.type;
 			cpCollisionHandler defaultHandler = space.defaultHandler;
-			cpCollisionHandler handler = this.handler = space.lookupHandler(typeA, typeB, defaultHandler);
+			cpCollisionHandler handler = this.handler = space.LookupHandler(typeA, typeB, defaultHandler);
 
 			// Check if the types match, but don't swap for a default handler which use the wildcard for type A.
 			bool swapped = this.swapped = (typeA != handler.typeA && handler.typeA != cp.WILDCARD_COLLISION_TYPE);
@@ -610,8 +610,8 @@ namespace ChipmunkSharp
 			if (handler != defaultHandler || space.usesWildcards)
 			{
 				// The order of the main handler swaps the wildcard handlers too. Uffda.
-				this.handlerA = space.lookupHandler(swapped ? typeB : typeA, cp.WILDCARD_COLLISION_TYPE, cpCollisionHandler.cpCollisionHandlerDoNothing);
-				this.handlerB = space.lookupHandler(swapped ? typeA : typeB, cp.WILDCARD_COLLISION_TYPE, cpCollisionHandler.cpCollisionHandlerDoNothing);
+				this.handlerA = space.LookupHandler(swapped ? typeB : typeA, cp.WILDCARD_COLLISION_TYPE, cpCollisionHandler.cpCollisionHandlerDoNothing);
+				this.handlerB = space.LookupHandler(swapped ? typeA : typeB, cp.WILDCARD_COLLISION_TYPE, cpCollisionHandler.cpCollisionHandlerDoNothing);
 			}
 
 			// mark it as new if it's been cached
@@ -788,7 +788,7 @@ namespace ChipmunkSharp
 		public void CallSeparate(cpSpace space)
 		{
 			// The handler needs to be looked up again as the handler cached on the arbiter may have been deleted since the last step.
-			var handler = space.lookupHandler(this.a.type, this.b.type, space.defaultHandler);
+			var handler = space.LookupHandler(this.a.type, this.b.type, space.defaultHandler);
 			handler.separateFunc(this, space, null);
 		}
 

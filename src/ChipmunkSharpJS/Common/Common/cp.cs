@@ -399,6 +399,7 @@ namespace ChipmunkSharp
 
 		#region MOMENTS
 
+
 		public static float momentForCircle(float m, float r1, float r2, cpVect offset)
 		{
 
@@ -410,10 +411,13 @@ namespace ChipmunkSharp
 			return (float)Math.PI * (float)Math.Abs(r1 * r1 - r2 * r2);
 		}
 
-		public static float momentForSegment(float m, cpVect a, cpVect b)
+		public static float MomentForSegment(float m, cpVect a, cpVect b, float r)
 		{
-			var offset = a.Add(b).Multiply(0.5f);
-			return m * (b.DistanceSQ(a) / 12 + offset.LengthSQ);
+			cpVect offset = cpVect.cpvlerp(a, b, 0.5f);
+
+			// This approximates the shape as a box for rounded segments, but it's quite close.
+			float length = cpVect.cpvdist(b, a) + 2.0f * r;
+			return m * ((length * length + 4.0f * r * r) / 12.0f + cpVect.cpvlengthsq(offset));
 		}
 
 		public static float areaForSegment(cpVect a, cpVect b, float r)
@@ -421,97 +425,36 @@ namespace ChipmunkSharp
 			return r * ((float)Math.PI * r + 2 * a.Distance(b));
 		}
 
-		#region OBSOLETE
 
-		[Obsolete("OBSOLETE JS VERSION")]
-		public static int GetPointXIndexFromFloatArrayIndex(int index)
+		public static float MomentForPoly(float m, cpVect[] verts, cpVect offset, float r)
 		{
-			return GetFloatIndex(index);
-		}
+			int count = verts.Length;
 
-		[Obsolete("OBSOLETE JS VERSION")]
-		public static int GetPointYIndexFromFloatArrayIndex(int index)
-		{
-			return GetFloatIndex(index) + 1;
-		}
+			// TODO account for radius.
+			if (count == 2) return MomentForSegment(m, verts[0], verts[1], 0.0f);
 
-		[Obsolete("OBSOLETE JS VERSION")]
-		public static int GetFloatIndex(int index)
-		{
-			return (index * 2);
-		}
-
-		[Obsolete("OBSOLETE JS VERSION")]
-		public static float areaForSegment(float m, List<float> verts, cpVect offset)
-		{
-			float sum1 = 0;
-			float sum2 = 0;
-			for (var i = 0; i < verts.Count; i += 2)
+			float sum1 = 0.0f;
+			float sum2 = 0.0f;
+			for (int i = 0; i < count; i++)
 			{
-				var v1x = verts[i] + offset.x;
-				var v1y = verts[i + 1] + offset.y;
-				var v2x = verts[(i + 2) % verts.Count] + offset.x;
-				var v2y = verts[(i + 3) % verts.Count] + offset.y;
+				cpVect v1 = cpVect.cpvadd(verts[i], offset);
+				cpVect v2 = cpVect.cpvadd(verts[(i + 1) % count], offset);
 
-				var a = cpVect.cpvcross2(v2x, v2y, v1x, v1y);
-				var b = cpVect.cpvdot2(v1x, v1y, v1x, v1y) + cpVect.cpvdot2(v1x, v1y, v2x, v2y) + cpVect.cpvdot2(v2x, v2y, v2x, v2y);
+				float a = cpVect.cpvcross(v2, v1);
+				float b = cpVect.cpvdot(v1, v1) + cpVect.cpvdot(v1, v2) + cpVect.cpvdot(v2, v2);
 
 				sum1 += a * b;
 				sum2 += a;
 			}
 
-			return (m * sum1) / (6 * sum2);
+			return (m * sum1) / (6.0f * sum2);
 		}
-
-		[Obsolete("OBSOLETE JS VERSION")]
-		public static float areaForPoly(float[] verts)
-		{
-			float area = 0.0f;
-			for (int i = 0, len = verts.Length; i < len; i += 2)
-			{
-				area += cpVect.cpvcross(new cpVect(verts[i], verts[i + 1]), new cpVect(verts[(i + 2) % len], verts[(i + 3) % len]));
-			}
-
-			return -area / 2;
-		}
-
-		[Obsolete("OBSOLETE JS VERSION")]
-		public static cpVect centroidForPoly(float[] verts)
-		{
-			float sum = 0;
-			var vsum = new cpVect(0, 0);
-
-			for (int i = 0, len = verts.Length; i < len; i += 2)
-			{
-				var v1 = new cpVect(verts[i], verts[i + 1]);
-				var v2 = new cpVect(verts[(i + 2) % len], verts[(i + 3) % len]);
-				var cross = cpVect.cpvcross(v1, v2);
-
-				sum += cross;
-				vsum = cpVect.cpvadd(vsum, cpVect.cpvmult(cpVect.cpvadd(v1, v2), cross));
-			}
-
-			return cpVect.cpvmult(vsum, 1 / (3 * sum));
-		}
-
-		[Obsolete("OBSOLETE JS VERSION")]
-		public static void recenterPoly(float[] verts)
-		{
-			var centroid = centroidForPoly(verts);
-
-			for (var i = 0; i < verts.Length; i += 2)
-			{
-				verts[i] -= centroid.x;
-				verts[i + 1] -= centroid.y;
-			}
-		}
-
-		#endregion
 
 		public static float areaForPoly(cpVect[] verts, float r)
 		{
 			float area = 0.0f;
 			float perimeter = 0.0f;
+
 			int count = verts.Length;
 			for (int i = 0; i < count; i++)
 			{
@@ -523,6 +466,23 @@ namespace ChipmunkSharp
 			}
 
 			return r * ((float)Math.PI * cpfabs(r) + perimeter) + area / 2.0f;
+		}
+		public static cpVect centroidForPoly(cpVect[] verts)
+		{
+			float sum = 0.0f;
+			cpVect vsum = cpVect.Zero;
+			int count = verts.Length;
+			for (int i = 0; i < count; i++)
+			{
+				cpVect v1 = verts[i];
+				cpVect v2 = verts[(i + 1) % count];
+				float cross = cpVect.cpvcross(v1, v2);
+
+				sum += cross;
+				vsum = cpVect.cpvadd(vsum, cpVect.cpvmult(cpVect.cpvadd(v1, v2), cross));
+			}
+
+			return cpVect.cpvmult(vsum, 1.0f / (3.0f * sum));
 		}
 
 		public static float momentForBox2(float m, cpBB box)
@@ -540,160 +500,39 @@ namespace ChipmunkSharp
 			return m * (width * width + height * height) / 12;
 		}
 
+
 		#endregion
 
 
-		public static void unlinkThread(Pair prev, Node leaf, Pair next)
+		public static void ThreadUnlink(Thread thread)
 		{
+
+			Pair next = thread.next;
+			Pair prev = thread.prev;
+
 			if (next != null)
 			{
-				if (next.leafA == leaf)
-					next.prevA = prev;
-				else next.prevB = prev;
+				if (next.a.leaf == thread.leaf)
+					next.a.prev = prev;
+				else next.b.prev = prev;
 			}
 
 			if (prev != null)
 			{
-				if (prev.leafA == leaf) prev.nextA = next;
-				else prev.nextB = next;
+				if (prev.a.leaf == thread.leaf)
+					prev.a.next = next;
+				else prev.b.next = next;
 			}
 			else
 			{
-				leaf.pairs = next;
+				thread.leaf.PAIRS = next;
 			}
-		}
-
-		public static void pairInsert(Node a, Node b, cpBBTree tree)
-		{
-			Pair nextA = a.pairs, nextB = b.pairs;
-			var pair = tree.MakePair(a, nextA, b, nextB);
-			a.pairs = b.pairs = pair;
-
-			if (nextA != null)
-			{
-				if (nextA.leafA == a) nextA.prevA = pair; else nextA.prevB = pair;
-			}
-
-			if (nextB != null)
-			{
-				if (nextB.leafA == b) nextB.prevA = pair; else nextB.prevB = pair;
-			}
-		}
-
-		public static Node partitionNodes(cpBBTree tree, Dictionary<int, Leaf> nodes, int offset, int count)
-		{
-			//int count = nodes.Count;
-			//int offset = 0;
-
-			if (count == 1)
-			{
-				return nodes[0];
-			}
-			else if (count == 2)
-			{
-				return tree.MakeNode(nodes[offset], nodes[offset + 1]);
-			}
-
-			// Find the AABB for these nodes
-			//var bb = nodes[offset].bb;
-			Leaf node = nodes[offset];
-			float bb_l = node.bb.l,
-		bb_b = node.bb.b,
-		bb_r = node.bb.r,
-		bb_t = node.bb.t;
-
-
-			var end = offset + count;
-			for (var i = offset + 1; i < end; i++)
-			{
-				//bb = bbMerge(bb, nodes[i].bb);
-				node = nodes[i];
-				bb_l = Math.Min(bb_l, node.bb.l);
-				bb_b = Math.Min(bb_b, node.bb.b);
-				bb_r = Math.Max(bb_r, node.bb.r);
-				bb_t = Math.Max(bb_t, node.bb.t);
-			}
-
-			// Split it on it's longest axis
-			var splitWidth = (bb_r - bb_l > bb_t - bb_b);
-
-			// Sort the bounds and use the median as the splitting point
-			float[] bounds = new float[count * 2];
-			if (splitWidth)
-			{
-				for (var i = offset; i < end; i++)
-				{
-					bounds[2 * i + 0] = nodes[i].bb.l;
-					bounds[2 * i + 1] = nodes[i].bb.r;
-				}
-			}
-			else
-			{
-				for (var i = offset; i < end; i++)
-				{
-					bounds[2 * i + 0] = nodes[i].bb.b;
-					bounds[2 * i + 1] = nodes[i].bb.t;
-				}
-			}
-
-			//TODO: ¿?
-
-			float split = (bounds[count - 1] + bounds[count]) * 0.5f; // use the median as the split
-
-			// Generate the child BBs
-			//var a = bb, b = bb;
-			float a_l = bb_l, a_b = bb_b, a_r = bb_r, a_t = bb_t;
-			float b_l = bb_l, b_b = bb_b, b_r = bb_r, b_t = bb_t;
-
-			if (splitWidth) a_r = b_l = split; else a_t = b_b = split;
-
-			// Partition the nodes
-			var right = end;
-
-			for (var left = offset; left < right; )
-			{
-				node = nodes[left];
-				//	if(bbMergedArea(node.bb, b) < bbMergedArea(node.bb, a)){
-				if (bbTreeMergedArea2(node, b_l, b_b, b_r, b_t) < bbTreeMergedArea2(node, a_l, a_b, a_r, a_t))
-				{
-					right--;
-					nodes[left] = nodes[right];
-					nodes[right] = node;
-				}
-				else
-				{
-					left++;
-				}
-			}
-
-			if (right == count)
-			{
-				Node tmp = null;
-				for (var i = offset; i < end; i++)
-					tmp = cp.subtreeInsert(tmp, nodes[i], tree);
-				return node;
-			}
-
-			// Recurse and build the node!
-			return new Node(
-				partitionNodes(tree, nodes, offset, right - offset),
-				partitionNodes(tree, nodes, right, end - right),
-				tree
-			);
-
-
 		}
 
 		public static float bbTreeMergedArea2(Node node, float l, float b, float r, float t)
 		{
 			return (Math.Max(node.bb.r, r) - Math.Min(node.bb.l, l)) * (Math.Max(node.bb.t, t) - Math.Min(node.bb.b, b));
 			//return (Math.Max(node.bb.r, r) - Math.Min(node.bb.l, l)) * (Math.Max(node.bb.t, t) - Math.Min(node.bb.b, b));
-		}
-
-		public static float bbProximity(Node a, Leaf b)
-		{
-			return Math.Abs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + Math.Abs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
-			//return Math.Abs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + Math.Abs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
 		}
 
 		public static void nodeRender(Node node, int depth)
@@ -713,36 +552,7 @@ namespace ChipmunkSharp
 			Trace(str + node.bb.b + " " + node.bb.t);
 		}
 
-		public static Node SubtreeRemove(Node subtree, Leaf leaf, cpBBTree tree)
-		{
-			if (leaf == subtree)
-			{
-				return null;
-			}
-			else
-			{
-				var parent = leaf.parent;
-				if (parent == subtree)
-				{
-					var other = subtree.OtherChild(leaf);
-					other.parent = subtree.parent;
-					subtree.Recycle(tree);
-					return other;
-				}
-				else
-				{
-					if (parent == null)
-						return null;
-
-					parent.parent.ReplaceChild(parent, parent.OtherChild(leaf), tree);
-					return subtree;
-				}
-			}
-		}
-
 		public static int numContacts { get; set; }
-
-		public static int step { get; set; }
 
 		public static void apply_bias_impulse(cpBody body, float jx, float jy, cpVect r)
 		{
@@ -787,11 +597,6 @@ namespace ChipmunkSharp
 
 		}
 
-
-
-
-
-
 		public static cpConstraint filterConstraints(cpConstraint node, cpBody body, cpConstraint filter)
 		{
 			if (node == filter)
@@ -830,7 +635,7 @@ namespace ChipmunkSharp
 				body.nodeRoot = null;
 				body.nodeNext = null;
 
-				space.activateBody(body);
+				space.ActivateBody(body);
 
 				body = next;
 			}
@@ -848,12 +653,9 @@ namespace ChipmunkSharp
 				cpBody other_root = ComponentRoot(body);
 				if (other_root == null)
 				{
-
 					componentAdd(root, body);
-
 					body.EachArbiter((arb, o) =>
 					{
-
 						FloodFillComponent(root, (body == arb.body_a ?
 							arb.body_b : arb.body_a));
 
@@ -889,6 +691,7 @@ namespace ChipmunkSharp
 
 		public static bool ComponentActive(cpBody root, float threshold)
 		{
+
 			for (var body = root; body != null; body = body.nodeNext)
 			{
 				if (body.nodeIdleTime < threshold)
@@ -898,17 +701,9 @@ namespace ChipmunkSharp
 			return false;
 		}
 
+
 		public static cpCollisionHandler defaultCollisionHandler = new cpCollisionHandler();
 
-
-
-
-		[Obsolete("DEPRECATED")]
-		public static void updateFunc(cpShape shape)
-		{
-			var body = shape.body;
-			shape.Update(body.GetPosition(), body.GetRotation());
-		}
 
 		//// **** All Important cpSpaceStep() Function
 		/// Returns true if @c a and @c b intersect.
@@ -937,48 +732,6 @@ namespace ChipmunkSharp
 		public static bool bbTreeIntersectsNode(Node a, Node b)
 		{
 			return (a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t);
-			//return (a.bb.l <= b.bb.r && b.bb.l <= a.bb.r && a.bb.b <= b.bb.t && b.bb.b <= a.bb.t);
-		}
-
-		public static Node subtreeInsert(Node subtree, Leaf leaf, cpBBTree tree)
-		{
-			if (subtree == null)
-			{
-				return leaf;
-			}
-			else if (subtree.isLeaf)
-			{
-				return tree.MakeNode(leaf, subtree);
-			}
-			else
-			{
-				var cost_a = subtree.B.bbArea() + bbTreeMergedArea(subtree.A, leaf);
-				var cost_b = subtree.A.bbArea() + bbTreeMergedArea(subtree.B, leaf);
-
-				if (cost_a == cost_b)
-				{
-					cost_a = bbProximity(subtree.A, leaf);
-					cost_b = bbProximity(subtree.B, leaf);
-				}
-
-				if (cost_b < cost_a)
-				{
-					subtree.SetB(subtreeInsert(subtree.B, leaf, tree));
-				}
-				else
-				{
-					subtree.SetA(subtreeInsert(subtree.A, leaf, tree));
-				}
-
-				//		subtree.bb = bbMerge(subtree.bb, leaf.bb);
-				subtree.bb.l = Math.Min(subtree.bb.l, leaf.bb.l);
-				subtree.bb.b = Math.Min(subtree.bb.b, leaf.bb.b);
-				subtree.bb.r = Math.Max(subtree.bb.r, leaf.bb.r);
-				subtree.bb.t = Math.Max(subtree.bb.t, leaf.bb.t);
-
-
-				return subtree;
-			}
 		}
 
 		/// Check that a set of vertexes is convex and has a clockwise winding.
@@ -1078,35 +831,6 @@ namespace ChipmunkSharp
 			return cpVect.cpvadd(b, cpVect.cpvmult(delta, t));
 		}
 
-		public static float segValueOnAxis(cpSegmentShape seg, cpVect n, float d)
-		{
-			// Like cpPolyValueOnAxis(), but for segments.
-			var a = cpVect.cpvdot(n, seg.ta) - seg.r;
-			var b = cpVect.cpvdot(n, seg.tb) - seg.r;
-			return Math.Min(a, b) - d;
-		}
-
-		public static void findPointsBehindSeg(List<cpContact> arr, cpSegmentShape seg, cpPolyShape poly, float pDist, int coef)
-		{
-			var dta = cpVect.cpvcross(seg.tn, seg.ta);
-			var dtb = cpVect.cpvcross(seg.tn, seg.tb);
-			var n = cpVect.cpvmult(seg.tn, coef);
-
-			var verts = poly.tVerts;
-			for (var i = 0; i < verts.Length; i += 2)
-			{
-				var vx = verts[i];
-				var vy = verts[i + 1];
-				if (cpVect.cpvdot2(vx, vy, n.x, n.y) < cpVect.cpvdot(seg.tn, seg.ta) * coef + seg.r)
-				{
-					var dt = cpVect.cpvcross2(seg.tn.x, seg.tn.y, vx, vy);
-					if (dta >= dt && dt >= dtb)
-					{
-						arr.Add(new cpContact(new cpVect(vx, vy), n, pDist, hashPair(poly.hashid, i.ToString())));
-					}
-				}
-			}
-		}
 
 		public static int GRABABLE_MASK_BIT { get { return (1 << 31); } }
 
@@ -1272,28 +996,6 @@ namespace ChipmunkSharp
 			arr[idx2 * 2 + 1] = tmp;
 		}
 
-		public static float momentForPoly(float m, float[] verts, cpVect offset, float r = 0.0f)
-		{
-			float sum1 = 0f;
-			float sum2 = 0f;
-			int len = verts.Length;
-			for (var i = 0; i < len; i += 2)
-			{
-				var v1x = verts[i] + offset.x;
-				var v1y = verts[i + 1] + offset.y;
-				var v2x = verts[(i + 2) % len] + offset.x;
-				var v2y = verts[(i + 3) % len] + offset.y;
-
-				var a = cpVect.cpvcross2(v2x, v2y, v1x, v1y);
-				var b = cpVect.cpvdot2(v1x, v1y, v1x, v1y) + cpVect.cpvdot2(v1x, v1y, v2x, v2y) + cpVect.cpvdot2(v2x, v2y, v2x, v2y);
-
-				sum1 += a * b;
-				sum2 += a;
-			}
-
-			return (m * sum1) / (6 * sum2);
-		}
-
 		public static List<cpColor> _styles;
 
 		public static float[] colorRanges = new float[] {
@@ -1364,92 +1066,6 @@ namespace ChipmunkSharp
 
 		public static float last_MSA_min = 0;
 
-		public static float findMSA(cpPolyShape poly, cpSplittingPlane[] planes)
-		{
-			float min_index = 0;
-			var min = poly.ValueOnAxis(planes[0].n, planes[0].d);
-			if (min > 0) return -1;
-
-			for (var i = 1; i < planes.Length; i++)
-			{
-				var dist = poly.ValueOnAxis(planes[i].n, planes[i].d);
-				if (dist > 0)
-				{
-					return -1;
-				}
-				else if (dist > min)
-				{
-					min = dist;
-					min_index = i;
-				}
-			}
-
-			last_MSA_min = min;
-			return min_index;
-		}
-
-		public static List<cpContact> findVerts(cpPolyShape poly1, cpPolyShape poly2, cpVect n, float dist)
-		{
-			List<cpContact> arr = new List<cpContact>();
-
-			var verts1 = poly1.tVerts;
-			for (var i = 0; i < verts1.Length; i += 2)
-			{
-				var vx = verts1[i];
-				var vy = verts1[i + 1];
-				if (poly2.ContainsVert(vx, vy))
-				{
-					arr.Add(new cpContact(new cpVect(vx, vy), n, dist, cp.hashPair(poly1.hashid, (i >> 1).ToString())));
-				}
-			}
-
-			var verts2 = poly2.tVerts;
-			for (var i = 0; i < verts2.Length; i += 2)
-			{
-				var vx = verts2[i];
-				var vy = verts2[i + 1];
-				if (poly1.ContainsVert(vx, vy))
-				{
-					arr.Add(new cpContact(new cpVect(vx, vy), n, dist, cp.hashPair(poly2.hashid, (i >> 1).ToString())));
-				}
-			}
-
-			return (arr.Count > 0 ? arr : cp.findVertsFallback(poly1, poly2, n, dist));
-
-
-
-		}
-
-		public static List<cpContact> findVertsFallback(cpPolyShape poly1, cpPolyShape poly2, cpVect n, float dist)
-		{
-			List<cpContact> arr = new List<cpContact>();
-
-
-			var verts1 = poly1.tVerts;
-			for (var i = 0; i < verts1.Length; i += 2)
-			{
-				var vx = verts1[i];
-				var vy = verts1[i + 1];
-				if (poly2.ContainsVertPartial(vx, vy, cpVect.cpvneg(n)))
-				{
-					arr.Add(new cpContact(new cpVect(vx, vy), n, dist, cp.hashPair(poly1.hashid, i.ToString())));
-				}
-			}
-
-			var verts2 = poly2.tVerts;
-			for (var i = 0; i < verts2.Length; i += 2)
-			{
-				var vx = verts2[i];
-				var vy = verts2[i + 1];
-				if (poly1.ContainsVertPartial(vx, vy, n))
-				{
-					arr.Add(new cpContact(new cpVect(vx, vy), n, dist, cp.hashPair(poly2.hashid, i.ToString())));
-				}
-			}
-
-			return arr;
-		}
-
 		internal static cpBB bbNewForCircle(cpVect p, float r)
 		{
 			return new cpBB(
@@ -1491,6 +1107,8 @@ namespace ChipmunkSharp
 
 
 		public static int numShapes { get; set; }
+
+
 
 
 	}
