@@ -853,7 +853,7 @@ namespace ChipmunkSharp
 		// Force a body to fall asleep immediately along with other bodies in a group.
 		public void SleepWithGroup(cpBody group)
 		{
-			cp.assertHard(bodyType != cpBodyType.STATIC && !this.IsRogue(), "Rogue and static bodies cannot be put to sleep.");
+			cp.assertHard(bodyType == cpBodyType.DYNAMIC, "Non-dynamic bodies cannot be put to sleep.");
 
 			var space = this.space;
 			cp.assertHard(!space.IsLocked, "Bodies cannot be put to sleep during a query or a call to cpSpaceStep(). Put these calls into a post-step callback.");

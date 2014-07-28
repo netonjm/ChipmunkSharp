@@ -37,7 +37,7 @@ namespace ChipmunkSharp
 	public class cpCollisionInfo
 	{
 		public cpShape a, b;
-		public int id;
+		public string id;
 		public cpVect n;
 		public int count;
 
@@ -45,7 +45,7 @@ namespace ChipmunkSharp
 
 		public List<cpContact> arr;
 
-		public cpCollisionInfo(cpShape a, cpShape b, int id, cpVect n, List<cpContact> contacts)
+		public cpCollisionInfo(cpShape a, cpShape b, string id, cpVect n, List<cpContact> contacts)
 		{
 			// TODO: Complete member initialization
 			this.a = a;
@@ -500,7 +500,7 @@ namespace ChipmunkSharp
 			//this.bb_l = this.bb_b = this.bb_r = this.bb_t = 0;
 			this.bb = new cpBB(0, 0, 0, 0);
 
-			this.hashid = (cp.shapeIDCounter++).ToString();
+			//this.hashid = (cp.shapeIDCounter++).ToString();
 
 			/// Sensor flag.
 			/// Sensor shapes call collision callbacks but don't produce collisions.
@@ -680,7 +680,7 @@ namespace ChipmunkSharp
 		public static cpContactPointSet Collide(cpShape a, cpShape b, ref List<cpContact> contacts)
 		{
 			//cpContact[] contacts = new cpContact[cpArbiter.CP_MAX_CONTACTS_PER_ARBITER];
-			cpCollisionInfo info = cpCollision.cpCollide(a, b, ref contacts);
+			cpCollisionInfo info = cpCollision.cpCollide(a, b,"0", ref contacts);
 
 			cpContactPointSet set = new cpContactPointSet();
 			//set.count = info.count;

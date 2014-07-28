@@ -64,9 +64,10 @@ namespace ChipmunkSharp
 		public static int numLeaves { get; set; }
 		public static int numNodes { get; set; }
 		public static int numPairs { get; set; }
+		public static int numContacts { get; set; }
 
 
-		public static int shapeIDCounter = 0;
+		public static int shapeIDCounter;
 		public static int CP_USE_CGPOINTS = 1;
 
 		public const int ALL_CATEGORIES = ~0;
@@ -103,6 +104,158 @@ namespace ChipmunkSharp
 		{
 			return Convert.ToInt32(a) < Convert.ToInt32(b) ? a + " " + b : b + " " + a;
 		}
+
+		public static void CircleSegmentQuery(cpShape shape, cpVect center, float r1, cpVect a, cpVect b, float r2, ref cpSegmentQueryInfo info)
+		{
+			// offset the line to be relative to the circle
+			cpVect da = cpVect.cpvsub(a, center);
+			cpVect db = cpVect.cpvsub(b, center);
+			float rsum = r1 + r2;
+
+
+			float qa = cpVect.cpvdot(da, da) - 2 * cpVect.cpvdot(da, db) + cpVect.cpvdot(db, db);
+			float qb = cpVect.cpvdot(da, db) - cpVect.cpvdot(da, da);
+			float det = qb * qb - qa * (cpVect.cpvdot(da, da) - rsum * rsum);
+
+			if (det >= 0.0f)
+			{
+				float t = (-qb - cp.cpfsqrt(det)) / (qa);
+				if (0.0f <= t && t <= 1.0f)
+				{
+					{
+						cpVect n = cpVect.cpvnormalize(cpVect.cpvlerp(da, db, t));
+
+						info.shape = shape;
+						info.point = cpVect.cpvsub(cpVect.cpvlerp(da, db, t), cpVect.cpvmult(n, r2));
+						info.normal = n;
+						info.alpha = t;
+
+
+					}
+
+				}
+			}
+		}
+
+
+		public static cpVect relative_velocity(cpBody a, cpBody b, cpVect r1, cpVect r2)
+		{
+
+			cpVect v1_sum = cpVect.cpvadd(a.v, cpVect.cpvmult(cpVect.cpvperp(r1), a.w));
+			cpVect v2_sum = cpVect.cpvadd(b.v, cpVect.cpvmult(cpVect.cpvperp(r2), b.w));
+
+			return cpVect.cpvsub(v2_sum, v1_sum);
+		}
+
+		public static float normal_relative_velocity(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect n)
+		{
+			return cpVect.cpvdot(relative_velocity(a, b, r1, r2), n);
+		}
+
+		public static void apply_impulse(cpBody body, cpVect j, cpVect r)
+		{
+			body.v = cpVect.cpvadd(body.v, cpVect.cpvmult(j, body.m_inv));
+			body.w += body.i_inv * cpVect.cpvcross(r, j);
+		}
+
+		public static void apply_impulses(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect j)
+		{
+			apply_impulse(a, cpVect.cpvneg(j), r1);
+			apply_impulse(b, j, r2);
+		}
+
+		//public static void apply_impulses(cpBody a, cpBody b, cpVect r1, cpVect r2, float jx, float jy)
+		//{
+		//	apply_impulse(a, -jx, -jy, r1);
+		//	apply_impulse(b, jx, jy, r2);
+		//}
+
+
+		//public static void apply_impulse(cpBody body, float jx, float jy, cpVect r)
+		//{
+		//	//	body.v = body.v.add(vmult(j, body.m_inv));
+		//	body.v.x += jx * body.m_inv;
+		//	body.v.y += jy * body.m_inv;
+		//	//	body.w += body.i_inv*vcross(r, j);
+		//	body.w += body.i_inv * (r.x * jy - r.y * jx);
+		//}
+
+
+		public static void apply_bias_impulse(cpBody body, cpVect j, cpVect r)
+		{
+			body.v_bias = cpVect.cpvadd(body.v_bias, cpVect.cpvmult(j, body.m_inv));
+			body.w_bias += body.i_inv * cpVect.cpvcross(r, j);
+		}
+
+
+		public static void apply_bias_impulses(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect j)
+		{
+			apply_bias_impulse(a, cpVect.cpvneg(j), r1);
+			apply_bias_impulse(b, j, r2);
+		}
+
+
+		public static float k_scalar_body(cpBody body, cpVect r, cpVect n)
+		{
+			var rcn = cpVect.cpvcross(r, n);
+			return body.m_inv + body.i_inv * rcn * rcn;
+		}
+
+		public static float k_scalar(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect n)
+		{
+			var value = k_scalar_body(a, r1, n) + k_scalar_body(b, r2, n);
+
+			cp.assertSoft(value != 0, "Unsolvable collision or constraint.");
+
+			return value;
+		}
+
+		// k1 and k2 are modified by the function to contain the outputs.
+
+		public static cpMat2x2 k_tensor(cpBody a, cpBody b, cpVect r1, cpVect r2)
+		{
+			float m_sum = a.m_inv + b.m_inv;
+
+			// start with Identity*m_sum
+			float k11 = m_sum, k12 = 0.0f;
+			float k21 = 0.0f, k22 = m_sum;
+
+			// add the influence from r1
+			float a_i_inv = a.i_inv;
+			float r1xsq = r1.x * r1.x * a_i_inv;
+			float r1ysq = r1.y * r1.y * a_i_inv;
+			float r1nxy = -r1.x * r1.y * a_i_inv;
+			k11 += r1ysq; k12 += r1nxy;
+			k21 += r1nxy; k22 += r1xsq;
+
+			// add the influnce from r2
+			float b_i_inv = b.i_inv;
+			float r2xsq = r2.x * r2.x * b_i_inv;
+			float r2ysq = r2.y * r2.y * b_i_inv;
+			float r2nxy = -r2.x * r2.y * b_i_inv;
+			k11 += r2ysq; k12 += r2nxy;
+			k21 += r2nxy; k22 += r2xsq;
+
+			// invert
+			float det = k11 * k22 - k12 * k21;
+			cp.assertSoft(det != 0.0f, "Unsolvable constraint.");
+
+			float det_inv = 1.0f / det;
+			return new cpMat2x2(
+				 k22 * det_inv, -k12 * det_inv,
+				-k21 * det_inv, k11 * det_inv
+			);
+		}
+
+		public static float bias_coef(float errorBias, float dt)
+		{
+			return 1.0f - cpfpow(errorBias, dt);
+		}
+
+
+
+
+
 
 		//===========================================================
 
@@ -217,122 +370,6 @@ namespace ChipmunkSharp
 
 		#endregion
 
-		public static float k_scalar_body(cpBody body, cpVect r, cpVect n)
-		{
-			var rcn = r.CrossProduct(n);
-			return body.m_inv + body.i_inv * rcn * rcn;
-		}
-
-		public static float k_scalar(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect n)
-		{
-			var value = k_scalar_body(a, r1, n) + k_scalar_body(b, r2, n);
-
-			//assertSoft(value != 0, "Unsolvable collision or constraint.");
-
-			return value;
-		}
-
-		#region Physics Operations
-
-		public static cpVect relative_velocity(cpBody a, cpBody b, cpVect r1, cpVect r2)
-		{
-
-			cpVect v1_sum = cpVect.cpvadd(a.v, cpVect.cpvmult(cpVect.cpvperp(r1), a.w));
-			cpVect v2_sum = cpVect.cpvadd(b.v, cpVect.cpvmult(cpVect.cpvperp(r2), b.w));
-
-			return cpVect.cpvsub(v2_sum, v1_sum);
-		}
-
-		public static float normal_relative_velocity(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect n)
-		{
-			return cpVect.cpvdot(relative_velocity(a, b, r1, r2), n);
-		}
-
-		public static void apply_impulse(cpBody body, cpVect j, cpVect r)
-		{
-			body.v = cpVect.cpvadd(body.v, cpVect.cpvmult(j, body.m_inv));
-			body.w += body.i_inv * cpVect.cpvcross(r, j);
-		}
-
-		public static void apply_impulses(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect vec)
-		{
-			apply_impulse(a, vec.Neg(), r1);
-			apply_impulse(b, vec, r2);
-		}
-
-		public static void apply_impulses(cpBody a, cpBody b, cpVect r1, cpVect r2, float jx, float jy)
-		{
-			apply_impulse(a, -jx, -jy, r1);
-			apply_impulse(b, jx, jy, r2);
-		}
-
-		public static void apply_impulse(cpBody body, float jx, float jy, cpVect r)
-		{
-			//	body.v = body.v.add(vmult(j, body.m_inv));
-			body.v.x += jx * body.m_inv;
-			body.v.y += jy * body.m_inv;
-			//	body.w += body.i_inv*vcross(r, j);
-			body.w += body.i_inv * (r.x * jy - r.y * jx);
-		}
-
-		public static void apply_bias_impulses(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect j)
-		{
-			apply_bias_impulse(a, cpVect.cpvneg(j), r1);
-			apply_bias_impulse(b, j, r2);
-		}
-
-		public static void apply_bias_impulse(cpBody body, cpVect j, cpVect r)
-		{
-			body.v_bias = cpVect.cpvadd(body.v_bias, cpVect.cpvmult(j, body.m_inv));
-			body.w_bias += body.i_inv * cpVect.cpvcross(r, j);
-		}
-
-		// k1 and k2 are modified by the function to contain the outputs.
-		public static void k_tensor(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect k1, cpVect k2)
-		{
-			// calculate mass matrix
-			// If I wasn't lazy and wrote a proper matrix class, this wouldn't be so gross...
-			float k11, k12, k21, k22;
-			var m_sum = a.m_inv + b.m_inv;
-
-			// start with I*m_sum
-			k11 = m_sum; k12 = 0;
-			k21 = 0; k22 = m_sum;
-
-			// add the influence from r1
-			var a_i_inv = a.i_inv;
-			var r1xsq = r1.x * r1.x * a_i_inv;
-			var r1ysq = r1.y * r1.y * a_i_inv;
-			var r1nxy = -r1.x * r1.y * a_i_inv;
-			k11 += r1ysq; k12 += r1nxy;
-			k21 += r1nxy; k22 += r1xsq;
-
-			// add the influnce from r2
-			var b_i_inv = b.i_inv;
-			var r2xsq = r2.x * r2.x * b_i_inv;
-			var r2ysq = r2.y * r2.y * b_i_inv;
-			var r2nxy = -r2.x * r2.y * b_i_inv;
-			k11 += r2ysq; k12 += r2nxy;
-			k21 += r2nxy; k22 += r2xsq;
-
-			// invert
-			var determinant = k11 * k22 - k12 * k21;
-
-			assertSoft(determinant != 0, "Unsolvable constraint.");
-
-			var det_inv = 1 / determinant;
-
-			k1.x = k22 * det_inv; k1.y = -k12 * det_inv;
-			k2.x = -k21 * det_inv; k2.y = k11 * det_inv;
-		}
-
-		public static float bias_coef(float errorBias, float dt)
-		{
-			return 1.0f - (float)Math.Pow(errorBias, dt);
-		}
-
-		#endregion
-
 		#region ASSERTS
 
 		public static void assert(string p2)
@@ -398,7 +435,6 @@ namespace ChipmunkSharp
 		#endregion
 
 		#region MOMENTS
-
 
 		public static float momentForCircle(float m, float r1, float r2, cpVect offset)
 		{
@@ -497,37 +533,140 @@ namespace ChipmunkSharp
 
 		public static float momentForBox(float m, float width, float height)
 		{
-			return m * (width * width + height * height) / 12;
+			return m * (width * width + height * height) / 12f;
 		}
 
 
 		#endregion
 
+		//MARK: Quick Hull
 
-		public static void ThreadUnlink(Thread thread)
+		public static void LoopIndexes(cpVect[] verts, ref int start, ref int end)
 		{
+			start = 0;
+			end = 0;
+			int count = verts.Length;
 
-			Pair next = thread.next;
-			Pair prev = thread.prev;
+			cpVect min = verts[0];
+			cpVect max = min;
 
-			if (next != null)
+			for (int i = 1; i < count; i++)
 			{
-				if (next.a.leaf == thread.leaf)
-					next.a.prev = prev;
-				else next.b.prev = prev;
-			}
+				cpVect v = verts[i];
 
-			if (prev != null)
-			{
-				if (prev.a.leaf == thread.leaf)
-					prev.a.next = next;
-				else prev.b.next = next;
-			}
-			else
-			{
-				thread.leaf.PAIRS = next;
+				if (v.x < min.x || (v.x == min.x && v.y < min.y))
+				{
+					min = v;
+					start = i;
+				}
+				else if (v.x > max.x || (v.x == max.x && v.y > max.y))
+				{
+					max = v;
+					end = i;
+				}
 			}
 		}
+
+		private static int QHullPartition(cpVect[] verts, cpVect a, cpVect b, float tol)
+		{
+			throw new NotImplementedException();
+			//int count = verts.Length;
+
+			//float max = 0;
+			//int pivot = 0;
+
+			//cpVect delta = cpVect.cpvsub(b, a);
+			//float valueTol = tol * cpVect.cpvlength(delta);
+
+			//int head = 0;
+			//for (int tail = count - 1; head <= tail; )
+			//{
+			//	float value = cpVect.cpvcross(cpVect.cpvsub(verts[head], a), delta);
+			//	if (value > valueTol)
+			//	{
+			//		if (value > max)
+			//		{
+			//			max = value;
+			//			pivot = head;
+			//		}
+
+			//		head++;
+			//	}
+			//	else
+			//	{
+			//		SWAP(verts[head], verts[tail]);
+			//		tail--;
+			//	}
+			//}
+
+			//// move the new pivot to the front if it's not already there.
+			//if (pivot != 0) SWAP(verts[0], verts[pivot]);
+			//return head;
+		}
+
+		public static int QHullReduce(float tol, cpVect[] verts, int offs, int count, cpVect a, cpVect pivot, cpVect b, cpVect[] result)
+		{
+			throw new NotImplementedException();
+			//if (count < 0)
+			//{
+			//	return 0;
+			//}
+			//else if (count == 0)
+			//{
+			//	result[0] = pivot;
+			//	return 1;
+			//}
+			//else
+			//{
+			//	int left_count = QHullPartition(verts, a, pivot, tol);
+			//	int index = QHullReduce(tol, verts + 1, left_count - 1, a, verts[0], pivot, result);
+
+			//	result[index++] = pivot;
+
+			//	int right_count = QHullPartition(verts + left_count, count - left_count, pivot, b, tol);
+			//	return index + QHullReduce(tol, verts + left_count + 1, right_count - 1, pivot, verts[left_count], b, result + index);
+			//}
+		}
+
+
+		// QuickHull seemed like a neat algorithm, and efficient-ish for large input sets.
+		// My implementation performs an in place reduction using the result array as scratch space.
+		public int cpConvexHull(int count, cpVect[] verts, cpVect[] result, int first, float tol)
+		{
+			throw new NotImplementedException();
+			//if (verts != result)
+			//{
+			//	// Copy the line vertexes into the empty part of the result polyline to use as a scratch buffer.
+			//	//memcpy(result, verts, count * sizeof(cpVect));
+			//	//TODO: NOT IMPLEMENTED
+			//}
+
+			// Degenerate case, all points are the same.
+			//int start, end;
+			//cpLoopIndexes(verts, count, &start, &end);
+			//if (start == end)
+			//{
+			//	if (first) (*first) = 0;
+			//	return 1;
+			//}
+
+			//SWAP(result[0], result[start]);
+			//SWAP(result[1], result[end == 0 ? start : end]);
+
+			//cpVect a = result[0];
+			//cpVect b = result[1];
+
+			//if (first) (*first) = start;
+			//return QHullReduce(tol, result + 2, count - 2, a, b, a, result + 1) + 1;
+		}
+
+
+
+
+
+		/// ///////////////////////////////////////////////////////////////////
+
+	
 
 		public static float bbTreeMergedArea2(Node node, float l, float b, float r, float t)
 		{
@@ -552,50 +691,7 @@ namespace ChipmunkSharp
 			Trace(str + node.bb.b + " " + node.bb.t);
 		}
 
-		public static int numContacts { get; set; }
-
-		public static void apply_bias_impulse(cpBody body, float jx, float jy, cpVect r)
-		{
-			//body.v_bias = vadd(body.v_bias, vmult(j, body.m_inv));
-			body.v_bias.x += jx * body.m_inv;
-			body.v_bias.y += jy * body.m_inv;
-			body.w_bias += body.i_inv * cpVect.cpvcross2(r.x, r.y, jx, jy);
-		}
-
-		public static void UnthreadHelper(cpArbiter arb, cpBody body)
-		{
-
-			cpArbiterThread thread;
-			arb.ThreadForBody(body, out thread);
-			cpArbiter prev = thread.prev;
-			cpArbiter next = thread.next;
-
-			// thread_x_y is quite ugly, but it avoids making unnecessary js objects per arbiter.
-			if (prev != null)
-			{
-				cpArbiterThread nextPrev;
-				prev.ThreadForBody(body, out nextPrev);
-				nextPrev.next = next;
-			}
-			else if (body.arbiterList == arb)
-			{
-				// IFF prev is NULL and body->arbiterList == arb, is arb at the head of the list.
-				// This function may be called for an arbiter that was never in a list.
-				// In that case, we need to protect it from wiping out the body->arbiterList pointer.
-				body.arbiterList = next;
-			}
-
-			if (next != null)
-			{
-				cpArbiterThread threadNext;
-				next.ThreadForBody(body, out threadNext);
-				threadNext.prev = prev;
-			}
-
-			thread.prev = null;
-			thread.next = null;
-
-		}
+	
 
 		public static cpConstraint filterConstraints(cpConstraint node, cpBody body, cpConstraint filter)
 		{
@@ -643,40 +739,7 @@ namespace ChipmunkSharp
 			space.sleepingComponents.Remove(root);
 		}
 
-		public static void FloodFillComponent(cpBody root, cpBody body)
-		{
-
-			// Kinematic bodies cannot be put to sleep and prevent bodies they are touching from sleeping.
-			// Static bodies are effectively sleeping all the time.
-			if (body.bodyType == cpBodyType.DYNAMIC)
-			{
-				cpBody other_root = ComponentRoot(body);
-				if (other_root == null)
-				{
-					componentAdd(root, body);
-					body.EachArbiter((arb, o) =>
-					{
-						FloodFillComponent(root, (body == arb.body_a ?
-							arb.body_b : arb.body_a));
-
-					}, null);
-
-					body.EachConstraint((constraint, o) =>
-					{
-
-						FloodFillComponent(root,
-							(body == constraint.a ? constraint.b : constraint.a));
-
-					}, null);
-
-				}
-				else
-				{
-					cp.assertSoft(other_root == root, "Internal Error: Inconsistency dectected in the contact graph.");
-				}
-			}
-
-		}
+	
 
 		public static void componentAdd(cpBody root, cpBody body)
 		{
@@ -689,18 +752,7 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public static bool ComponentActive(cpBody root, float threshold)
-		{
-
-			for (var body = root; body != null; body = body.nodeNext)
-			{
-				if (body.nodeIdleTime < threshold)
-					return true;
-			}
-
-			return false;
-		}
-
+	
 
 		public static cpCollisionHandler defaultCollisionHandler = new cpCollisionHandler();
 
@@ -767,62 +819,8 @@ namespace ChipmunkSharp
 
 
 
-		public static void CircleSegmentQuery(cpShape shape, cpVect center, float r1, cpVect a, cpVect b, float r2, ref cpSegmentQueryInfo info)
-		{
-			// offset the line to be relative to the circle
-			cpVect da = cpVect.cpvsub(a, center);
-			cpVect db = cpVect.cpvsub(b, center);
-			float rsum = r1 + r2;
 
 
-			float qa = cpVect.cpvdot(da, da) - 2 * cpVect.cpvdot(da, db) + cpVect.cpvdot(db, db);
-			float qb = cpVect.cpvdot(da, db) - cpVect.cpvdot(da, da);
-			float det = qb * qb - qa * (cpVect.cpvdot(da, da) - rsum * rsum);
-
-			if (det >= 0.0f)
-			{
-				float t = (-qb - cp.cpfsqrt(det)) / (qa);
-				if (0.0f <= t && t <= 1.0f)
-				{
-					{
-						cpVect n = cpVect.cpvnormalize(cpVect.cpvlerp(da, db, t));
-
-						info.shape = shape;
-						info.point = cpVect.cpvsub(cpVect.cpvlerp(da, db, t), cpVect.cpvmult(n, r2));
-						info.normal = n;
-						info.alpha = t;
-
-
-					}
-
-				}
-			}
-		}
-
-		[Obsolete("This method was obsolete from Chipmunk JS")]
-		public static cpSegmentQueryInfo circleSegmentQuery(cpShape shape, cpVect center, float r, cpVect a, cpVect b)
-		{
-			// offset the line to be relative to the circle
-			a = cpVect.cpvsub(a, center);
-			b = cpVect.cpvsub(b, center);
-
-			var qa = cpVect.cpvdot(a, a) - 2 * cpVect.cpvdot(a, b) + cpVect.cpvdot(b, b);
-			var qb = -2 * cpVect.cpvdot(a, a) + 2 * cpVect.cpvdot(a, b);
-			var qc = cpVect.cpvdot(a, a) - r * r;
-
-			var det = qb * qb - 4 * qa * qc;
-
-			if (det >= 0)
-			{
-				var t = (-qb - cp.cpfsqrt(det)) / (2 * qa);
-				if (0 <= t && t <= 1)
-				{
-					return new cpSegmentQueryInfo(shape, cpVect.cpvnormalize(cpVect.cpvlerp(a, b, t)), cpVect.Zero, 0.0f);
-				}
-
-			}
-			return null;
-		}
 
 		public static cpVect closestPointOnSegment(cpVect p, cpVect a, cpVect b)
 		{
@@ -836,154 +834,11 @@ namespace ChipmunkSharp
 
 		public static int NOT_GRABABLE_MASK { get { return ~GRABABLE_MASK_BIT; } }
 
-		public static float[] convexHull(float[] verts, float[] result, float tolerance)
-		{
-			if (result != null)
-			{
-				// Copy the line vertexes into the empty part of the result polyline to use as a scratch buffer.
-				for (var i = 0; i < verts.Length; i++)
-				{
-					result[i] = verts[i];
-				}
-			}
-			else
-			{
-				// If a result array was not specified, reduce the input instead.
-				result = verts;
-			}
 
-			// Degenerate case, all points are the same.
-			int[] indexes = loopIndexes(verts);
-			int start = indexes[0], end = indexes[1];
 
-			int position;
-			float[] dev;
 
-			if (start == end)
-			{
-				//if(first) (*first) = 0;
-				position = 2;
-				dev = new float[position];
-				for (int i = 0; i < position; i++)
-					dev[i] = result[i];
-				return dev;
-			}
 
-			SWAP(result, 0, start);
-			SWAP(result, 1, end == 0 ? start : end);
 
-			var a = new cpVect(result[0], result[1]);
-			var b = new cpVect(result[2], result[3]);
-
-			var count = verts.Length >> 1;
-			//if(first) (*first) = start;
-			var resultCount = QHullReduce(tolerance, result, 2, count - 2, a, b, a, 1) + 1;
-
-			position = resultCount * 2;
-
-			dev = new float[position];
-			for (int i = 0; i < position; i++)
-				dev[i] = result[i];
-
-			assertSoft(polyValidate(result),
-				"Internal error: cpConvexHull() and cpPolyValidate() did not agree." +
-				"Please report this error with as much info as you can.");
-			return dev;
-		}
-
-		public static int QHullReduce(float tol, float[] verts, int offs, int count, cpVect a, cpVect pivot, cpVect b, int resultPos)
-		{
-			if (count < 0)
-			{
-				return 0;
-			}
-			else if (count == 0)
-			{
-				verts[resultPos * 2] = pivot.x;
-				verts[resultPos * 2 + 1] = pivot.y;
-				return 1;
-			}
-			else
-			{
-				var left_count = QHullPartition(verts, offs, count, a, pivot, tol);
-				var left = new cpVect(verts[offs * 2], verts[offs * 2 + 1]);
-				var index = QHullReduce(tol, verts, offs + 1, left_count - 1, a, left, pivot, resultPos);
-
-				var pivotPos = resultPos + index++;
-				verts[pivotPos * 2] = pivot.x;
-				verts[pivotPos * 2 + 1] = pivot.y;
-
-				var right_count = QHullPartition(verts, offs + left_count, count - left_count, pivot, b, tol);
-				var right = new cpVect(verts[(offs + left_count) * 2], verts[(offs + left_count) * 2 + 1]);
-				return index + QHullReduce(tol, verts, offs + left_count + 1, right_count - 1, pivot, right, b, resultPos + index);
-			}
-		}
-
-		private static int QHullPartition(float[] verts, int offs, int count, cpVect a, cpVect b, float tol)
-		{
-			if (count == 0) return 0;
-
-			float max = 0;
-			var pivot = offs;
-
-			var delta = cpVect.cpvsub(b, a);
-			var valueTol = tol * cpVect.cpvlength(delta);
-
-			var head = offs;
-			for (var tail = offs + count - 1; head <= tail; )
-			{
-				var v = new cpVect(verts[head * 2], verts[head * 2 + 1]);
-				float value = cpVect.cpvcross(delta, cpVect.cpvsub(v, a));
-				if (value > valueTol)
-				{
-					if (value > max)
-					{
-						max = value;
-						pivot = head;
-					}
-
-					head++;
-				}
-				else
-				{
-					SWAP(verts, head, tail);
-					tail--;
-				}
-			}
-
-			// move the new pivot to the front if it's not already there.
-			if (pivot != offs) SWAP(verts, offs, pivot);
-			return head - offs;
-		}
-
-		public static int[] loopIndexes(float[] verts)
-		{
-			int start = 0, end = 0;
-			float minx, miny, maxx, maxy;
-			minx = maxx = verts[0];
-			miny = maxy = verts[1];
-
-			var count = verts.Length >> 1;
-			for (var i = 1; i < count; i++)
-			{
-				var x = verts[i * 2];
-				var y = verts[i * 2 + 1];
-
-				if (x < minx || (x == minx && y < miny))
-				{
-					minx = x;
-					miny = y;
-					start = i;
-				}
-				else if (x > maxx || (x == maxx && y > maxy))
-				{
-					maxx = x;
-					maxy = y;
-					end = i;
-				}
-			}
-			return new int[] { start, end };
-		}
 
 		public static void SWAP(float[] arr, int idx1, int idx2)
 		{
@@ -1113,4 +968,58 @@ namespace ChipmunkSharp
 
 	}
 
-}
+}		//public static float[] convexHull(float[] verts, float[] result, float tolerance)
+//{
+//	if (result != null)
+//	{
+//		// Copy the line vertexes into the empty part of the result polyline to use as a scratch buffer.
+//		for (var i = 0; i < verts.Length; i++)
+//		{
+//			result[i] = verts[i];
+//		}
+//	}
+//	else
+//	{
+//		// If a result array was not specified, reduce the input instead.
+//		result = verts;
+//	}
+
+
+//	// Degenerate case, all points are the same.
+//	int[] indexes = LoopIndexes(verts);
+//	int start = indexes[0], end = indexes[1];
+
+//	int position;
+//	float[] dev;
+
+//	if (start == end)
+//	{
+//		//if(first) (*first) = 0;
+//		position = 2;
+//		dev = new float[position];
+//		for (int i = 0; i < position; i++)
+//			dev[i] = result[i];
+//		return dev;
+//	}
+
+//	SWAP(result, 0, start);
+//	SWAP(result, 1, end == 0 ? start : end);
+
+//	var a = new cpVect(result[0], result[1]);
+//	var b = new cpVect(result[2], result[3]);
+
+//	var count = verts.Length >> 1;
+//	//if(first) (*first) = start;
+//	var resultCount = QHullReduce(tolerance, result, 2, count - 2, a, b, a, 1) + 1;
+
+//	position = resultCount * 2;
+
+//	dev = new float[position];
+//	for (int i = 0; i < position; i++)
+//		dev[i] = result[i];
+
+//	assertSoft(polyValidate(result),
+//		"Internal error: cpConvexHull() and cpPolyValidate() did not agree." +
+//		"Please report this error with as much info as you can.");
+//	return dev;
+//}

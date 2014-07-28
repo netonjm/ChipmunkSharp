@@ -179,22 +179,9 @@ namespace ChipmunkSharp
 			//{// Reject any of the simple cases
 			if (QueryReject(a, b)) return id;
 
-			var handler = LookupHandler(a.type, b.type, defaultHandler);
-
-			//var sensor = a.sensor || b.sensor;
-			//if (sensor && handler == cp.defaultCollisionHandler) return;
-
-			//// Shape 'a' should have the lower shape type. (required by cpCollideShapes() )
-			//if ((a as ICollisionShape).CollisionCode > (b as ICollisionShape).CollisionCode)
-			//{
-			//	var temp = a;
-			//	a = b;
-			//	b = temp;
-			//}
-
 			// Narrow-phase collision detection.
 			//int numContacts = cpCollideShapes(a, b, contacts);
-			cpCollisionInfo info = cpCollision.cpCollide(a, b, ref this.contactsBuffer);
+			cpCollisionInfo info = cpCollision.cpCollide(a, b, id, ref this.contactsBuffer);
 
 			if (contactsBuffer.Count == 0)
 				return info.id.ToString(); // Shapes are not colliding.
@@ -211,6 +198,9 @@ namespace ChipmunkSharp
 			}
 
 			arb.Update(info, this);
+
+			cpCollisionHandler handler = arb.handler;  //LookupHandler(a.type, b.type, defaultHandler);
+
 
 			// Call the begin function first if it's the first step
 			if (arb.state == cpArbiterState.FirstCollision && !handler.beginFunc(arb, this, null))
@@ -346,7 +336,7 @@ namespace ChipmunkSharp
 			} Unlock(false);
 
 			// Rebuild the contact graph (and detect sleeping components if sleeping is enabled)
-			this.processComponents(dt);
+			this.ProcessComponents(dt);
 
 			Lock();
 			{
@@ -427,51 +417,6 @@ namespace ChipmunkSharp
 			this.Unlock(true);
 		}
 
-
-		//////////////////////////////////////////////////////////////////
-
-		//public void runPostStepCallbacks()
-		//{
-		//	// Don't cache length because post step callbacks may add more post step callbacks
-		//	// directly or indirectly.
-		//	for (var i = 0; i < this.postStepCallbacks.Count; i++)
-		//		this.postStepCallbacks[i].;
-		//	this.postStepCallbacks.Clear();
-
-		//}
-
-
-
-		//static bool QueryReject(cpShape a, cpShape b)
-		//{
-		//    return (
-		//        // BBoxes must overlap
-		//        !a.bb.Intersects(b.bb)
-		//        // Don't collide shapes attached to the same body.
-		//        || a.body == b.body
-		//        // Don't collide objects in the same non-zero group
-		//        || (a.group != 0 && a.group == b.group)
-		//        // Don't collide objects that don't share at least on layer.
-		//        || !(a.layers != 0 & b.layers != 0)
-		//        // Don't collide infinite mass objects
-		//        || (a.body.Mass == cpEnvironment.Infinity && b.body.Mass == cpEnvironment.Infinity)
-		//    );
-		//}
-
-		//// Callback from the spatial hash.
-		//public List<ContactPoint> collideShapes(cpShape a, cpShape b)
-		//{
-		//    cpEnvironment.assertWarn((a as ICollisionShape).collisionCode <= (b as ICollisionShape).collisionCode, "Collided shapes must be sorted by type");
-		//    return (a as ICollisionShape).collisionTable[(b as ICollisionShape).collisionCode](a, b);
-		//    //return null;
-
-		//}
-
-		//private void UpdateFunc(cpShape shape)
-		//{
-		//    var body = shape.body;
-		//    shape.update(body.Position, body.Rotation);
-		//}
 
 
 	}

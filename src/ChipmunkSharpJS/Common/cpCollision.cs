@@ -300,10 +300,10 @@ namespace ChipmunkSharp
 			// Signed distance between the points.
 			public float d;
 			// Concatenation of the id's of the minkoski points.
-			public int id;
+			public string id;
 
 
-			public ClosestPoints(cpVect a, cpVect b, cpVect n, float d, int id)
+			public ClosestPoints(cpVect a, cpVect b, cpVect n, float d, string id)
 			{
 				this.a = a;
 				this.b = b;
@@ -323,7 +323,7 @@ namespace ChipmunkSharp
 				// This gives you the closest surface points in absolute coordinates. NEAT!
 				cpVect pa = cpCollision.LerpT(v0.a, v1.a, t);
 				cpVect pb = cpCollision.LerpT(v0.b, v1.b, t);
-				int id = (v0.id & 0xFFFF) << 16 | (v1.id & 0xFFFF);
+				string id = ((v0.id & 0xFFFF) << 16 | (v1.id & 0xFFFF)).ToString();
 
 				// First try calculating the MSA from the minkowski difference edge.
 				// This gives us a nice, accurate MSA when the surfaces are close together.
@@ -527,26 +527,27 @@ namespace ChipmunkSharp
 		}
 
 
-		public static ClosestPoints GJK(SupportContext ctx, ref int id)
+		public static ClosestPoints GJK(SupportContext ctx, ref string id)
 		{
-
+			int Iid = int.Parse(id);
 			MinkowskiPoint v0, v1;
-			if (id > 0 && ENABLE_CACHING == 0)
+			if (Iid > 0 && ENABLE_CACHING == 0)
 			{
 				v0 = MinkowskiPoint.MinkowskiPointNew(
-					ShapePoint(ctx.shape1, (id >> 24) & 0xFF),
-					ShapePoint(ctx.shape2, (id >> 16) & 0xFF)
+					ShapePoint(ctx.shape1, (Iid >> 24) & 0xFF),
+					ShapePoint(ctx.shape2, (Iid >> 16) & 0xFF)
 					);
 
 				v1 = MinkowskiPoint.MinkowskiPointNew(
-					ShapePoint(ctx.shape1, (id >> 8) & 0xFF),
-					ShapePoint(ctx.shape2, (id) & 0xFF)
+					ShapePoint(ctx.shape1, (Iid >> 8) & 0xFF),
+					ShapePoint(ctx.shape2, (Iid) & 0xFF)
 					);
 			}
 			else
 			{
 				cpVect axis = cpVect.cpvperp(
-					cpVect.cpvsub(cpBB.Center(ctx.shape1.bb),
+					cpVect.cpvsub(
+					cpBB.Center(ctx.shape1.bb),
 					cpBB.Center(ctx.shape2.bb)));
 
 				v0 = MinkowskiPoint.Support(ctx, axis);
@@ -770,12 +771,12 @@ namespace ChipmunkSharp
 		public static Action<cpShape, cpShape, cpCollisionInfo>[] CollisionFuncs = BuiltinCollisionFuncs;
 
 
-		public static cpCollisionInfo cpCollide(cpShape a, cpShape b, ref List<cpContact> contacts)
+		public static cpCollisionInfo cpCollide(cpShape a, cpShape b, string id, ref List<cpContact> contacts)
 		{
-			cpCollisionInfo info = new cpCollisionInfo(a, b, 0, cpVect.Zero, contacts);
+			cpCollisionInfo info = new cpCollisionInfo(a, b, id, cpVect.Zero, contacts);
 
 			// Make sure the shape types are in order.
-			if (a.shapeType > b.shapeType)
+			if ((int)a.shapeType > (int)b.shapeType)
 			{
 				info.a = b;
 				info.b = a;

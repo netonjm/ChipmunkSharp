@@ -439,10 +439,6 @@ namespace ChipmunkSharp
 			return (this.bb.l <= obj.bb.l && this.bb.r >= obj.bb.r && this.bb.b <= obj.bb.b && this.bb.t >= obj.bb.t);
 		}
 
-
-
-
-
 	}
 
 	public class Thread
@@ -458,11 +454,34 @@ namespace ChipmunkSharp
 			this.next = next;
 		}
 
-
-
 		public void Unlink()
 		{
-			cp.ThreadUnlink(this);
+			ThreadUnlink(this);
+		}
+
+		public static void ThreadUnlink(Thread thread)
+		{
+
+			Pair next = thread.next;
+			Pair prev = thread.prev;
+
+			if (next != null)
+			{
+				if (next.a.leaf == thread.leaf)
+					next.a.prev = prev;
+				else next.b.prev = prev;
+			}
+
+			if (prev != null)
+			{
+				if (prev.a.leaf == thread.leaf)
+					prev.a.next = next;
+				else prev.b.next = next;
+			}
+			else
+			{
+				thread.leaf.PAIRS = next;
+			}
 		}
 
 	}
@@ -479,6 +498,7 @@ namespace ChipmunkSharp
 		{
 			a = new Thread(null, leafA, nextA);
 			b = new Thread(null, leafB, nextB);
+			id = "0";
 		}
 
 
@@ -1205,7 +1225,7 @@ namespace ChipmunkSharp
 				func(item.Value.obj);
 		}
 
-	
+
 
 		public void Log()
 		{
