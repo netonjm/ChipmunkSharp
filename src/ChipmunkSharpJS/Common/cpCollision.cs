@@ -31,11 +31,11 @@ namespace ChipmunkSharp
 
 	public class cpCollision
 	{
-		public static int PolySupportPointIndex(cpSplittingPlane[] planes, cpVect n)
+		public static int PolySupportPointIndex(int count, cpSplittingPlane[] planes, cpVect n)
 		{
 			float max = -cp.Infinity;
 			int index = 0;
-			for (int i = 0; i < planes.Length; i++)
+			for (int i = 0; i < count; i++)
 			{
 				cpVect v = planes[i].v0;
 				float d = cpVect.cpvdot(v, n);
@@ -95,7 +95,7 @@ namespace ChipmunkSharp
 
 			public static SupportPoint PolySupportPoint(cpPolyShape poly, cpVect n)
 			{
-				int i = PolySupportPointIndex(poly.planes, n);
+				int i = PolySupportPointIndex(poly.Count, poly.planes, n);
 				return new SupportPoint(poly.planes[i].v0, i);
 			}
 
@@ -216,7 +216,7 @@ namespace ChipmunkSharp
 			{
 				int count = poly.Count;
 
-				int i1 = cpCollision.PolySupportPointIndex(poly.planes, n);
+				int i1 = cpCollision.PolySupportPointIndex(count, poly.planes, n);
 
 				// TODO get rid of mod eventually, very expensive on ARM
 				int i0 = (i1 - 1 + count) % count;
@@ -791,7 +791,7 @@ namespace ChipmunkSharp
 		public static SupportPoint PolySupportPoint(cpPolyShape poly, cpVect n)
 		{
 			cpSplittingPlane[] planes = poly.planes;
-			int i = PolySupportPointIndex(planes, n);
+			int i = PolySupportPointIndex(poly.Count, planes, n);
 			return new SupportPoint(planes[i].v0, i);
 		}
 
