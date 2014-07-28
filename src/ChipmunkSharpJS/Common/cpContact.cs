@@ -30,8 +30,8 @@ namespace ChipmunkSharp
 	public class cpContact
 	{
 
-		public cpVect p, n;
-		public float dist;
+		//public cpVect p, n;
+		//public float dist;
 
 		public cpVect r1, r2;
 		public float nMass, tMass, bounce;
@@ -43,25 +43,25 @@ namespace ChipmunkSharp
 
 		public override string ToString()
 		{
-			return string.Format("{0}: p({1}),n({2}),dist({3})", hash, p, n, dist);
+			return string.Format("{0}: p({1}),n({2})", hash, r1, r2);
 		}
 
-		public cpContact(cpVect p, cpVect n, float dist, string hash)
+		public cpContact(cpVect r1, cpVect r2, string hash)
 		{
-			Init(p, n, dist, hash);
+			Init(r1, r2, hash);
 		}
 
-		public cpContact Clone()
-		{
-			cpContact tmp = new cpContact(p, n, dist, hash);
-			return tmp;
-		}
+		//public cpContact Clone()
+		//{
+		//	cpContact tmp = new cpContact(p, n, dist, hash);
+		//	return tmp;
+		//}
 
-		public void Init(cpVect p, cpVect n, float dist, string hash)
+		public void Init(cpVect r1, cpVect r2, string hash)
 		{
-			this.p = p;
-			this.n = n;
-			this.dist = dist;
+			this.r1 = r1;
+			this.r2 = r2;
+			//this.dist = dist;
 
 			this.r1 = this.r2 = cpVect.Zero;
 			this.nMass = this.tMass = this.bounce = this.bias = 0;
@@ -73,7 +73,7 @@ namespace ChipmunkSharp
 
 		public void Draw(cpDebugDraw m_debugDraw)
 		{
-			m_debugDraw.DrawPoint(p, 1, cpColor.Red);
+			//m_debugDraw.DrawPoint(p, 1, cpColor.Red);
 		}
 
 	};

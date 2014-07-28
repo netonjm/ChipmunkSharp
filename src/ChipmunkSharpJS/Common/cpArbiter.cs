@@ -229,7 +229,7 @@ namespace ChipmunkSharp
 
 		public cpArbiterThread thread_a, thread_b;
 
-		public List<cpContact> contacts;
+		public List<cpContact> contacts { get; set; }
 		cpVect n;
 
 		public cpCollisionHandler handler, handlerA, handlerB;
@@ -267,7 +267,7 @@ namespace ChipmunkSharp
 			this.thread_a = new cpArbiterThread(null, null);
 			this.thread_b = new cpArbiterThread(null, null);
 
-			this.contacts = null;
+			this.contacts = new List<cpContact>();
 
 			this.stamp = 0;
 
@@ -421,10 +421,10 @@ namespace ChipmunkSharp
 			{
 				cpContact con = contacts[i];
 				// sum.Add(con.n.Multiply(con.jnAcc));
-				sum = sum.Add(con.n.Multiply(con.jnAcc));
+				sum = cpVect.cpvadd(sum, cpVect.cpvrotate(n, new cpVect(con.jnAcc, con.jtAcc)));
 			}
 
-			return this.swapped ? sum : sum.Neg();
+			return this.swapped ? sum : cpVect.cpvneg(sum);
 		}
 
 		/// Calculate the amount of energy lost in a collision including static, but not dynamic friction.
@@ -437,7 +437,7 @@ namespace ChipmunkSharp
 
 			//cpContact contacts = contacts;
 
-			for (int i = 0, count = contacts.Count; i < count; i++)
+			for (int i = 0, count = GetCount(); i < count; i++)
 			{
 
 				cpContact con = contacts[i];
@@ -657,31 +657,33 @@ namespace ChipmunkSharp
 
 		public void PreStep(float dt, float slop, float bias)
 		{
-			var a = this.body_a;
-			var b = this.body_b;
-
+			cpBody a = this.body_a;
+			cpBody b = this.body_b;
+			cpVect n = this.n;
 			cpVect body_delta = cpVect.cpvsub(b.p, a.p);
-
 
 			for (var i = 0; i < Count; i++)
 			{
 				var con = this.contacts[i];
 
-				// Calculate the offsets.
-				con.r1 = cpVect.cpvsub(con.p, a.GetPosition());
-				con.r2 = cpVect.cpvsub(con.p, b.GetPosition());
-
 				// Calculate the mass normal and mass tangent.
-				con.nMass = 1 / cp.k_scalar(a, b, con.r1, con.r2, con.n);
-				con.tMass = 1 / cp.k_scalar(a, b, con.r1, con.r2, cpVect.cpvperp(con.n));
+				con.nMass = 1f / cp.k_scalar(a, b, con.r1, con.r2, n);
+				con.tMass = 1f / cp.k_scalar(a, b, con.r1, con.r2, cpVect.cpvperp(n));
 
 				// Calculate the target bias velocity.
-				con.bias = -bias * Math.Min(0, con.dist + slop) / dt;
-				con.jBias = 0;
+				// Calculate the target bias velocity.
+				float dist = cpVect.cpvdot(cpVect.cpvadd(cpVect.cpvsub(con.r2, con.r1), body_delta), n);
+				con.bias = -bias * cp.cpfmin(0.0f, dist + slop) / dt;
+				con.jBias = 0.0f;
 
 				// Calculate the target bounce velocity.
-				con.bounce = cp.normal_relative_velocity(a, b, con.r1, con.r2, con.n) * this.e;
+				con.bounce = cp.normal_relative_velocity(a, b, con.r1, con.r2, n) * this.e;
 			}
+		}
+
+		public static cpArbiterThread ThreadForBody(cpArbiter arb, cpBody body)
+		{
+			return (arb.body_a == body ? arb.thread_a : arb.thread_b);
 		}
 
 		public void ThreadForBody(cpBody body, out cpArbiterThread thread)

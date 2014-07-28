@@ -225,7 +225,7 @@ namespace ChipmunkSharp
 			{
 				//cpSpacePopContacts(space, numContacts);
 
-				arb.contacts = null;
+				arb.contacts.Clear();
 
 				// Normally arbiters are set as used after calling the post-solve callback.
 				// However, post-solve callbacks are not called for sensors or arbiters rejected from pre-solve.
@@ -279,7 +279,7 @@ namespace ChipmunkSharp
 
 			if (ticks >= this.collisionPersistence)
 			{
-				arb.contacts = null;
+				arb.contacts.Clear();
 				//cpArrayPush(this.pooledArbiters, arb);
 				return false;
 			}
@@ -331,7 +331,7 @@ namespace ChipmunkSharp
 
 				// Find colliding pairs.
 				this.dynamicShapes.Each(s => cpShape.UpdateFunc(s as cpShape, null));
-				//this.dynamicShapes.ReindexQuery((a, b, s, o) => CollideShapes(a as cpShape, b as cpShape, s), null);
+				this.dynamicShapes.ReindexQuery((a, b, s, o) => CollideShapes(a as cpShape, b as cpShape, s), null);
 
 			} Unlock(false);
 
@@ -340,8 +340,6 @@ namespace ChipmunkSharp
 
 			Lock();
 			{
-
-
 				List<string> safeDelete = new List<string>();
 				// Clear out old cached arbiters and call separate callbacks
 				foreach (var hash in this.cachedArbiters)

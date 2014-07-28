@@ -196,8 +196,6 @@ namespace ChipmunkSharp
 				b.PushArbiter(arb);
 			}
 
-
-
 			if (sleep)
 			{
 				// Bodies should be held active if connected by a joint to a non-static rouge body.

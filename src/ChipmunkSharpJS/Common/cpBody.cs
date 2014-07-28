@@ -760,24 +760,21 @@ namespace ChipmunkSharp
 
 		public void PushArbiter(cpArbiter arb)
 		{
-			cpArbiterThread thread;
-			arb.ThreadForBody(this, out thread);
 
-			cp.assertSoft(thread.next == null, "Internal Error: Dangling contact graph pointers detected. (A)");
-			cp.assertSoft(thread.prev == null, "Internal Error: Dangling contact graph pointers detected. (B)");
-
+			cp.assertSoft(cpArbiter.ThreadForBody(arb, this).next == null, "Internal Error: Dangling contact graph pointers detected. (A)");
+			cp.assertSoft(cpArbiter.ThreadForBody(arb, this).prev == null, "Internal Error: Dangling contact graph pointers detected. (B)");
 
 			cpArbiter next = this.arbiterList;
 
-			cpArbiterThread next_thread;
-			next.ThreadForBody(this, out next_thread);
+			cp.assertSoft(next == null || cpArbiter.ThreadForBody(next, this).prev == null, "Internal Error: Dangling contact graph pointers detected. (C)");
 
-			cp.assertSoft(next == null || next_thread.prev == null, "Internal Error: Dangling contact graph pointers detected. (C)");
+			cpArbiterThread thread = cpArbiter.ThreadForBody(arb, this);
 			thread.next = next;
 
 			if (next != null)
 			{
-				next_thread.prev = arb;
+				var threadNext = cpArbiter.ThreadForBody(next, this);
+				threadNext.prev = arb;
 			}
 
 			this.arbiterList = arb;

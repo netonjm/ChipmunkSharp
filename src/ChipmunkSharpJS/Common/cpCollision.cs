@@ -104,11 +104,8 @@ namespace ChipmunkSharp
 		public static void InfoPushContact(cpCollisionInfo info, cpVect p1, cpVect p2, string hash)
 		{
 			cp.assertSoft(info.count <= cpArbiter.CP_MAX_CONTACTS_PER_ARBITER, "Internal error: Tried to push too many contacts.");
-
-			cpContact con = info.arr[info.count];
-			con.r1 = p1;
-			con.r2 = p2;
-			con.hash = hash;
+			info.arr.Add(new cpContact(p1, p2, hash));
+			//info.arr[info.count] = ;
 			info.count++;// = count++;
 		}
 
