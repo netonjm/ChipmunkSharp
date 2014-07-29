@@ -39,14 +39,14 @@ namespace ChipmunkSharp
 		public float jnAcc, jtAcc, jBias;
 		public float bias;
 
-		public string hash;
+		public ulong hash;
 
 		public override string ToString()
 		{
 			return string.Format("{0}: p({1}),n({2})", hash, r1, r2);
 		}
 
-		public cpContact(cpVect r1, cpVect r2, string hash)
+		public cpContact(cpVect r1, cpVect r2, ulong hash)
 		{
 			Init(r1, r2, hash);
 		}
@@ -57,7 +57,7 @@ namespace ChipmunkSharp
 		//	return tmp;
 		//}
 
-		public void Init(cpVect r1, cpVect r2, string hash)
+		public void Init(cpVect r1, cpVect r2, ulong hash)
 		{
 			this.r1 = r1;
 			this.r2 = r2;

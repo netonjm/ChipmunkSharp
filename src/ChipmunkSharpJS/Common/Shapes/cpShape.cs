@@ -37,7 +37,7 @@ namespace ChipmunkSharp
 	public class cpCollisionInfo
 	{
 		public cpShape a, b;
-		public string id;
+		public ulong id;
 		public cpVect n;
 		public int count;
 
@@ -45,7 +45,7 @@ namespace ChipmunkSharp
 
 		public List<cpContact> arr;
 
-		public cpCollisionInfo(cpShape a, cpShape b, string id, cpVect n, List<cpContact> contacts)
+		public cpCollisionInfo(cpShape a, cpShape b, ulong id, cpVect n, List<cpContact> contacts)
 		{
 			// TODO: Complete member initialization
 			this.a = a;
@@ -470,7 +470,7 @@ namespace ChipmunkSharp
 
 
 		/// Collision type of this shape used when picking collision handlers.
-		public string type;
+		public ulong type;
 
 		public cpShapeFilter filter { get; set; }
 
@@ -479,7 +479,7 @@ namespace ChipmunkSharp
 
 		public cpShape prev;
 
-		public string hashid;
+		public ulong hashid;
 
 		#endregion
 
@@ -517,7 +517,7 @@ namespace ChipmunkSharp
 			this.surfaceV = cpVect.Zero;
 
 			/// Collision type of this shape used when picking collision handlers.
-			this.type = "0";
+			this.type = 0;
 
 			this.space = null;
 		}
@@ -599,12 +599,12 @@ namespace ChipmunkSharp
 			this.userData = userData;
 		}
 
-		public string GetCollisionType()
+		public ulong GetCollisionType()
 		{
 			return this.type;
 		}
 
-		public void SetCollisionType(string collisionType)
+		public void SetCollisionType(ulong collisionType)
 		{
 			this.body.Activate();
 			this.type = collisionType;
@@ -680,7 +680,7 @@ namespace ChipmunkSharp
 		public static cpContactPointSet Collide(cpShape a, cpShape b, ref List<cpContact> contacts)
 		{
 			//cpContact[] contacts = new cpContact[cpArbiter.CP_MAX_CONTACTS_PER_ARBITER];
-			cpCollisionInfo info = cpCollision.cpCollide(a, b,"0", ref contacts);
+			cpCollisionInfo info = cpCollision.cpCollide(a, b, 0, ref contacts);
 
 			cpContactPointSet set = new cpContactPointSet();
 			//set.count = info.count;

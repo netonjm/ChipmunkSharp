@@ -19,49 +19,113 @@
   SOFTWARE.
  */
 using System;
-namespace ChipmunkSharp.Constraints
+namespace ChipmunkSharp
 {
 
 	public class cpDampedSpring : cpConstraint
 	{
 
-		public float defaultSpringForce(cpDampedSpring spring, float relativeAngle)
+		internal cpVect anchorA, anchorB;
+		internal float restLength;
+		internal float stiffness;
+		internal float damping;
+		internal Func<cpDampedSpring, float, float> springForceFunc;
+
+		internal float v_coef;
+		internal float target_vrn;
+
+		internal cpVect n;
+		internal cpVect r1, r2;
+		internal float nMass;
+
+		internal float jAcc;
+
+
+		public float defaultSpringForce(cpDampedSpring spring, float dist)
 		{
 			return (spring.restLength - dist) * spring.stiffness;
 		}
 
+		public override void PreStep(float dt)
+		{
 
-		public Func<cpDampedSpring, float, float> springForceFunc;
+			cpBody a = this.a;
+			cpBody b = this.b;
 
-		#region PUBLIC PROPS
-		public cpVect r1 { get; set; }
-		public cpVect r2 { get; set; }
-		public cpVect n { get; set; }
-		public float v_coef { get; set; }
-		public float target_vrn { get; set; }
-		public float nMass { get; set; }
-		#endregion
+			this.r1 = cpTransform.cpTransformVect(a.transform, cpVect.cpvsub(this.anchorA, a.cog));
+			this.r2 = cpTransform.cpTransformVect(b.transform, cpVect.cpvsub(this.anchorB, b.cog));
 
-		#region PRIVATE PROPS
-		float dist { get; set; }
-		cpVect anchr1 { get; set; }
-		cpVect anchr2 { get; set; }
-		float restLength { get; set; }
-		float damping { get; set; }
-		float stiffness { get; set; }
+			cpVect delta = cpVect.cpvsub(cpVect.cpvadd(b.p, this.r2), cpVect.cpvadd(a.p, this.r1));
+			float dist = cpVect.cpvlength(delta);
+			this.n = cpVect.cpvmult(delta, 1.0f / (dist > 0 ? dist : cp.Infinity));
 
-		#endregion
+			float k = cp.k_scalar(a, b, this.r1, this.r2, this.n);
+			cp.assertSoft(k != 0.0, "Unsolvable this.");
+			this.nMass = 1.0f / k;
+
+			this.target_vrn = 0.0f;
+			this.v_coef = 1.0f - cp.cpfexp(-this.damping * dt * k);
+
+			// apply spring force
+			float f_spring = this.springForceFunc(this, dist);
+			float j_spring = this.jAcc = f_spring * dt;
+			cp.apply_impulses(a, b, this.r1, this.r2, cpVect.cpvmult(this.n, j_spring));
+		}
+
+		public override void ApplyCachedImpulse(float coef)
+		{
+		}
+
+		public override void ApplyImpulse(float dt)
+		{
+			cpBody a = this.a;
+			cpBody b = this.b;
+
+			cpVect n = this.n;
+			cpVect r1 = this.r1;
+			cpVect r2 = this.r2;
+
+			// compute relative velocity
+			float vrn = cp.normal_relative_velocity(a, b, r1, r2, n);
+
+			// compute velocity loss from drag
+			float v_damp = (this.target_vrn - vrn) * this.v_coef;
+			this.target_vrn = vrn + v_damp;
+
+			float j_damp = v_damp * this.nMass;
+			this.jAcc += j_damp;
+			cp.apply_impulses(a, b, this.r1, this.r2, cpVect.cpvmult(this.n, j_damp));
+		}
+
+		public cpDampedSpring(cpBody a, cpBody b, cpVect anchr1, cpVect anchr2, float restLength, float stiffness, float damping)
+			: base(a, b)
+		{
+
+			this.anchorA = anchr1;
+			this.anchorB = anchr2;
+
+			this.restLength = restLength;
+
+			this.stiffness = stiffness;
+			this.damping = damping;
+
+			this.springForceFunc = defaultSpringForce;
+
+			this.target_vrn = this.v_coef = 0;
+
+			this.r1 = this.r2 = null;
+			this.nMass = 0;
+			this.n = null;
+
+			this.jAcc = 0f;
+
+
+		}
+
 
 		#region PROPS OVERIDE
 
-		public override float GetDist()
-		{
-			return dist;
-		}
-		public override void SetDist(float distance)
-		{
-			dist = distance;
-		}
+
 		public override void SetStiffness(float stiffness)
 		{
 			this.stiffness = stiffness;
@@ -74,22 +138,22 @@ namespace ChipmunkSharp.Constraints
 
 		public override void SetAnchorA(cpVect anchr1)
 		{
-			this.anchr1 = anchr1;
+			this.anchorA = anchr1;
 		}
 
 		public override cpVect GetAnchorA()
 		{
-			return this.anchr1;
+			return this.anchorA;
 		}
 
 		public override void SetAnchorB(cpVect anchr2)
 		{
-			this.anchr2 = anchr2;
+			this.anchorB = anchr2;
 		}
 
 		public override cpVect GetAnchorB()
 		{
-			return anchr2;
+			return anchorB;
 		}
 
 		public override void SetRestLength(float restLength)
@@ -114,81 +178,16 @@ namespace ChipmunkSharp.Constraints
 
 		#endregion
 
-		public cpDampedSpring(cpBody a, cpBody b, cpVect anchr1, cpVect anchr2, float restLength, float stiffness, float damping)
-			: base(a, b)
-		{
-
-			this.anchr1 = anchr1;
-			this.anchr2 = anchr2;
-
-			this.restLength = restLength;
-
-			this.stiffness = stiffness;
-			this.damping = damping;
-
-			this.target_vrn = this.v_coef = 0;
-
-			this.r1 = this.r2 = null;
-			this.nMass = 0;
-			this.n = null;
-
-			this.springForceFunc = defaultSpringForce;
-
-		}
-
-
-
-		public override void PreStep(float dt)
-		{
-
-			this.r1 = cpVect.cpvrotate(this.anchr1, a.Rotation);
-			this.r2 = cpVect.cpvrotate(this.anchr2, b.Rotation);
-
-			var delta = cpVect.cpvsub(cpVect.cpvadd(b.Position, this.r2), cpVect.cpvadd(a.Position, this.r1));
-			var dist = cpVect.cpvlength(delta);
-			this.n = cpVect.cpvmult(delta, 1 / (dist > 0 ? dist : cp.Infinity));
-
-			var k = cp.k_scalar(a, b, this.r1, this.r2, this.n);
-
-			cp.assertSoft(k != 0, "Unsolvable this.");
-
-			this.nMass = 1 / k;
-
-			this.target_vrn = 0;
-			this.v_coef = 1 - (float)Math.Exp(-this.damping * dt * k);
-
-			// apply this force
-			var f_spring = this.springForceFunc(this, dist);
-
-			cp.apply_impulses(a, b, this.r1, this.r2, this.n.x * f_spring * dt, this.n.y * f_spring * dt);
-		}
-
-		public override void ApplyCachedImpulse(float coef)
-		{
-		}
-
-		public override void ApplyImpulse(float dt)
-		{
-			// compute relative velocity
-			var vrn = cp.normal_relative_velocity(a, b, r1, r2, n);
-
-			// compute velocity loss from drag
-			var v_damp = (this.target_vrn - vrn) * this.v_coef;
-			this.target_vrn = vrn + v_damp;
-
-			v_damp *= this.nMass;
-			cp.apply_impulses(a, b, this.r1, this.r2, this.n.x * v_damp, this.n.y * v_damp);
-		}
 
 		public override float GetImpulse()
 		{
-			return 0;
+			return this.jAcc;
 		}
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
-			var a = this.a.Local2World(this.anchr1);
-			var b = this.b.Local2World(this.anchr2);
+			var a = this.a.LocalToWorld(this.anchorA);
+			var b = this.b.LocalToWorld(this.anchorB);
 
 			m_debugDraw.DrawSpring(a, b, cpColor.Grey);
 		}

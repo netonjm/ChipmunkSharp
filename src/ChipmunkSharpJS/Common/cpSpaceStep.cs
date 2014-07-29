@@ -171,7 +171,7 @@ namespace ChipmunkSharp
 			);
 		}
 
-		public string CollideShapes(cpShape a, cpShape b, string id)
+		public ulong CollideShapes(cpShape a, cpShape b, ulong id)
 		{
 
 			// It would be nicer to use .bind() or something, but this is faster.
@@ -184,11 +184,11 @@ namespace ChipmunkSharp
 			cpCollisionInfo info = cpCollision.cpCollide(a, b, id, ref this.contactsBuffer);
 
 			if (contactsBuffer.Count == 0)
-				return info.id.ToString(); // Shapes are not colliding.
+				return info.id; // Shapes are not colliding.
 
 			// Get an arbiter from space.arbiterSet for the two shapes.
 			// This is where the persistant contact magic comes from.
-			var arbHash = cp.hashPair(a.hashid, b.hashid);
+			var arbHash = cp.CP_HASH_PAIR(info.a.hashid, info.b.hashid);
 
 			cpArbiter arb;
 			if (!cachedArbiters.TryGetValue(arbHash, out arb))
@@ -235,19 +235,15 @@ namespace ChipmunkSharp
 			// Time stamp the arbiter so we know it was used recently.
 			arb.stamp = this.stamp;
 			//	});
-			return info.id.ToString();
+			return info.id;
 
 		}
 
 
 		/// ///////////////////////////////////////////////////////////////////////////
-
-
 		// **** Post Step Callback Functions
 
 		static void PostStepDoNothing(cpSpace space, object obj, object data) { }
-
-
 
 		// Hashset filter func to throw away old arbiters.
 		public bool ArbiterSetFilter(cpArbiter arb)
@@ -330,17 +326,21 @@ namespace ChipmunkSharp
 				}
 
 				// Find colliding pairs.
-				this.dynamicShapes.Each(s => cpShape.UpdateFunc(s as cpShape, null));
-				this.dynamicShapes.ReindexQuery((a, b, s, o) => CollideShapes(a as cpShape, b as cpShape, s), null);
+				this.dynamicShapes.Each(shape => cpShape.UpdateFunc(shape as cpShape, null));
 
-			} Unlock(false);
+				this.dynamicShapes.ReindexQuery(
+					(shape1, shape2, key, data) => CollideShapes(shape1 as cpShape, shape2 as cpShape, key),
+					null);
+
+			}
+			Unlock(false);
 
 			// Rebuild the contact graph (and detect sleeping components if sleeping is enabled)
 			this.ProcessComponents(dt);
 
 			Lock();
 			{
-				List<string> safeDelete = new List<string>();
+				List<ulong> safeDelete = new List<ulong>();
 				// Clear out old cached arbiters and call separate callbacks
 				foreach (var hash in this.cachedArbiters)
 				{

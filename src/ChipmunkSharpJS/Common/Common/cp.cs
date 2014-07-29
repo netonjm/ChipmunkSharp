@@ -28,6 +28,34 @@ using System.Text;
 namespace ChipmunkSharp
 {
 
+	public class hash
+	{
+
+		public int[] values;
+		public int count;
+
+		public hash(int value)
+		{
+			values = new int[50];
+			SetValue(value);
+		}
+
+		public hash(hash value)
+		{
+			values = new int[50];
+			for (int i = 0; i < value.count; i++)
+			{
+
+			}
+		}
+
+		public void SetValue(int value)
+		{
+
+		}
+
+	}
+
 	public struct cpMat2x2
 	{
 		// Row major [[a, b][c d]]
@@ -41,16 +69,22 @@ namespace ChipmunkSharp
 			this.d = d;
 		}
 
+		public static cpVect Transform(cpMat2x2 m, cpVect v)
+		{
+			return new cpVect(v.x * m.a + v.y * m.b, v.x * m.c + v.y * m.d);
+		}
+
 	} ;
 
 	public class cp
 	{
-		public static string COLLISION_TYPE_STICKY = "1";
-		public static string WILDCARD_COLLISION_TYPE
+		public static ulong COLLISION_TYPE_STICKY = 1;
+		public static ulong WILDCARD_COLLISION_TYPE
 		{
 			get
 			{
-				return (~0).ToString();
+				int parse = ~0;
+				return (ulong)parse;
 			}
 		}
 
@@ -67,7 +101,7 @@ namespace ChipmunkSharp
 		public static int numContacts { get; set; }
 
 
-		public static int shapeIDCounter;
+		public static ulong shapeIDCounter;
 		public static int CP_USE_CGPOINTS = 1;
 
 		public const int ALL_CATEGORIES = ~0;
@@ -93,6 +127,17 @@ namespace ChipmunkSharp
 			}
 		}
 
+		public static ulong CP_HASH_COEF = 3344921057ul;
+
+		public static ulong CP_HASH_PAIR(ulong a, ulong b)
+		{
+			return a * CP_HASH_COEF ^ b * CP_HASH_COEF;
+		}
+
+		//		#define CP_HASH_COEF (3344921057ul)
+		//#define CP_HASH_PAIR(A, B) ((cpHashValue)(A)*CP_HASH_COEF ^ (cpHashValue)(B)*CP_HASH_COEF)
+
+
 		public static float PHYSICS_INFINITY { get { return Infinity; } }
 
 		public static void resetShapeIdCounter()
@@ -100,10 +145,29 @@ namespace ChipmunkSharp
 			shapeIDCounter = 0;
 		}
 
-		public static string hashPair(string a, string b)
-		{
-			return Convert.ToInt32(a) < Convert.ToInt32(b) ? a + " " + b : b + " " + a;
-		}
+		//public static string hashPair(string a, string b)
+		//{
+
+		//	try
+		//	{
+		//		return Convert.ToInt32(a) < Convert.ToInt32(b) ? a + " " + b : b + " " + a;
+		//	}
+		//	catch (Exception)
+		//	{
+		//		//long number1 = 0;
+		//		//var test = a.Split(' ');
+		//		//for (int i = 0; i < a.Length; i++)
+		//		//{
+
+		//		//}
+		//		//long number1 = 0;
+
+		//		return a + " " + b;
+
+		//		//return a.Split(' ') < b ? a + " " + b : b + " " + a;
+		//	}
+
+		//}
 
 		public static void CircleSegmentQuery(cpShape shape, cpVect center, float r1, cpVect a, cpVect b, float r2, ref cpSegmentQueryInfo info)
 		{
@@ -666,7 +730,7 @@ namespace ChipmunkSharp
 
 		/// ///////////////////////////////////////////////////////////////////
 
-	
+
 
 		public static float bbTreeMergedArea2(Node node, float l, float b, float r, float t)
 		{
@@ -691,7 +755,7 @@ namespace ChipmunkSharp
 			Trace(str + node.bb.b + " " + node.bb.t);
 		}
 
-	
+
 
 		public static cpConstraint filterConstraints(cpConstraint node, cpBody body, cpConstraint filter)
 		{
@@ -739,7 +803,7 @@ namespace ChipmunkSharp
 			space.sleepingComponents.Remove(root);
 		}
 
-	
+
 
 		public static void componentAdd(cpBody root, cpBody body)
 		{
@@ -752,7 +816,7 @@ namespace ChipmunkSharp
 			}
 		}
 
-	
+
 
 		public static cpCollisionHandler defaultCollisionHandler = new cpCollisionHandler();
 
@@ -909,7 +973,7 @@ namespace ChipmunkSharp
 				}
 				else
 				{
-					return styles[int.Parse(shape.hashid) % styles.Count];
+					return styles[(int)shape.hashid % styles.Count];
 				}
 			}
 		}

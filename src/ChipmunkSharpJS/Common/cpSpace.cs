@@ -98,13 +98,13 @@ namespace ChipmunkSharp
 		public List<cpConstraint> constraints;
 
 		public List<cpArbiter> arbiters { get; set; }
-		public Dictionary<string, cpArbiter> cachedArbiters;
+		public Dictionary<ulong, cpArbiter> cachedArbiters;
 
 		// public cpArray allocatedBuffers;
 		public int locked;
 
 		public bool usesWildcards;
-		public Dictionary<string, cpCollisionHandler> collisionHandlers;
+		public Dictionary<ulong, cpCollisionHandler> collisionHandlers;
 		public cpCollisionHandler defaultHandler;
 
 		public bool skipPostStep;
@@ -238,14 +238,14 @@ namespace ChipmunkSharp
 			this.idleSpeedThreshold = 0;
 
 			this.arbiters = new List<cpArbiter>();
-			this.cachedArbiters = new Dictionary<string, cpArbiter>();
+			this.cachedArbiters = new Dictionary<ulong, cpArbiter>();
 
 			this.constraints = new List<cpConstraint>();
 
 			this.usesWildcards = false;
 			this.defaultHandler = cpCollisionHandlerDoNothing;
 
-			this.collisionHandlers = new Dictionary<string, cpCollisionHandler>();
+			this.collisionHandlers = new Dictionary<ulong, cpCollisionHandler>();
 
 			this.postStepCallbacks = new List<cpPostStepCallback>();
 
@@ -425,10 +425,10 @@ namespace ChipmunkSharp
 			return this.defaultHandler;
 		}
 
-		public cpCollisionHandler AddCollisionHandler(string a, string b)
+		public cpCollisionHandler AddCollisionHandler(ulong a, ulong b)
 		{
 
-			string hash = cp.hashPair(a, b);
+			ulong hash = cp.CP_HASH_PAIR(a, b);
 
 			var handlers = this.collisionHandlers;
 
@@ -441,11 +441,11 @@ namespace ChipmunkSharp
 			return handler;
 		}
 
-		public cpCollisionHandler AddWildcardHandler(string type)
+		public cpCollisionHandler AddWildcardHandler(ulong type)
 		{
 			UseWildcardDefaultHandler();
 
-			string hash = cp.hashPair(type, cp.WILDCARD_COLLISION_TYPE);
+			ulong hash = cp.CP_HASH_PAIR(type, cp.WILDCARD_COLLISION_TYPE);
 
 			var handlers = this.collisionHandlers;
 
@@ -475,7 +475,7 @@ namespace ChipmunkSharp
 
 			body.AddShape(shape);
 
-			shape.hashid = (cp.shapeIDCounter++).ToString();
+			shape.hashid = cp.shapeIDCounter++;
 
 			shape.Update(body.transform);
 
@@ -530,7 +530,7 @@ namespace ChipmunkSharp
 		public void filterArbiters(cpBody body, cpShape filter)
 		{
 
-			List<string> safeDelete = new List<string>();
+			List<ulong> safeDelete = new List<ulong>();
 
 			foreach (var hash in this.cachedArbiters)
 			{
@@ -589,7 +589,7 @@ namespace ChipmunkSharp
 			(isStatic ? this.staticShapes : this.dynamicShapes).Remove(shape.hashid);
 
 			shape.space = null;
-			shape.hashid = "0";
+			shape.hashid = 0;
 		}
 
 		/// Remove a rigid body from the simulation.
@@ -832,10 +832,10 @@ namespace ChipmunkSharp
 
 		//}
 
-		public cpCollisionHandler LookupHandler(string a, string b, cpCollisionHandler defaultValue)
+		public cpCollisionHandler LookupHandler(ulong a, ulong b, cpCollisionHandler defaultValue)
 		{
 			cpCollisionHandler test;
-			if (collisionHandlers.TryGetValue(cp.hashPair(a, b), out test))
+			if (collisionHandlers.TryGetValue(cp.CP_HASH_PAIR(a, b), out test))
 				return test;
 			else
 				return defaultValue;

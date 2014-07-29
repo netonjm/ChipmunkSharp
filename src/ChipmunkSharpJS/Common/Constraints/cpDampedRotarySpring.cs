@@ -19,57 +19,34 @@
   SOFTWARE.
  */
 using System;
-namespace ChipmunkSharp.Constraints
+namespace ChipmunkSharp
 {
 	public class cpDampedRotarySpring : cpConstraint
 	{
 
 		#region PROPS
 
-		public float target_wrn { get; set; }
-		public float w_coef { get; set; }
-		public float iSum { get; set; }
 
-		float restAngle { get; set; }
-		float stiffness { get; set; }
-		float damping { get; set; }
+		internal float restAngle { get; set; }
+		internal float stiffness { get; set; }
+		internal float damping { get; set; }
 
-		#endregion
 
-		#region PROPS OVERWRTE
+		internal float target_wrn { get; set; }
+		internal float w_coef { get; set; }
 
-		public override float GetRestAngle()
-		{
-			return this.restAngle;
-		}
 
-		public override void SetRestAngle(float restAngle)
-		{
-			this.restAngle = restAngle;
-		}
+		internal float iSum { get; set; }
+		internal float jAcc { get; set; }
 
-		public override void SetStiffness(float stiffness)
-		{
-			this.stiffness = stiffness;
-		}
-		public override float GetStiffness()
-		{
-			return this.stiffness;
-		}
-
-		public override void SetDamping(float damping)
-		{
-			base.SetDamping(damping);
-		}
-
-		public override float GetDamping()
-		{
-			return this.damping;
-		}
+		internal Func<cpDampedRotarySpring, float, float> springTorqueFunc { get; set; }
 
 		#endregion
 
-		Func<cpDampedRotarySpring, float, float> springTorqueFunc;
+		public float defaultSpringTorque(cpDampedRotarySpring spring, float relativeAngle)
+		{
+			return (relativeAngle - spring.restAngle) * spring.stiffness;
+		}
 
 		public cpDampedRotarySpring(cpBody a, cpBody b, float restAngle, float stiffness, float damping)
 			: base(a, b)
@@ -86,25 +63,79 @@ namespace ChipmunkSharp.Constraints
 			this.iSum = 0.0f;
 		}
 
-		public float defaultSpringTorque(cpDampedRotarySpring spring, float relativeAngle)
+
+		public Func<cpDampedRotarySpring, float, float> GetSpringTorqueFunc()
 		{
-			return (relativeAngle - spring.restAngle) * spring.stiffness;
+			return this.springTorqueFunc;
+		}
+
+		public void SetSpringTorqueFunc(Func<cpDampedRotarySpring, float, float> springTorqueFunc)
+		{
+			this.springTorqueFunc = springTorqueFunc;
+		}
+
+
+		/// ///////////////////////////////////////////////////////////////
+
+		#region PROPS OVERWRTE
+
+		public override float GetRestAngle()
+		{
+			return this.restAngle;
+		}
+
+		public override void SetRestAngle(float restAngle)
+		{
+			ActivateBodies();
+			this.restAngle = restAngle;
+		}
+
+		public override void SetStiffness(float stiffness)
+		{
+			ActivateBodies();
+			this.stiffness = stiffness;
+		}
+		public override float GetStiffness()
+		{
+
+			return this.stiffness;
+		}
+
+		public override void SetDamping(float damping)
+		{
+			ActivateBodies();
+			base.SetDamping(damping);
+		}
+
+		public override float GetDamping()
+		{
+			return this.damping;
+		}
+
+
+		#endregion
+
+		public override void ApplyCachedImpulse(float dt_coef)
+		{
+
 		}
 
 		public override void PreStep(float dt)
 		{
 
-			var moment = a.i_inv + b.i_inv;
+			cpBody a = this.a;
+			cpBody b = this.b;
 
-			cp.assertSoft(moment != 0, "Unsolvable spring.");
+			float moment = a.i_inv + b.i_inv;
+			cp.assertSoft(moment != 0.0f, "Unsolvable spring.");
+			this.iSum = 1.0f / moment;
 
-			this.iSum = 1 / moment;
+			this.w_coef = 1.0f - cp.cpfexp(-this.damping * dt * moment);
+			this.target_wrn = 0.0f;
 
-			this.w_coef = 1 - (float)Math.Exp(-this.damping * dt * moment);
-			this.target_wrn = 0;
-
-			// apply this torque
-			float j_spring = springTorqueFunc(this, a.Angle - b.Angle) * dt;
+			// apply spring torque
+			float j_spring = this.springTorqueFunc(this, a.a - b.a) * dt;
+			this.jAcc = j_spring;
 
 			a.w -= j_spring * a.i_inv;
 			b.w += j_spring * b.i_inv;
@@ -122,18 +153,24 @@ namespace ChipmunkSharp.Constraints
 
 			//apply_impulses(a, b, this.r1, this.r2, vmult(this.n, v_damp*this.nMass));
 			var j_damp = w_damp * this.iSum;
+			this.jAcc += j_damp;
+
 			a.w += j_damp * a.i_inv;
 			b.w -= j_damp * b.i_inv;
 		}
 
+		public override float GetImpulse()
+		{
+			return this.jAcc;
+		}
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
 			//base.Draw(m_debugDraw);
-			//var a = this.a.local2World(this.anchr1);
-			//var b = this.b.local2World(this.anchr2);
+			//var a = this.a.LocalToWorld(this.anchr1);
+			//var b = this.b.LocalToWorld(this.anchr2);
 
-			//ctx.strokeStyle = "grey";
+			////ctx.strokeStyle = "grey";
 			//drawSpring(ctx, scale, point2canvas, a, b);
 
 

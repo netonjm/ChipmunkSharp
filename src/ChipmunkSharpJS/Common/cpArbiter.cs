@@ -86,8 +86,8 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public string typeA;
-		public string typeB;
+		public ulong typeA;
+		public ulong typeB;
 
 		public Func<cpArbiter, cpSpace, object, bool> beginFunc;
 		public Func<cpArbiter, cpSpace, object, bool> preSolveFunc;
@@ -108,7 +108,7 @@ namespace ChipmunkSharp
 		}
 
 
-		public cpCollisionHandler(string a, string b,
+		public cpCollisionHandler(ulong a, ulong b,
 			Func<cpArbiter, cpSpace, object, bool> begin,
 			Func<cpArbiter, cpSpace, object, bool> preSolve,
 			Action<cpArbiter, cpSpace, object> postSolve,
@@ -196,7 +196,7 @@ namespace ChipmunkSharp
 	/// A colliding pair of shapes.
 	public class cpArbiter
 	{
-		public string Key { get { return cp.hashPair(a.hashid, b.hashid); } }
+		public ulong Key { get { return cp.CP_HASH_PAIR(a.hashid, b.hashid); } }
 
 		public static int CP_MAX_CONTACTS_PER_ARBITER = 4;
 
@@ -635,7 +635,7 @@ namespace ChipmunkSharp
 			cpVect surface_vr = cpVect.cpvsub(b.surfaceV, a.surfaceV);
 			this.surface_vr = cpVect.cpvsub(surface_vr, cpVect.cpvmult(info.n, cpVect.cpvdot(surface_vr, info.n)));
 
-			string typeA = info.a.type, typeB = info.b.type;
+			ulong typeA = info.a.type, typeB = info.b.type;
 			cpCollisionHandler defaultHandler = space.defaultHandler;
 			cpCollisionHandler handler = this.handler = space.LookupHandler(typeA, typeB, defaultHandler);
 

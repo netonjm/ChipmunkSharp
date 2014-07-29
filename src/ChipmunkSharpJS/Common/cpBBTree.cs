@@ -101,10 +101,10 @@ namespace ChipmunkSharp
 	{
 		public cpBBTree tree;
 		public Node staticRoot;
-		public Func<object, object, string, object, string> func;
+		public Func<object, object, ulong, object, ulong> func;
 		public object data;
 
-		public MarkContext(cpBBTree tree, Node staticRoot, Func<object, object, string, object, string> func, object data)
+		public MarkContext(cpBBTree tree, Node staticRoot, Func<object, object, ulong, object, ulong> func, object data)
 		{
 			this.tree = tree;
 			this.staticRoot = staticRoot;
@@ -214,7 +214,7 @@ namespace ChipmunkSharp
 						if (this.STAMP < leaf.STAMP)
 							context.tree.PairInsert(this, leaf);// this.PairInsert(leaf, );
 
-						context.func(leaf.obj, this.obj, "0", context.data);
+						context.func(leaf.obj, this.obj, 0, context.data);
 					}
 				}
 				else
@@ -491,14 +491,14 @@ namespace ChipmunkSharp
 
 
 		public Thread a, b;
-		public string id;
+		public ulong id;
 
 		// Objects created with constructors are faster than object literals. :(
 		public Pair(Node leafA, Pair nextA, Node leafB, Pair nextB)
 		{
 			a = new Thread(null, leafA, nextA);
 			b = new Thread(null, leafB, nextB);
-			id = "0";
+			id = 0;
 		}
 
 
@@ -530,7 +530,7 @@ namespace ChipmunkSharp
 		public cpBBTree staticIndex { get; set; }
 		public cpBBTree dynamicIndex { get; set; }
 
-		public Dictionary<string, Leaf> leaves { get; set; }
+		public Dictionary<ulong, Leaf> leaves { get; set; }
 
 		public Node pooledNodes { get; set; }
 		public Pair pooledPairs { get; set; }
@@ -748,14 +748,14 @@ namespace ChipmunkSharp
 
 		}
 
-		public void SubtreeQuery(Node subtree, object obj, cpBB bb, Func<object, object, string, object, string> func, object data)
+		public void SubtreeQuery(Node subtree, object obj, cpBB bb, Func<object, object, ulong, object, ulong> func, object data)
 		{
 			//if(bbIntersectsBB(subtree.bb, bb)){
 			if (subtree.bb.Intersects(bb))
 			{
 				if (subtree.isLeaf)
 				{
-					func(obj, subtree.obj, "0", data);
+					func(obj, subtree.obj, 0, data);
 				}
 				else
 				{
@@ -855,7 +855,7 @@ namespace ChipmunkSharp
 			}
 		}
 
-		static string VoidQueryFunc(object obj1, object obj2, string id, object data) { return id; }
+		static ulong VoidQueryFunc(object obj1, object obj2, ulong id, object data) { return id; }
 
 		public void LeafAddPairs(Node leaf)
 		{
@@ -880,7 +880,7 @@ namespace ChipmunkSharp
 				leaf.MarkLeaf(context);
 			}
 		}
-		public Leaf Insert(string hashid, IObjectBox obj)
+		public Leaf Insert(ulong hashid, IObjectBox obj)
 		{
 			Leaf leaf = new Leaf(this, obj);
 			this.leaves.Add(hashid, leaf);
@@ -897,7 +897,7 @@ namespace ChipmunkSharp
 			return leaf;
 		}
 
-		public void Remove(string key)
+		public void Remove(ulong key)
 		{
 			Leaf leaf;
 			if (TryGetValue(key, out leaf))
@@ -931,12 +931,12 @@ namespace ChipmunkSharp
 			return false;
 		}
 
-		public bool TryGetValue(string key, out Leaf value)
+		public bool TryGetValue(ulong key, out Leaf value)
 		{
 			return leaves.TryGetValue(key, out value);
 		}
 
-		public bool ContainsHash(string hashid)
+		public bool ContainsHash(ulong hashid)
 		{
 			foreach (var item in leaves)
 				if (item.Key == hashid)
@@ -971,7 +971,7 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public void ReindexQuery(Func<object, object, string, object, string> func, object data)
+		public void ReindexQuery(Func<object, object, ulong, object, ulong> func, object data)
 		{
 
 			if (this.root == null) return;
@@ -994,7 +994,7 @@ namespace ChipmunkSharp
 		}
 
 		// Collide the objects in an index against the objects in a staticIndex using the query callback function.
-		public void CollideStatic(cpBBTree staticIndex, Func<object, object, string, object, string> func, object data)
+		public void CollideStatic(cpBBTree staticIndex, Func<object, object, ulong, object, ulong> func, object data)
 		{
 			if (staticIndex != null && staticIndex.Count > 0)
 			{
@@ -1014,7 +1014,7 @@ namespace ChipmunkSharp
 		}
 
 
-		public void ReindexObject(object obj, string hashid)
+		public void ReindexObject(object obj, ulong hashid)
 		{
 			Leaf leaf;
 			if (leaves.TryGetValue(hashid, out leaf))
@@ -1036,7 +1036,7 @@ namespace ChipmunkSharp
 		}
 
 
-		public void Query(object context, cpBB bb, Func<object, object, string, object, string> func, object node)
+		public void Query(object context, cpBB bb, Func<object, object, ulong, object, ulong> func, object node)
 		{
 			if (root != null)
 				SubtreeQuery(root, context, bb, func, node);
@@ -1166,7 +1166,7 @@ namespace ChipmunkSharp
 			this.velocityFunc = null;
 
 			// This is a hash from object ID -> object for the objects stored in the BBTree.
-			leaves = new Dictionary<string, Leaf>();
+			leaves = new Dictionary<ulong, Leaf>();
 
 			// elements = new Dictionary<int, object>();
 			root = null;
@@ -1233,7 +1233,7 @@ namespace ChipmunkSharp
 				cp.nodeRender(this.root, 0);
 		}
 
-		public object GetValue(string arbHash)
+		public object GetValue(ulong arbHash)
 		{
 			Leaf dev = Get(arbHash);
 			if (dev != null)
@@ -1241,7 +1241,7 @@ namespace ChipmunkSharp
 			return null;
 		}
 
-		public Leaf Get(string arbHash)
+		public Leaf Get(ulong arbHash)
 		{
 			Leaf dev;
 			if (TryGetValue(arbHash, out dev))

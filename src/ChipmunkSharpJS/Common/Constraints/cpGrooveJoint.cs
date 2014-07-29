@@ -19,7 +19,7 @@
   SOFTWARE.
  */
 using System;
-namespace ChipmunkSharp.Constraints
+namespace ChipmunkSharp
 {
 
 	public class cpGrooveJoint : cpConstraint
@@ -27,129 +27,101 @@ namespace ChipmunkSharp.Constraints
 
 		#region PUBLIC PROPS
 
-		public cpVect grv_a { get; set; }
 
-		public cpVect grv_b { get; set; }
+		public cpVect grv_n, grv_a, grv_b;
 
-		public cpVect grv_n { get; set; }
+		cpVect anchorB;
 
-		public cpVect anchr2 { get; set; }
+		cpVect grv_tn;
+		float clamp;
+		cpVect r1, r2;
+		cpMat2x2 k;
 
-		public float clamp { get; set; }
-
-		public cpVect grv_tn { get; set; }
-
-		public float jMaxLen { get; set; }
-
-		public cpVect k1 { get; set; }
-
-		public cpVect k2 { get; set; }
-
-		public cpVect jAcc { get; set; }
-
-		public cpVect r2 { get; set; }
-
-		public cpVect r1 { get; set; }
-
-		public cpVect bias { get; set; }
+		cpVect jAcc;
+		cpVect bias;
 
 
 		#endregion
 
-		public cpGrooveJoint(cpBody a, cpBody b, cpVect groove_a, cpVect groove_b, cpVect anchr2)
-			: base(a, b)
-		{
-
-
-			this.grv_a = groove_a;
-			this.grv_b = groove_b;
-			this.grv_n = groove_b.Sub(groove_a).Normalize().Perp();// vperp(vnormalize(vsub(groove_b, groove_a)));
-			this.anchr2 = anchr2;
-
-			this.grv_tn = null;
-			this.clamp = 0.0f;
-			this.r1 = this.r2 = null;
-
-			this.k1 = cpVect.Zero;// new cpVect(0, 0);
-			this.k2 = cpVect.Zero;// new Vect(0, 0);
-
-			this.jAcc = cpVect.Zero;
-			this.jMaxLen = 0.0f;
-			this.bias = null;
-
-		}
 
 		public override void PreStep(float dt)
 		{
 
+			cpBody a = this.a;
+			cpBody b = this.b;
+
 			// calculate endpoints in worldspace
-			var ta = a.Local2World(this.grv_a);
-			var tb = a.Local2World(this.grv_b);
+			cpVect ta = cpTransform.cpTransformPoint(a.transform, this.grv_a);
+			cpVect tb = cpTransform.cpTransformPoint(a.transform, this.grv_b);
 
 			// calculate axis
-			var n = cpVect.cpvrotate(this.grv_n, a.Rotation);
-			var d = cpVect.cpvdot(ta, n);
+			cpVect n = cpTransform.cpTransformVect(a.transform, this.grv_n);
+			float d = cpVect.cpvdot(ta, n);
 
 			this.grv_tn = n;
-			this.r2 = cpVect.cpvrotate(this.anchr2, b.Rotation);// vrotate(this.anchr2, b.rot);
+			this.r2 = cpTransform.cpTransformVect(b.transform, cpVect.cpvsub(this.anchorB, b.cog));
 
 			// calculate tangential distance along the axis of r2
-			var td = cpVect.cpvcross(cpVect.cpvadd(b.Position, this.r2), n);
+			float td = cpVect.cpvcross(cpVect.cpvadd(b.p, this.r2), n);
 			// calculate clamping factor and r2
-			if (td <= cpVect.cpvcross(ta, n))// vcross(ta, n))
+			if (td <= cpVect.cpvcross(ta, n))
 			{
-				this.clamp = 1;
-				this.r1 = cpVect.cpvsub(ta, a.Position);
+				this.clamp = 1.0f;
+				this.r1 = cpVect.cpvsub(ta, a.p);
 			}
 			else if (td >= cpVect.cpvcross(tb, n))
 			{
-				this.clamp = -1;
-				this.r1 = cpVect.cpvsub(tb, a.Position);
+				this.clamp = -1.0f;
+				this.r1 = cpVect.cpvsub(tb, a.p);
 			}
 			else
 			{
-				this.clamp = 0;
-				this.r1 = cpVect.cpvsub(cpVect.cpvadd(cpVect.cpvmult(cpVect.cpvperp(n), -td), cpVect.cpvmult(n, d)), a.Position);  //n.Perp().Multiply(-td).Add(n.Multiply(d)).Sub(a.Position);
-
+				this.clamp = 0.0f;
+				this.r1 = cpVect.cpvsub(cpVect.cpvadd(cpVect.cpvmult(cpVect.cpvperp(n), -td), cpVect.cpvmult(n, d)), a.p);
 			}
 
 			// Calculate mass tensor
-			cp.k_tensor(a, b, this.r1, this.r2, this.k1, this.k2);
-
-			// compute max impulse
-			this.jMaxLen = this.maxForce * dt;
+			this.k = cp.k_tensor(a, b, this.r1, this.r2);
 
 			// calculate bias velocity
-			var delta = cpVect.cpvsub(cpVect.cpvadd(b.Position, this.r2), cpVect.cpvadd(a.Position, this.r1));
-
-			//this.bias = delta.Multiply(-cp.bias_coef(this.errorBias, dt) / dt).Clamp(this.maxBias);
+			cpVect delta = cpVect.cpvsub(cpVect.cpvadd(b.p, this.r2), cpVect.cpvadd(a.p, this.r1));
 			this.bias = cpVect.cpvclamp(cpVect.cpvmult(delta, -cp.bias_coef(this.errorBias, dt) / dt), this.maxBias);
 		}
 
 		public override void ApplyCachedImpulse(float dt_coef)
 		{
-			cp.apply_impulses(this.a, this.b, this.r1, this.r2, this.jAcc.x * dt_coef, this.jAcc.y * dt_coef);
+			cpBody a = this.a;
+			cpBody b = this.b;
+
+			cp.apply_impulses(a, b, this.r1, this.r2, cpVect.cpvmult(this.jAcc, dt_coef));
 		}
 
-		public cpVect grooveConstrain(cpVect j)
+		public cpVect grooveConstrain(cpVect j, float dt)
 		{
-			var n = this.grv_tn;
-			var jClamp = (this.clamp * cpVect.cpvcross(j, n) > 0) ? j : cpVect.cpvproject(j, n);
-			return cpVect.cpvclamp(jClamp, this.jMaxLen);
+			cpVect n = this.grv_tn;
+			cpVect jClamp = (this.clamp * cpVect.cpvcross(j, n) > 0.0f) ? j : cpVect.cpvproject(j, n);
+			return cpVect.cpvclamp(jClamp, this.maxForce * dt);
 		}
 
 		public override void ApplyImpulse(float dt)
 		{
 
-			// compute impulse
-			var vr = cp.relative_velocity(a, b, r1, r2);
+			cpBody a = this.a;
+			cpBody b = this.b;
 
-			var j = cpVect.mult_k(cpVect.cpvsub(this.bias, vr), this.k1, this.k2);
-			var jOld = this.jAcc;
-			this.jAcc = this.grooveConstrain(cpVect.cpvadd(jOld, j));
+			cpVect r1 = this.r1;
+			cpVect r2 = this.r2;
+
+			// compute impulse
+			cpVect vr = cp.relative_velocity(a, b, r1, r2);
+
+			cpVect j = cpMat2x2.Transform(this.k, cpVect.cpvsub(this.bias, vr));
+			cpVect jOld = this.jAcc;
+			this.jAcc = grooveConstrain(cpVect.cpvadd(jOld, j), dt);
+			j = cpVect.cpvsub(this.jAcc, jOld);
 
 			// apply impulse
-			cp.apply_impulses(a, b, this.r1, this.r2, this.jAcc.x - jOld.x, this.jAcc.y - jOld.y);
+			cp.apply_impulses(a, b, this.r1, this.r2, j);
 		}
 
 		public override float GetImpulse()
@@ -158,26 +130,68 @@ namespace ChipmunkSharp.Constraints
 			return cpVect.cpvlength(this.jAcc);
 		}
 
-		public void SetGrooveA(cpVect value)
+
+		public cpGrooveJoint(cpBody a, cpBody b, cpVect groove_a, cpVect groove_b, cpVect anchorB)
+			: base(a, b)
+		{
+
+			this.grv_a = groove_a;
+			this.grv_b = groove_b;
+			this.grv_n = cpVect.cpvperp(cpVect.cpvnormalize(cpVect.cpvsub(groove_b, groove_a)));
+			this.anchorB = anchorB;
+
+			this.grv_tn = null;
+			this.clamp = 0.0f;
+			this.r1 = this.r2 = null;
+
+			this.jAcc = cpVect.Zero;
+			this.bias = null;
+
+		}
+
+
+		public override cpVect GetGrooveA()
+		{
+			return this.grv_a;
+		}
+
+		public override void SetGrooveA(cpVect value)
 		{
 			this.grv_a = value;
 			this.grv_n = cpVect.cpvperp(cpVect.cpvnormalize(cpVect.cpvsub(this.grv_b, value)));
 
-			this.activateBodies();
+			this.ActivateBodies();
 		}
-		public void SetGrooveB(cpVect value)
+
+		public override cpVect GetGrooveB()
+		{
+			return this.grv_b;
+		}
+
+		public override void SetGrooveB(cpVect value)
 		{
 			this.grv_b = value;
 			this.grv_n = cpVect.cpvperp(cpVect.cpvnormalize(cpVect.cpvsub(value, this.grv_a)));
 
-			this.activateBodies();
+			this.ActivateBodies();
+		}
+
+		public override cpVect GetAnchorB()
+		{
+			return this.anchorB;
+		}
+
+		public override void SetAnchorB(cpVect anchorB)
+		{
+			this.ActivateBodies();
+			this.anchorB = anchorB;
 		}
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
-			var a = this.a.Local2World(this.grv_a);
-			var b = this.a.Local2World(this.grv_b);
-			var c = this.b.Local2World(this.anchr2);
+			var a = this.a.LocalToWorld(this.grv_a);
+			var b = this.a.LocalToWorld(this.grv_b);
+			var c = this.b.LocalToWorld(this.anchorB);
 
 			m_debugDraw.DrawSegment(a, b, cpColor.Grey);
 			m_debugDraw.DrawCircle(c, 3f, cpColor.Grey);

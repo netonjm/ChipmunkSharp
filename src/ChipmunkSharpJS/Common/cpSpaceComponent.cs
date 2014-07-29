@@ -79,7 +79,7 @@ namespace ChipmunkSharp
 						//}
 
 						cpShape a = arb.a, b = arb.b;
-						this.cachedArbiters.Add(cp.hashPair(a.hashid, b.hashid), arb);
+						this.cachedArbiters.Add(cp.CP_HASH_PAIR(a.hashid, b.hashid), arb);
 
 						// Update the arbiter's state
 						arb.stamp = this.stamp;

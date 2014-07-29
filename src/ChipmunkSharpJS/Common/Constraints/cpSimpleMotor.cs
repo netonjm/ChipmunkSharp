@@ -19,37 +19,32 @@
   SOFTWARE.
  */
 using System;
-namespace ChipmunkSharp.Constraints
+namespace ChipmunkSharp
 {
 
 	public class cpSimpleMotor : cpConstraint
 	{
 
-		public cpSimpleMotor(cpBody a, cpBody b, float rate)
-			: base(a, b)
-		{
-
-			this.rate = rate;
-
-			this.jAcc = 0.0f;
-
-			this.iSum = this.jMax = 0.0f;
-		}
+	internal	float rate;
+	internal	float iSum;
+	internal	float jAcc;
 
 		public override void PreStep(float dt)
 		{
 
-			// calculate moment of inertia coefficient.
-			this.iSum = 1 / (this.a.i_inv + this.b.i_inv);
+			cpBody a = this.a;
+			cpBody b = this.b;
 
-			// compute max impulse
-			this.jMax = this.maxForce * dt;
+			// calculate moment of inertia coefficient.
+			this.iSum = 1.0f / (a.i_inv + b.i_inv);
 		}
 
 		public override void ApplyCachedImpulse(float dt_coef)
 		{
+			cpBody a = this.a;
+			cpBody b = this.b;
 
-			var j = this.jAcc * dt_coef;
+			float j = this.jAcc * dt_coef;
 			a.w -= j * a.i_inv;
 			b.w += j * b.i_inv;
 		}
@@ -58,14 +53,18 @@ namespace ChipmunkSharp.Constraints
 		public override void ApplyImpulse(float dt)
 		{
 
+			cpBody a = this.a;
+			cpBody b = this.b;
 
 			// compute relative rotational velocity
-			var wr = b.w - a.w + this.rate;
+			float wr = b.w - a.w + this.rate;
+
+			float jMax = this.maxForce * dt;
 
 			// compute normal impulse	
-			var j = -wr * this.iSum;
-			var jOld = this.jAcc;
-			this.jAcc = cp.cpclamp(jOld + j, -this.jMax, this.jMax);
+			float j = -wr * this.iSum;
+			float jOld = this.jAcc;
+			this.jAcc = cp.cpfclamp(jOld + j, -jMax, jMax);
 			j = this.jAcc - jOld;
 
 			// apply impulse
@@ -76,23 +75,28 @@ namespace ChipmunkSharp.Constraints
 
 		public override float GetImpulse()
 		{
-			return Math.Abs(jAcc);
+			return cp.cpfabs(jAcc);
 		}
 
 
-		public float jMax { get; set; }
 
-		public float iSum { get; set; }
 
-		public float jAcc { get; set; }
+		public cpSimpleMotor(cpBody a, cpBody b, float rate)
+			: base(a, b)
+		{
 
-		public float rate { get; set; }
+			this.rate = rate;
+
+			this.jAcc = 0.0f;
+
+		}
+
 
 
 		public override void SetRate(float rate)
 		{
+			ActivateBodies();
 			this.rate = rate;
-
 		}
 
 

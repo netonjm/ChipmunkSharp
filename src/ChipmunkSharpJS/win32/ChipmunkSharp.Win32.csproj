@@ -52,6 +52,36 @@
     <Compile Include="..\Common\Constraints\cpConstraint.cs">
       <Link>Constraints\cpConstraint.cs</Link>
     </Compile>
+    <Compile Include="..\Common\Constraints\cpDampedRotarySpring.cs">
+      <Link>Constraints\cpDampedRotarySpring.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Constraints\cpDampedSpring.cs">
+      <Link>Constraints\cpDampedSpring.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Constraints\cpGearJoint.cs">
+      <Link>Constraints\cpGearJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Constraints\cpGrooveJoint.cs">
+      <Link>Constraints\cpGrooveJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Constraints\cpPinJoint.cs">
+      <Link>Constraints\cpPinJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Constraints\cpPivotJoint.cs">
+      <Link>Constraints\cpPivotJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Constraints\cpRatchetJoint.cs">
+      <Link>Constraints\cpRatchetJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Constraints\cpRotaryLimitJoint.cs">
+      <Link>Constraints\cpRotaryLimitJoint.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Constraints\cpSimpleMotor.cs">
+      <Link>Constraints\cpSimpleMotor.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Constraints\cpSlideJoint.cs">
+      <Link>Constraints\cpSlideJoint.cs</Link>
+    </Compile>
     <Compile Include="..\Common\cpArbiter.cs">
       <Link>cpArbiter.cs</Link>
     </Compile>

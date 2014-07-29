@@ -30,7 +30,7 @@ namespace ChipmunkSharp
 	{
 
 
-		public string NearestPointQuery(PointQueryContext context, cpShape shape, string id, object data)
+		public ulong NearestPointQuery(PointQueryContext context, cpShape shape, ulong id, object data)
 		{
 			if (
 				!cpShapeFilter.Reject(shape.filter, context.filter)
@@ -56,7 +56,7 @@ namespace ChipmunkSharp
 			} Unlock(true);
 		}
 
-		public string NearestPointQueryNearest(PointQueryContext context, cpShape shape, string id, ref cpPointQueryInfo output)
+		public ulong NearestPointQueryNearest(PointQueryContext context, cpShape shape, ulong id, ref cpPointQueryInfo output)
 		{
 			if (
 				!cpShapeFilter.Reject(shape.filter, context.filter) && !shape.sensor
@@ -152,7 +152,7 @@ namespace ChipmunkSharp
 
 		//MARK: BB Query Functions
 
-		public string BBQueryFunc(BBQueryContext context, cpShape shape, string id, object data)
+		public ulong BBQueryFunc(BBQueryContext context, cpShape shape, ulong id, object data)
 		{
 			if (
 				!cpShapeFilter.Reject(shape.filter, context.filter) &&
@@ -185,7 +185,7 @@ namespace ChipmunkSharp
 			} Unlock(true);
 		}
 
-		public string ShapeQueryFunc(cpShape a, cpShape b, string id, ShapeQueryContext context)
+		public ulong ShapeQueryFunc(cpShape a, cpShape b, ulong id, ShapeQueryContext context)
 		{
 			if (cpShapeFilter.Reject(a.filter, b.filter) || a == b) return id;
 

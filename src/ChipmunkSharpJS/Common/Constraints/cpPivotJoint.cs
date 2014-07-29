@@ -19,34 +19,95 @@
   SOFTWARE.
  */
 using System;
-namespace ChipmunkSharp.Constraints
+namespace ChipmunkSharp
 {
 
 	public class cpPivotJoint : cpConstraint
 	{
 
-		#region PUBLIC PROPS
 
-		public cpVect anchorA, anchorB;
+		internal cpVect anchorA, anchorB;
 
-		public cpVect r2 { get; set; }
+		internal cpVect r1, r2;
+		internal cpMat2x2 k;
 
-		public cpVect r1 { get; set; }
+		internal cpVect jAcc;
+		internal cpVect bias;
 
-		public cpVect k1 { get; set; }
+		public override void PreStep(float dt)
+		{
 
-		public cpVect k2 { get; set; }
+			cpBody a = this.a;
+			cpBody b = this.b;
 
-		public cpVect jAcc { get; set; }
+			this.r1 = cpTransform.cpTransformVect(a.transform, cpVect.cpvsub(this.anchorA, a.cog));
+			this.r2 = cpTransform.cpTransformVect(b.transform, cpVect.cpvsub(this.anchorB, b.cog));
 
-		public float jMaxLen { get; set; }
+			// Calculate mass tensor
+			this.k = cp.k_tensor(a, b, this.r1, this.r2);
 
-		public cpVect bias { get; set; }
+			// calculate bias velocity
+			cpVect delta = cpVect.cpvsub(cpVect.cpvadd(b.p, this.r2), cpVect.cpvadd(a.p, this.r1));
+			this.bias = cpVect.cpvclamp(cpVect.cpvmult(delta, -cp.bias_coef(this.errorBias, dt) / dt), this.maxBias);
+		}
 
-		#endregion
+		public override void ApplyCachedImpulse(float dt_coef)
+		{
+			cpBody a = this.a;
+			cpBody b = this.b;
+
+			cp.apply_impulses(a, b, this.r1, this.r2, cpVect.cpvmult(this.jAcc, dt_coef));
+		}
+
+		public override void ApplyImpulse(float dt)
+		{
+
+			cpBody a = this.a;
+			cpBody b = this.b;
+
+			cpVect r1 = this.r1;
+			cpVect r2 = this.r2;
+
+			// compute relative velocity
+			cpVect vr = cp.relative_velocity(a, b, r1, r2);
+
+			// compute normal impulse
+			cpVect j = cpMat2x2.Transform(this.k, cpVect.cpvsub(this.bias, vr));
+			cpVect jOld = this.jAcc;
+			this.jAcc = cpVect.cpvclamp(cpVect.cpvadd(this.jAcc, j), this.maxForce * dt);
+			j = cpVect.cpvsub(this.jAcc, jOld);
+
+			// apply impulse
+			cp.apply_impulses(a, b, this.r1, this.r2, j);
+
+		}
+
+
+		public cpPivotJoint(cpBody a, cpBody b, cpVect pivot)
+			: this(a, b,
+			(a != null ? a.WorldToLocal(pivot) : pivot),
+			(b != null ? b.WorldToLocal(pivot) : pivot))
+		{
+
+		}
+
+		public cpPivotJoint(cpBody a, cpBody b, cpVect anchorA, cpVect anchorB)
+			: base(a, b)
+		{
+			this.anchorA = anchorA;
+			this.anchorB = anchorB;
+			this.jAcc = cpVect.Zero;
+		}
+
+
+		public override float GetImpulse()
+		{
+			return cpVect.cpvlength(jAcc);//.Length;  //cpvlength(this.jAcc);
+		}
 
 		public override void SetAnchorA(cpVect anchr1)
 		{
+			ActivateBodies();
 			this.anchorA = anchr1;
 		}
 
@@ -57,6 +118,7 @@ namespace ChipmunkSharp.Constraints
 
 		public override void SetAnchorB(cpVect anchr2)
 		{
+			ActivateBodies();
 			this.anchorB = anchr2;
 		}
 
@@ -65,87 +127,10 @@ namespace ChipmunkSharp.Constraints
 			return anchorB;
 		}
 
-
-		public cpPivotJoint(cpBody a, cpBody b, cpVect pivot)
-			: this(a, b, (a != null ? a.World2Local(pivot) : pivot), (b != null ? b.World2Local(pivot) : pivot))
-		{
-
-		}
-		public cpPivotJoint(cpBody a, cpBody b, cpVect anchr1, cpVect anchr2)
-			: base(a, b)
-		{
-
-
-			// if(typeof(cpVect) ==anchr2   ) {
-			if (anchr2 == null)
-			{
-				var pivot = anchr1;
-
-				anchr1 = (a != null ? a.World2Local(pivot) : pivot);
-				anchr2 = (b != null ? b.World2Local(pivot) : pivot);
-			}
-
-			this.anchorA = anchr1;
-			this.anchorB = anchr2;
-
-			this.r1 = cpVect.Zero;
-			this.r2 = cpVect.Zero;
-
-			this.k1 = cpVect.Zero;
-			this.k2 = cpVect.Zero;
-
-			this.jAcc = cpVect.Zero;
-
-			this.jMaxLen = 0.0f;
-			this.bias = cpVect.Zero;
-		}
-
-		public override void PreStep(float dt)
-		{
-
-			this.r1 = anchorA.Rotate(a.Rotation);// cpvrotate();
-			this.r2 = anchorB.Rotate(b.Rotation); // cpvrotate(this.anchr2, b.rot);
-
-			// Calculate mass tensor. Result is stored into this.k1 & this.k2.
-			cp.k_tensor(a, b, this.r1, this.r2, this.k1, this.k2);
-
-			// compute max impulse
-			this.jMaxLen = this.maxForce * dt;
-
-			// calculate bias velocity
-			var delta = cpVect.cpvsub(cpVect.cpvadd(b.Position, this.r2), cpVect.cpvadd(a.Position, this.r1));
-			this.bias = cpVect.cpvclamp(cpVect.cpvmult(delta, -cp.bias_coef(this.errorBias, dt) / dt), this.maxBias);  //delta.Multiply(-cp.bias_coef(errorBias, dt) / dt).Clamp(maxBias);  //cpvclamp(cpvmult(delta, -Util.bias_coef(this.errorBias, dt) / dt), this.maxBias);
-		}
-
-		public override void ApplyCachedImpulse(float dt_coef)
-		{
-			cp.apply_impulses(this.a, this.b, this.r1, this.r2, this.jAcc.x * dt_coef, this.jAcc.y * dt_coef);
-		}
-
-		public override void ApplyImpulse(float dt)
-		{
-
-			// compute relative velocity
-			var vr = cp.relative_velocity(a, b, r1, r2);
-
-			// compute normal impulse
-			var j = cpVect.mult_k(bias.Sub(vr), k1, k2);   // Util.mult_k(cpvsub(this.bias, vr), this.k1, this.k2);
-			var jOld = this.jAcc;
-			this.jAcc = jAcc.Add(j).Clamp(jMaxLen);  // cpEnvironment.cpvclamp(cpvadd(this.jAcc, j), this.jMaxLen);
-
-			// apply impulse
-			cp.apply_impulses(a, b, this.r1, this.r2, this.jAcc.x - jOld.x, this.jAcc.y - jOld.y);
-		}
-
-		public override float GetImpulse()
-		{
-			return jAcc.Length;  //cpvlength(this.jAcc);
-		}
-
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
-			var a = this.a.Local2World(this.anchorA);
-			var b = this.b.Local2World(this.anchorB);
+			var a = this.a.LocalToWorld(this.anchorA);
+			var b = this.b.LocalToWorld(this.anchorB);
 			m_debugDraw.DrawCircle(a, 2, cpColor.Grey);
 			m_debugDraw.DrawCircle(b, 2, cpColor.Grey);
 

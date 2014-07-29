@@ -26,46 +26,46 @@ namespace ChipmunkSharp
 	public class cpConstraint
 	{
 
-		public cpSpace space;
+		internal cpSpace space;
 
 
 		/// The first body connected to this constraint.
-		public cpBody a;
-		/// The second body connected to this constraint.
-		public cpBody b;
+		internal cpBody a, b;
+
+		internal cpConstraint next_a, next_b;
 
 
-		public cpConstraint next_a;
-		public cpConstraint next_b;
 
 		/// The maximum force that this constraint is allowed to use.
 		/// Defaults to infinity.
-		public float maxForce;
+		internal float maxForce;
 		/// The rate at which joint error is corrected.
 		/// Defaults to pow(1.0 - 0.1, 60.0) meaning that it will
 		/// correct 10% of the error every 1/60th of a second.
-		public float errorBias;
+		internal float errorBias;
 		/// The maximum rate at which joint error is corrected.
 		/// Defaults to infinity.
-		public float maxBias;
+		internal float maxBias;
+
+		internal bool collideBodies;
+
 
 		/// Function called before the solver runs.
 		/// Animate your joint anchors, update your motor torque, etc.
-		public Action<cpSpace> preSolve;
+		internal Action<cpSpace> preSolve;
 		//TODO: cpConstraintPreSolveFunc
 
 		/// Function called after the solver runs.
 		/// Use the applied impulse to perform effects like breakable joints.
 		//public cpConstraintPostSolveFunc postSolve;
-		public Action<cpSpace> postSolve;
+		internal Action<cpSpace> postSolve;
 		//TODO: cpConstraintPostSolveFunc
 
 		/// User definable data pointer.
 		/// Generally this points to your the game object class so you can access it
 		/// when given a cpConstraint reference in a callback.
-		//public cpDataPointer data;
+		internal object userData;
 
-		public bool collideBodies;
 
 		public cpConstraint(cpBody a, cpBody b)
 		{
@@ -88,18 +88,123 @@ namespace ChipmunkSharp
 			/// The maximum rate at which joint error is corrected.
 			this.maxBias = cp.Infinity;
 
+
+			this.collideBodies = true;
+
+			//Not clear
 			preSolve = DefaultPreSolve;
 			postSolve = DefaultPostSolve;
 
 		}
+		public cpSpace GetSpace()
+		{
+			return this.space;
+		}
 
-		public void activateBodies()
+		public cpBody GetBodyA()
+		{
+			return this.a;
+		}
+
+		public cpBody GetBodyB()
+		{
+			return this.b;
+		}
+
+		public float GetMaxForce()
+		{
+			return maxForce;
+		}
+
+		public void SetMaxForce(float maxForce)
+		{
+			cp.assertHard(maxForce >= 0.0f, "maxForce must be positive.");
+			ActivateBodies();// cpConstraintActivateBodies(constraint);
+			this.maxForce = maxForce;
+		}
+
+		public float GetErrorBias()
+		{
+			return this.errorBias;
+		}
+
+		public void SetErrorBias(float errorBias)
+		{
+			cp.assertHard(errorBias >= 0.0f, "errorBias must be positive.");
+			ActivateBodies();
+			this.errorBias = errorBias;
+		}
+
+		public float GetMaxBias()
+		{
+			return this.maxBias;
+		}
+
+		public void SetMaxBias(float maxBias)
+		{
+			cp.assertHard(maxBias >= 0.0f, "errorBias must be positive.");
+			ActivateBodies();
+			this.maxBias = maxBias;
+		}
+
+		public bool GetCollideBodies()
+		{
+			return collideBodies;
+		}
+
+		public void SetCollideBodies(bool value)
+		{
+			ActivateBodies();
+			this.collideBodies = value;
+		}
+
+
+		public Action<cpSpace> GetPreSolveFunc()
+		{
+			return preSolve;
+		}
+
+		public void SetPreSolveFunc(Action<cpSpace> preSolveFunc)
+		{
+			this.preSolve = preSolveFunc;
+		}
+
+		public Action<cpSpace> GetPostSolveFunc()
+		{
+			return postSolve;
+		}
+
+		public void SetPostSolveFunc(Action<cpSpace> postSolve)
+		{
+			this.postSolve = postSolve;
+		}
+
+		public object GetUserData()
+		{
+			return userData;
+		}
+
+		public void SetUserData(object userData)
+		{
+			this.userData = userData;
+		}
+
+		public virtual float GetImpulse()
+		{
+			return 0;
+		}
+
+		public void ActivateBodies()
 		{
 			if (this.a != null)
 				this.a.Activate();
 			if (this.b != null)
 				this.b.Activate();
 		}
+
+		/// /////////////////////////////////////////////////////////////
+
+	
 
 		/// These methods are overridden by the constraint itself.
 		#region overriden methods
@@ -108,10 +213,6 @@ namespace ChipmunkSharp
 		public virtual void ApplyCachedImpulse(float dt_coef) { }
 		public virtual void ApplyImpulse(float dt)
 		{
-		}
-		public virtual float GetImpulse()
-		{
-			return 0;
 		}
 
 		//Function called before the solver runs. This can be overridden by the user
@@ -143,52 +244,6 @@ namespace ChipmunkSharp
 
 		}
 
-		public float GetMaxForce()
-		{
-			return maxForce;
-		}
-
-		public void SetMaxForce(float maxForce)
-		{
-			cp.assertHard(maxForce >= 0.0f, "maxForce must be positive.");
-			activateBodies();// cpConstraintActivateBodies(constraint);
-			this.maxForce = maxForce;
-		}
-
-		public float GetErrorBias()
-		{
-			return this.errorBias;
-		}
-
-		public void SetErrorBias(float errorBias)
-		{
-			cp.assertHard(errorBias >= 0.0f, "errorBias must be positive.");
-			activateBodies();
-			this.errorBias = errorBias;
-		}
-
-		public float GetMaxBias()
-		{
-			return this.maxBias;
-		}
-
-		public void SetMaxBias(float maxBias)
-		{
-			cp.assertHard(maxBias >= 0.0f, "errorBias must be positive.");
-			activateBodies();
-			this.maxBias = maxBias;
-		}
-
-		public bool GetCollideBodies()
-		{
-			return collideBodies;
-		}
-
-		public void SetCollideBodies(bool value)
-		{
-			activateBodies();
-			this.collideBodies = value;
-		}
 
 		#region OverRideMethods
 
@@ -277,7 +332,7 @@ namespace ChipmunkSharp
 			throw new NotImplementedException();
 		}
 
-		public virtual void setGrooveA(cpVect grooveA)
+		public virtual void SetGrooveA(cpVect grooveA)
 		{
 			throw new NotImplementedException();
 		}
@@ -359,39 +414,4 @@ namespace ChipmunkSharp
 
 
 
-	/// @defgroup cpConstraint cpConstraint
-	/// @{
-
-	// struct cpConstraintClass cpConstraintClass;
-
-	delegate void cpConstraintPreStepImpl(cpConstraint constraint, float dt);
-	delegate void cpConstraintApplyCachedImpulseImpl(cpConstraint constraint, float dt_coef);
-	delegate void cpConstraintApplyImpulseImpl(cpConstraint constraint, float dt);
-	delegate float cpConstraintGetImpulseImpl(cpConstraint constraint);
-
-
-	struct cpConstraintClass
-	{
-
-		cpConstraintPreStepImpl preStep;
-		cpConstraintApplyCachedImpulseImpl applyCachedImpulse;
-		cpConstraintApplyImpulseImpl applyImpulse;
-		cpConstraintGetImpulseImpl getImpulse;
-
-		void cpConstraintDestroy(cpConstraint constraint) { }
-
-		void cpConstraintFree(cpConstraint constraint)
-		{
-			if (constraint != null)
-			{
-
-				cpConstraintDestroy(constraint);
-				//cpfree(constraint);
-			}
-		}
-
-		// *** declared in util.h TODO move declaration to chipmunk_private.h
-
-
-	}
 }

@@ -19,23 +19,72 @@
   SOFTWARE.
  */
 using System;
-namespace ChipmunkSharp.Constraints
+namespace ChipmunkSharp
 {
 
 	public class cpGearJoint : cpConstraint
 	{
 
-		#region PUBLIC PROPS
+		internal float phase, ratio;
+		internal float ratio_inv;
 
-		public float phase { get; set; }
-		public float ratio { get; set; }
-		public float ratio_inv { get; set; }
-		public float jAcc { get; set; }
-		public float jMax { get; set; }
-		public float bias { get; set; }
-		public float iSum { get; set; }
+		internal float iSum;
 
-		#endregion
+		internal float bias;
+		internal float jAcc;
+
+
+		public override void PreStep(float dt)
+		{
+			cpBody a = this.a;
+			cpBody b = this.b;
+
+			// calculate moment of inertia coefficient.
+			this.iSum = 1.0f / (a.i_inv * this.ratio_inv + this.ratio * b.i_inv);
+
+			// calculate bias velocity
+			float maxBias = this.maxBias;
+			this.bias = cp.cpfclamp(-cp.bias_coef(this.errorBias, dt) * (b.a * this.ratio - a.a - this.phase) / dt, -maxBias, maxBias);
+		}
+
+		public override void ApplyCachedImpulse(float dt_coef)
+		{
+
+			cpBody a = this.a;
+			cpBody b = this.b;
+
+			float j = this.jAcc * dt_coef;
+			a.w -= j * a.i_inv * this.ratio_inv;
+			b.w += j * b.i_inv;
+		}
+
+		public override void ApplyImpulse(float dt)
+		{
+
+			cpBody a = this.a;
+			cpBody b = this.b;
+
+			// compute relative rotational velocity
+			float wr = b.w * this.ratio - a.w;
+
+			float jMax = this.maxForce * dt;
+
+			// compute normal impulse	
+			float j = (this.bias - wr) * this.iSum;
+			float jOld = this.jAcc;
+			this.jAcc = cp.cpfclamp(jOld + j, -jMax, jMax);
+			j = this.jAcc - jOld;
+
+			// apply impulse
+			a.w -= j * a.i_inv * this.ratio_inv;
+			b.w += j * b.i_inv;
+		}
+
+		public override float GetImpulse()
+		{
+			return cp.cpfabs(this.jAcc);
+		}
+
 
 		public cpGearJoint(cpBody a, cpBody b, float phase, float ratio)
 			: base(a, b)
@@ -47,61 +96,34 @@ namespace ChipmunkSharp.Constraints
 
 			this.jAcc = 0.0f;
 
-			this.iSum = this.bias = this.jMax = 0.0f;
+
 		}
 
-		public override void PreStep(float dt)
+
+
+		public float GetPhase()
 		{
-			// calculate moment of inertia coefficient.
-			this.iSum = 1 / (a.i_inv * this.ratio_inv + this.ratio * b.i_inv);
-
-			// calculate bias velocity
-			this.bias = cp.cpfclamp(-cp.bias_coef(this.errorBias, dt) * (b.a * this.ratio - a.a - this.phase) / dt, -maxBias, maxBias);
-
-			// compute max impulse
-			this.jMax = this.maxForce * dt;
+			return this.phase;
 		}
 
-		public override void ApplyCachedImpulse(float dt_coef)
+		public void SetPhase(float phase)
 		{
-
-			var j = this.jAcc * dt_coef;
-			a.w -= j * a.i_inv * this.ratio_inv;
-			b.w += j * b.i_inv;
+			ActivateBodies();
+			this.phase = phase;
 		}
 
-		public override void ApplyImpulse(float dt)
+		public float GetRatio()
 		{
-
-			// compute relative rotational velocity
-			var wr = b.w * this.ratio - a.w;
-
-			// compute normal impulse	
-			var j = (this.bias - wr) * this.iSum;
-			var jOld = this.jAcc;
-			this.jAcc = cp.cpfclamp(jOld + j, -this.jMax, this.jMax);
-
-			j = this.jAcc - jOld;
-
-			// apply impulse
-			a.w -= j * a.i_inv * this.ratio_inv;
-			b.w += j * b.i_inv;
+			return this.ratio;
 		}
-
-
-		public override float GetImpulse()
-		{
-			return Math.Abs(this.jAcc);
-		}
-
 
 		public override void SetRatio(float value)
 		{
+			this.ActivateBodies();
 			this.ratio = value;
 			this.ratio_inv = 1 / value;
-			this.activateBodies();
-		}
 
+		}
 
 	}
 

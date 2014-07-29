@@ -19,113 +19,128 @@
   SOFTWARE.
  */
 using System;
-namespace ChipmunkSharp.Constraints
+namespace ChipmunkSharp
 {
 
-    public class cpRotaryLimitJoint : cpConstraint
-    {
+	public class cpRotaryLimitJoint : cpConstraint
+	{
 
-        #region PUBLIC PROPS
+		internal float min, max;
 
-        public float jMax { get; set; }
+		internal float iSum;
 
-        public float bias { get; set; }
+		internal float bias;
+		internal float jAcc;
 
-        public float iSum { get; set; }
+		public override void PreStep(float dt)
+		{
+			cpBody a = this.a;
+			cpBody b = this.b;
 
-        public float jAcc { get; set; }
+			float dist = b.a - a.a;
+			float pdist = 0.0f;
+			if (dist > this.max)
+			{
+				pdist = this.max - dist;
+			}
+			else if (dist < this.min)
+			{
+				pdist = this.min - dist;
+			}
 
-        public float min { get; set; }
+			// calculate moment of inertia coefficient.
+			this.iSum = 1.0f / (a.i_inv + b.i_inv);
 
-        public float max { get; set; }
+			// calculate bias velocity
+			float maxBias = this.maxBias;
+			this.bias = cp.cpfclamp(-cp.bias_coef(this.errorBias, dt) * pdist / dt, -maxBias, maxBias);
 
-        #endregion
+			// If the bias is 0, the joint is not at a limit. Reset the impulse.
+			if (this.bias == 0) this.jAcc = 0.0f;
+		}
 
-        public cpRotaryLimitJoint(cpBody a, cpBody b, float min, float max)
-            : base(a, b)
-        {
+		public override void ApplyCachedImpulse(float dt_coef)
+		{
+			cpBody a = this.a;
+			cpBody b = this.b;
 
-            this.min = min;
-            this.max = max;
-
-            this.jAcc = 0.0f;
-
-            this.iSum = this.bias = this.jMax = 0.0f;
-        }
-
-        public override void PreStep(float dt)
-        {
-
-            float dist = b.Angle - a.Angle;
-            float pdist = 0.0f;
-            if (dist > this.max)
-            {
-                pdist = this.max - dist;
-            }
-            else if (dist < this.min)
-            {
-                pdist = this.min - dist;
-            }
-
-            // calculate moment of inertia coefficient.
-            this.iSum = 1 / (1 / a.Moment + 1 / b.Moment);
-
-            // calculate bias velocity
-            var maxBias = this.maxBias;
-            this.bias = cp.cpclamp(-cp.bias_coef(this.errorBias, dt) * pdist / dt, -maxBias, maxBias);
-
-            // compute max impulse
-            this.jMax = this.maxForce * dt;
-
-            // If the bias is 0, the joint is not at a limit. Reset the impulse.
-            if (this.bias == 0)
-                this.jAcc = 0;
-        }
-
-        public override void ApplyCachedImpulse(float dt_coef)
-        {
-            var j = this.jAcc * dt_coef;
-            a.w -= j * a.i_inv;
-            b.w += j * b.i_inv;
-        }
+			float j = this.jAcc * dt_coef;
+			a.w -= j * a.i_inv;
+			b.w += j * b.i_inv;
+		}
 
 
-        public override void ApplyImpulse(float dt)
-        {
+		public override void ApplyImpulse(float dt)
+		{
 
-            if (this.bias == 0) return; // early exit
+			if (this.bias == 0) return; // early exit
 
-            // compute relative rotational velocity
-            var wr = b.w - a.w;
+			cpBody a = this.a;
+			cpBody b = this.b;
 
-            // compute normal impulse	
-            var j = -(this.bias + wr) * this.iSum;
-            var jOld = this.jAcc;
-            if (this.bias < 0)
-            {
-                this.jAcc = cp.cpclamp(jOld + j, 0, this.jMax);
-            }
-            else
-            {
-                this.jAcc = cp.cpclamp(jOld + j, -this.jMax, 0);
-            }
+			// compute relative rotational velocity
+			float wr = b.w - a.w;
 
-            j = this.jAcc - jOld;
+			float jMax = this.maxForce * dt;
 
-            // apply impulse
-            a.w -= j * a.i_inv;
-            b.w += j * b.i_inv;
-        }
+			// compute normal impulse	
+			float j = -(this.bias + wr) * this.iSum;
+			float jOld = this.jAcc;
+			if (this.bias < 0.0f)
+			{
+				this.jAcc = cp.cpfclamp(jOld + j, 0.0f, jMax);
+			}
+			else
+			{
+				this.jAcc = cp.cpfclamp(jOld + j, -jMax, 0.0f);
+			}
+			j = this.jAcc - jOld;
 
-        public override float GetImpulse()
-        {
-            return Math.Abs(jAcc);
-        }
-
+			// apply impulse
+			a.w -= j * a.i_inv;
+			b.w += j * b.i_inv;
+		}
 
 
+		public cpRotaryLimitJoint(cpBody a, cpBody b, float min, float max)
+			: base(a, b)
+		{
+
+			this.min = min;
+			this.max = max;
+
+			this.jAcc = 0.0f;
+
+		}
 
 
-    }
+		public override float GetImpulse()
+		{
+			return cp.cpfabs(jAcc);
+		}
+
+
+		public override float GetMin()
+		{
+			return base.GetMin();
+		}
+
+		public override void SetMin(float min)
+		{
+			base.SetMin(min);
+		}
+
+		public override float GetMax()
+		{
+			return base.GetMax();
+		}
+
+		public override void SetMax(float max)
+		{
+			base.SetMax(max);
+		}
+
+
+	}
 
 }

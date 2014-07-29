@@ -20,95 +20,80 @@
  */
 using System;
 
-namespace ChipmunkSharp.Constraints
+namespace ChipmunkSharp
 {
 	public class cpRatchetJoint : cpConstraint
 	{
 
-		#region PUBLIC PROPS
+		internal float angle, phase, ratchet;
 
-		public float angle { get; set; }
+		internal float iSum;
 
-		public float phase { get; set; }
-
-		public float ratchet { get; set; }
-
-		public float jMax { get; set; }
-
-		public float jAcc { get; set; }
-
-		public float bias { get; set; }
-
-		public float iSum { get; set; }
-
-
-		#endregion
-
-
-		public cpRatchetJoint(cpBody a, cpBody b, float phase, float ratchet)
-			: base(a, b)
-		{
-
-
-			this.angle = 0.0f;
-			this.phase = phase;
-			this.ratchet = ratchet;
-
-			// STATIC_BODY_CHECK
-			this.angle = (b != null ? b.a : 0) - (a != null ? a.a : 0);
-
-			this.iSum = this.bias = this.jAcc = this.jMax = 0.0f;
-		}
+		internal float bias;
+		internal float jAcc;
 
 		public override void PreStep(float dt)
 		{
 
-			var delta = b.a - a.a;
-			var diff = angle - delta;
-			var pdist = 0.0f;
+			cpBody a = this.a;
+			cpBody b = this.b;
 
-			if (diff * ratchet > 0)
+			float angle = this.angle;
+			float phase = this.phase;
+			float ratchet = this.ratchet;
+
+			float delta = b.a - a.a;
+			float diff = angle - delta;
+			float pdist = 0.0f;
+
+			if (diff * ratchet > 0.0f)
 			{
 				pdist = diff;
 			}
 			else
 			{
-				this.angle = (float)Math.Floor((delta - phase) / ratchet) * ratchet + phase;
+				this.angle = cp.cpffloor((delta - phase) / ratchet) * ratchet + phase;
 			}
 
 			// calculate moment of inertia coefficient.
-			this.iSum = 1 / (a.i_inv + b.i_inv);
+			this.iSum = 1.0f / (a.i_inv + b.i_inv);
 
 			// calculate bias velocity
-			var maxBias = this.maxBias;
-			this.bias = cp.cpclamp(-cp.bias_coef(this.errorBias, dt) * pdist / dt, -maxBias, maxBias);
-
-			// compute max impulse
-			this.jMax = this.maxForce * dt;
+			float maxBias = this.maxBias;
+			this.bias = cp.cpfclamp(-cp.bias_coef(this.errorBias, dt) * pdist / dt, -maxBias, maxBias);
 
 			// If the bias is 0, the joint is not at a limit. Reset the impulse.
-			if (this.bias == 0) this.jAcc = 0;
+			if (this.bias == 0) this.jAcc = 0.0f;
 		}
 
 		public override void ApplyCachedImpulse(float dt_coef)
 		{
 
-			var j = this.jAcc * dt_coef;
+			cpBody a = this.a;
+			cpBody b = this.b;
+
+			float j = this.jAcc * dt_coef;
 			a.w -= j * a.i_inv;
 			b.w += j * b.i_inv;
 		}
 
 		public override void ApplyImpulse(float dt)
 		{
-			if (this.bias == 0) return; // early exit
+			if (this.bias != 0) return; // early exit
+
+			cpBody a = this.a;
+			cpBody b = this.b;
 
 			// compute relative rotational velocity
-			var wr = b.w - a.w;
+			float wr = b.w - a.w;
+			float ratchet = this.ratchet;
+
+			float jMax = this.maxForce * dt;
 
 			// compute normal impulse	
-			var j = -(this.bias + wr) * this.iSum;
-			var jOld = this.jAcc;
-			this.jAcc = cp.cpclamp((jOld + j) * ratchet, 0, this.jMax * (float)Math.Abs(ratchet)) / ratchet;
+			float j = -(this.bias + wr) * this.iSum;
+			float jOld = this.jAcc;
+			this.jAcc = cp.cpfclamp((jOld + j) * ratchet, 0.0f, jMax * cp.cpfabs(ratchet)) / ratchet;
 			j = this.jAcc - jOld;
 
 			// apply impulse
@@ -118,10 +103,60 @@ namespace ChipmunkSharp.Constraints
 
 		public override float GetImpulse()
 		{
-			return (float)Math.Abs(jAcc);
+			return cp.cpfabs(jAcc);
+		}
+
+		public cpRatchetJoint(cpBody a, cpBody b, float phase, float ratchet)
+			: base(a, b)
+		{
+
+
+
+			this.angle = 0.0f;
+			this.phase = phase;
+			this.ratchet = ratchet;
+
+			// STATIC_BODY_CHECK
+			this.angle = (b != null ? b.a : 0.0f) - (a != null ? a.a : 0.0f);
+
 		}
 
 
+		public override float GetAngle()
+		{
+			return this.angle;
+		}
+
+		public override void SetAngle(float angle)
+		{
+			ActivateBodies();
+			this.angle = angle;
+		}
+
+		public override float GetPhase()
+		{
+			return this.phase;
+		}
+
+
+		public override void SetPhase(float phase)
+		{
+			ActivateBodies();
+			this.phase = phase;
+		}
+
+
+		public override float GetRatchet()
+		{
+			return this.ratchet;
+		}
+
+
+		public override void SetRatchet(float ratchet)
+		{
+			ActivateBodies();
+			this.ratchet = ratchet;
+		}
 
 	}
 

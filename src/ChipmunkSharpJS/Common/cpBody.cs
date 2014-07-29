@@ -88,7 +88,7 @@ namespace ChipmunkSharp
 
 		/// Cached unit length vector representing the angle of the body.
 		/// Used for fast rotations using cpvrotate().
-		private cpVect cog;
+		internal cpVect cog;
 
 
 		/// Position of the rigid body's center of gravity.
@@ -803,7 +803,7 @@ namespace ChipmunkSharp
 			return space == null;  //(cpSpace)0));
 		}
 
-		public cpVect GetVel() { return v; }
+		//public cpVect GetVel() { return v; }
 
 		public void SetAngleInternal(float angle)
 		{
