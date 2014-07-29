@@ -142,7 +142,7 @@ namespace ChipmunkSharp
 		{
 
 			bool returnValue = false;
-			a.EachConstraint((constraint, o) =>
+			a.eachConstraint((constraint, o) =>
 			{
 
 				if (
@@ -183,7 +183,7 @@ namespace ChipmunkSharp
 			//int numContacts = cpCollideShapes(a, b, contacts);
 			cpCollisionInfo info = cpCollision.cpCollide(a, b, id, ref this.contactsBuffer);
 
-			if (contactsBuffer.Count == 0)
+			if (info.count == 0 )
 				return info.id; // Shapes are not colliding.
 
 			// Get an arbiter from space.arbiterSet for the two shapes.

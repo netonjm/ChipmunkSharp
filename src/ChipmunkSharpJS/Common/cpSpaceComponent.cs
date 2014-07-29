@@ -48,14 +48,14 @@ namespace ChipmunkSharp
 
 				this.dynamicBodies.Add(body);
 
-				body.EachShape((s, o) =>
+				body.eachShape((s, o) =>
 				{
 					this.staticShapes.Remove(s.hashid);
 					this.dynamicShapes.Insert(s.hashid, s);
 				}, null);
 
 
-				body.EachArbiter((arb, o) =>
+				body.eachArbiter((arb, o) =>
 				{
 					cpBody bodyA = arb.body_a;
 
@@ -89,7 +89,7 @@ namespace ChipmunkSharp
 
 				}, null);
 
-				body.EachConstraint((constraint, o) =>
+				body.eachConstraint((constraint, o) =>
 				{
 					var bodyA = constraint.a;
 					if (body == bodyA || bodyA.bodyType == cpBodyType.STATIC)
@@ -109,14 +109,14 @@ namespace ChipmunkSharp
 
 			this.dynamicBodies.Remove(body);
 
-			body.EachShape((shape, o) =>
+			body.eachShape((shape, o) =>
 				{
 					this.dynamicShapes.Remove(shape.hashid);
 					this.staticShapes.Insert(shape.hashid, shape);
 				}, null);
 
 
-			body.EachArbiter((arb, o) =>
+			body.eachArbiter((arb, o) =>
 			{
 
 				var bodyA = arb.body_a;
@@ -129,7 +129,7 @@ namespace ChipmunkSharp
 			}, null);
 
 
-			body.EachConstraint((constraint, o) =>
+			body.eachConstraint((constraint, o) =>
 			{
 				var bodyA = constraint.a;
 				if (body == bodyA || bodyA.bodyType == cpBodyType.STATIC)
@@ -272,14 +272,14 @@ namespace ChipmunkSharp
 				if (other_root == null)
 				{
 					cp.componentAdd(root, body);
-					body.EachArbiter((arb, o) =>
+					body.eachArbiter((arb, o) =>
 					{
 						FloodFillComponent(root, (body == arb.body_a ?
 							arb.body_b : arb.body_a));
 
 					}, null);
 
-					body.EachConstraint((constraint, o) =>
+					body.eachConstraint((constraint, o) =>
 					{
 
 						FloodFillComponent(root,

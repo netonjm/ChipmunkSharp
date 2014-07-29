@@ -739,17 +739,17 @@ namespace ChipmunkSharp
 
 
 		/// Update the collision detection data for all shapes attached to a body.
-		public void ReindexShapesForBody(cpBody body)
-		{
+		//public void ReindexShapesForBody(cpBody body)
+		//{
 
-			foreach (var shape in body.shapeList)
-			{
-				this.ReindexShape(shape);
-			}
+		//	foreach (var shape in body.shapeList)
+		//	{
+		//		this.ReindexShape(shape);
+		//	}
 
-			//for (var shape = body.shapeList; shape != null; shape = shape.next)
-			//    this.reindexShape(shape);
-		}
+		//	//for (var shape = body.shapeList; shape != null; shape = shape.next)
+		//	//    this.reindexShape(shape);
+		//}
 
 
 		/// Remove a collision shape added using cpSpaceAddStaticShape() from the simulation.

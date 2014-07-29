@@ -43,6 +43,10 @@ namespace ChipmunkSharp
 
 		}
 
+		public override string ToString()
+		{
+			return string.Format("l:{0},b:{1},r:{2},t:{3}", l, b, r, t);
+		}
 
 		/// ructs a cpBB for a circle with the given position and radius.
 		public static cpBB NewForCircle(cpVect p, float r)

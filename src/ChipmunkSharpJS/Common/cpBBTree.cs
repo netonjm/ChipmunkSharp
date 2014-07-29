@@ -748,7 +748,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public void SubtreeQuery(Node subtree, object obj, cpBB bb, Func<object, object, ulong, object, ulong> func, object data)
+		public void SubtreeQuery(Node subtree, object obj, cpBB bb, Func<object, object, ulong, object, ulong> func,ref object data)
 		{
 			//if(bbIntersectsBB(subtree.bb, bb)){
 			if (subtree.bb.Intersects(bb))
@@ -759,8 +759,8 @@ namespace ChipmunkSharp
 				}
 				else
 				{
-					SubtreeQuery(subtree.A, obj, bb, func, data);
-					SubtreeQuery(subtree.B, obj, bb, func, data);
+					SubtreeQuery(subtree.A, obj, bb, func,ref data);
+					SubtreeQuery(subtree.B, obj, bb, func,ref data);
 				}
 			}
 		}
@@ -1039,7 +1039,7 @@ namespace ChipmunkSharp
 		public void Query(object context, cpBB bb, Func<object, object, ulong, object, ulong> func, object node)
 		{
 			if (root != null)
-				SubtreeQuery(root, context, bb, func, node);
+				SubtreeQuery(root, context, bb, func,ref node);
 		}
 
 

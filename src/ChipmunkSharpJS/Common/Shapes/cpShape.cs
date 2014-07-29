@@ -633,7 +633,7 @@ namespace ChipmunkSharp
 
 		public float PointQuery(cpVect p, ref cpPointQueryInfo info)
 		{
-			if (info != null)
+			if (info == null)
 				info = new cpPointQueryInfo(null, cpVect.Zero, cp.Infinity, cpVect.Zero);
 
 			pointQuery(p, ref info);
@@ -732,7 +732,7 @@ namespace ChipmunkSharp
 
 		public bool Active()
 		{
-			return (this.prev != null && this.body != null && this.body.shapeList.Contains(this));
+			return (this.prev != null && this.body != null && this.body.shapeList == this);
 			//return this.body != null && this.body.shapeList.IndexOf(this) != -1;
 		}
 

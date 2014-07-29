@@ -56,8 +56,11 @@ namespace ChipmunkSharp
 			} Unlock(true);
 		}
 
-		public ulong NearestPointQueryNearest(PointQueryContext context, cpShape shape, ulong id, ref cpPointQueryInfo output)
+		public ulong NearestPointQueryNearest(object ctx, cpShape shape, ulong id, ref object outp)
 		{
+			PointQueryContext context = (PointQueryContext)ctx;
+			cpPointQueryInfo output = (cpPointQueryInfo)outp;
+
 			if (
 				!cpShapeFilter.Reject(shape.filter, context.filter) && !shape.sensor
 			)
@@ -66,11 +69,41 @@ namespace ChipmunkSharp
 				shape.PointQuery(context.point, ref info);
 
 				if (info.distance < output.distance)
-					output = info;
+					outp = (object)info;
 			}
 
 			return id;
 		}
+
+		public cpShape PointQueryNearest(cpVect point, float maxDistance, cpShapeFilter filter, ref cpPointQueryInfo output)
+		{
+			cpPointQueryInfo info = new cpPointQueryInfo(null, cpVect.Zero, maxDistance, cpVect.Zero);
+			if (output == null)
+				output = info;
+
+			PointQueryContext context = new PointQueryContext(
+			point, maxDistance,
+			filter,
+			null
+			);
+
+			cpBB bb = cpBB.cpBBNewForCircle(point, cp.cpfmax(maxDistance, 0.0f));
+
+			object outp = (object)output;
+
+			this.dynamicShapes.Query(context, bb,
+				(o1, o2, s, o3) => NearestPointQueryNearest(o1, (cpShape)o2, s, ref outp)
+			, null);
+
+			this.staticShapes.Query(context, bb,
+				(o1, o2, s, o3) => NearestPointQueryNearest(o1, (cpShape)o2, s, ref outp)
+			, null);
+
+			output = (cpPointQueryInfo)outp;
+
+			return output.shape;
+		}
+
 
 		//MARK: Segment Query Functions
 
@@ -207,20 +240,22 @@ namespace ChipmunkSharp
 			cpBB bb = (body != null ? shape.Update(body.transform) : shape.bb);
 			ShapeQueryContext context = new ShapeQueryContext(func, data, false);
 
+			object ctx = (object)context;
+
 			Lock();
 			{
 
 				this.staticShapes.Query(shape, bb,
 					(o1, o2, s, o3) => ShapeQueryFunc(o1 as cpShape, o2 as cpShape, s, (ShapeQueryContext)o3)
-				, context);
+				, ctx);
 
 				this.dynamicShapes.Query(shape, bb,
 					(o1, o2, s, o3) => ShapeQueryFunc(o1 as cpShape, o2 as cpShape, s, (ShapeQueryContext)o3)
-				, context);
+				, ctx);
 
 			} Unlock(true);
 
-			return context.anyCollision;
+			return ((ShapeQueryContext)ctx).anyCollision;
 		}
 
 	}

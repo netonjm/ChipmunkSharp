@@ -124,7 +124,7 @@ namespace ChipmunkSharp
 
 		public cpSpace space;
 
-		public List<cpShape> shapeList;
+		public cpShape shapeList;
 		public cpArbiter arbiterList;
 		public cpConstraint constraintList;
 
@@ -176,12 +176,12 @@ namespace ChipmunkSharp
 			this.cog = cpVect.Zero;
 			this.space = null;
 
-			this.shapeList = new List<cpShape>();
+			this.shapeList = null;
 			this.arbiterList = null; // These are both wacky linked lists.
 			this.constraintList = null;
 
-			velocity_func = (v, f, d) => UpdateVelocity(v, f, d);
-			position_func = (f) => UpdatePosition(f);
+			velocity_func = UpdateVelocity;
+			position_func = UpdatePosition;
 
 			// This stuff is used to track information on the collision graph.
 			this.nodeRoot = null;
@@ -284,7 +284,7 @@ namespace ChipmunkSharp
 
 				if (fromIndex != toIndex)
 				{
-					EachShape((s, o) =>
+					eachShape((s, o) =>
 					{
 						fromIndex.Remove(s.hashid);
 						toIndex.Insert(s.hashid, s);
@@ -312,7 +312,7 @@ namespace ChipmunkSharp
 
 			// Accumulate mass from shapes.
 
-			EachShape((shape, o) =>
+			eachShape((shape, o) =>
 			{
 				cpShapeMassInfo info = shape.massInfo;
 				float m = info.m;
@@ -385,7 +385,14 @@ namespace ChipmunkSharp
 
 		public void AddShape(cpShape shape)
 		{
-			this.shapeList.Add(shape);
+			//this.shapeList.Add(shape);
+
+			cpShape next = this.shapeList;
+			if (next != null)
+				next.prev = shape;
+
+			shape.next = next;
+			this.shapeList = shape;
 
 			if (shape.massInfo.m > 0.0f)
 			{
@@ -395,11 +402,25 @@ namespace ChipmunkSharp
 
 		public void RemoveShape(cpShape shape)
 		{
-			// This implementation has a linear time complexity with the number of shapes.
-			// The original implementation used linked lists instead, which might be faster if
-			// you're constantly editing the shape of a body. I expect most bodies will never
-			// have their shape edited, so I'm just going to use the simplest possible implemention.
-			shapeList.Remove(shape);
+			cpShape prev = shape.prev;
+			cpShape next = shape.next;
+
+			if (prev != null)
+			{
+				prev.next = next;
+			}
+			else
+			{
+				this.shapeList = next;
+			}
+
+			if (next != null)
+			{
+				next.prev = prev;
+			}
+
+			shape.prev = null;
+			shape.next = null;
 
 			if (bodyType == cpBodyType.DYNAMIC && shape.massInfo.m > 0.0f)
 			{
@@ -417,7 +438,7 @@ namespace ChipmunkSharp
 		// 'p' is the position of the CoG
 		public void SetTransform(cpVect p, float a)
 		{
-			cpVect rot = cpVect.ForAngle(a);
+			cpVect rot = cpVect.cpvforangle(a);
 			cpVect c = this.cog;
 
 			this.transform = cpTransform.cpTransformNewTranspose(
@@ -646,11 +667,23 @@ namespace ChipmunkSharp
 		//public delegate void cpBodyShapeIteratorFunc(cpBody body, cpShape shape, object data);
 		public void EachShape(Action<cpShape, object> func, object data)
 		{
-			for (int i = 0, len = this.shapeList.Count; i < len; i++)
+			var shape = this.shapeList;
+			while (shape != null)
 			{
-				func(this.shapeList[i], data);
+				var next = shape.next;
+				func(shape, data);
+				shape = next;
 			}
 		}
+
+		public void eachShape(Action<cpShape, object> func, object data)
+		{
+			for (cpShape var = this.shapeList; var != null; var = var.next)
+			{
+				func(var, data);
+			}
+		}
+
 
 		///// Body/raint iterator callback function type. 
 		//public delegate void cpBodyConstraintIteratorFunc(cpBody body, cpConstraint raint, object data);
@@ -665,6 +698,12 @@ namespace ChipmunkSharp
 			}
 		}
 
+		public void eachConstraint(Action<cpConstraint, object> func, object data)
+		{
+			for (cpConstraint var = this.constraintList; var != null; var = var.Next(this))
+				func(var, data);
+		}
+
 
 		/// Body/arbiter iterator callback function type. 
 		//public delegate void cpBodyArbiterIteratorFunc(cpBody body, cpArbiter arbiter, object data);
@@ -673,16 +712,22 @@ namespace ChipmunkSharp
 			var arb = this.arbiterList;
 			while (arb != null)
 			{
-				cpArbiter next = arb.Next(this);
+				var next = arb.Next(this);
 
-				bool swapped = arb.swapped;
-				{
-					arb.swapped = (this == arb.body_b);
-					func(arb, data);
-				}
-				arb.swapped = swapped;
+				arb.swapped = (this == arb.body_b);
+				func(arb, data);
+
 				arb = next;
 			}
+		}
+
+		public void eachArbiter(Action<cpArbiter, object> func, object data)
+		{
+			for (cpArbiter var = this.arbiterList; var != null; var = var.Next(this))
+			{
+				func(var, data);
+			}
+
 		}
 
 		public void EachComponent(Func<cpBody, object, bool> func, object data)
@@ -727,7 +772,7 @@ namespace ChipmunkSharp
 
 				}
 
-				EachArbiter((arb, o) =>
+				eachArbiter((arb, o) =>
 				{
 
 					// Reset the idle timer of things the body is touching as well.
@@ -747,7 +792,7 @@ namespace ChipmunkSharp
 		{
 			cp.assertHard(bodyType == cpBodyType.STATIC, "Body.activateStatic() called on a non-static body.");
 
-			EachArbiter((arb, o) =>
+			eachArbiter((arb, o) =>
 			{
 				if (filter == null || filter == arb.a || filter == arb.b)
 				{
@@ -863,7 +908,7 @@ namespace ChipmunkSharp
 				return;
 			}
 
-			EachShape((shape, o) => shape.CacheBB(), null);
+			eachShape((shape, o) => shape.CacheBB(), null);
 
 
 			space.DeactivateBody(this);
