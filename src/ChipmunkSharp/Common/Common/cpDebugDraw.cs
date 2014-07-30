@@ -43,12 +43,17 @@ namespace ChipmunkSharp
 		Joints = 2,
 
 		/// <summary>
-		/// Draw joint connections.
+		/// Draw contact points.
 		/// </summary>
 		ContactPoints = 3,
 
 		/// <summary>
-		/// Draw joint connections.
+		/// Draw polygon BB.
+		/// </summary>
+		BB = 4,
+
+		/// <summary>
+		/// Draw All connections.
 		/// </summary>
 		All = 10,
 
@@ -127,6 +132,8 @@ namespace ChipmunkSharp
 		public abstract void DrawSpring(cpVect a, cpVect b, cpColor cpColor);
 
 		public abstract void DrawPoint(cpVect p, float size, cpColor color);
+
+		public abstract void DrawBB(cpBB bb, cpColor color);
 
 	}
 

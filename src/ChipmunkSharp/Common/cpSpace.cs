@@ -41,7 +41,7 @@ namespace ChipmunkSharp
 		public bool CollisionEnabled = true;
 
 		/// Number of iterations to use in the impulse solver to solve contacts.
-		public int iterations;
+		internal int iterations;
 
 		/// Gravity to pass to rigid bodies when integrating velocity.
 		internal cpVect gravity;
@@ -50,7 +50,7 @@ namespace ChipmunkSharp
 		/// A value of 0.9 would mean that each body's velocity will drop 10% per second.
 		/// The default value is 1.0, meaning no damping is applied.
 		/// @note This damping value is different than those of cpDampedSpring and cpDampedRotarySpring.
-		public float damping;
+		internal float damping;
 
 		/// Speed threshold for a body to be considered idle.
 		/// The default value of 0 means to let the space guess a good threshold based on gravity.
@@ -102,7 +102,7 @@ namespace ChipmunkSharp
 		public Dictionary<ulong, cpArbiter> cachedArbiters;
 
 		// public cpArray allocatedBuffers;
-		public int locked;
+		internal int locked;
 
 		internal bool usesWildcards;
 		public Dictionary<ulong, cpCollisionHandler> collisionHandlers;
@@ -722,8 +722,6 @@ namespace ChipmunkSharp
 
 		}
 
-
-
 		/// Update the collision detection data for a specific shape in the space.
 		public void ReindexShape(cpShape shape)
 		{
@@ -739,100 +737,6 @@ namespace ChipmunkSharp
 		}
 
 
-		/// Update the collision detection data for all shapes attached to a body.
-		//public void ReindexShapesForBody(cpBody body)
-		//{
-
-		//	foreach (var shape in body.shapeList)
-		//	{
-		//		this.ReindexShape(shape);
-		//	}
-
-		//	//for (var shape = body.shapeList; shape != null; shape = shape.next)
-		//	//    this.reindexShape(shape);
-		//}
-
-
-		/// Remove a collision shape added using cpSpaceAddStaticShape() from the simulation.
-		//public void removeStaticShape(cpShape shape)
-		//{
-
-		//	cp.assertSoft(this.ContainsShape(shape),
-		//   "Cannot remove a static or sleeping shape that was not added to the space. (Removed twice maybe?)");
-		//	cp.assertSpaceUnlocked(this);
-
-		//	var body = shape.body;
-		//	if (body.bodyType == cpBodyType.STATIC) body.ActivateStatic(shape);
-		//	body.RemoveShape(shape);
-		//	this.filterArbiters(body, shape);
-		//	this.staticShapes.Remove(shape.hashid);
-		//	shape.space = null;
-
-		//}
-
-
-		/// /////////////////////////////////////////////////////////
-
-		//#region OBSOLETE
-
-		///// Set a collision handler to be used whenever the two shapes with the given collision types collide.
-		///// You can pass null for any function you don't want to implement.
-		//[Obsolete("OBSOLETE: JS")]
-		//public void AddCollisionHandler(string a, string b,
-		//	Func<cpArbiter, cpSpace, object, bool> begin,
-		//	Func<cpArbiter, cpSpace, object, bool> preSolve,
-		//	Action<cpArbiter, cpSpace, object> postSolve,
-		//	Action<cpArbiter, cpSpace, object> separate)
-		//{
-
-		//	cp.assertSpaceUnlocked(this);
-
-		//	// Remove any old function so the new one will get added.
-		//	this.removeCollisionHandler(a, b);
-
-		//	var handler = new cpCollisionHandler();
-		//	handler.typeA = a;
-		//	handler.typeB = b;
-		//	if (begin != null)
-		//		handler.beginFunc = begin;
-		//	if (preSolve != null)
-		//		handler.preSolveFunc = preSolve;
-		//	if (postSolve != null)
-		//		handler.postSolveFunc = postSolve;
-		//	if (separate != null)
-		//		handler.separateFunc = separate;
-
-		//	collisionHandlers.Add(cp.hashPair(a, b), handler);
-		//}
-
-		//#endregion
-
-
-
-
-
-
-		/// Explicity add a shape as a static shape to the simulation.
-		//public cpShape addStaticShape(cpShape shape)
-		//{
-
-		//	// cpEnvironment.cpAssertHard(shape.space != this, "You have already added this shape to this space. You must not add it a second time.");
-		//	// cpEnvironment.cpAssertHard(shape.space != null, "You have already added this shape to another space. You cannot add it to a second.");
-		//	// cpEnvironment.cpAssertHard(shape.body.IsRogue(), "You are adding a static shape to a dynamic body. Did you mean to attach it to a static or rogue body? See the documentation for more information.");
-		//	cp.assertSpaceUnlocked(this);
-
-
-		//	var body = shape.body;
-		//	body.AddShape(shape);
-
-		//	shape.Update(body.GetPosition(), body.GetRotation());
-		//	this.staticShapes.Insert(shape.hashid, shape);
-		//	shape.space = this;
-
-		//	return shape;
-
-		//}
-
 		public cpCollisionHandler LookupHandler(ulong a, ulong b, cpCollisionHandler defaultValue)
 		{
 			cpCollisionHandler test;
@@ -842,13 +746,6 @@ namespace ChipmunkSharp
 				return defaultValue;
 		}
 
-		/// Unset a collision handler.
-		//public void removeCollisionHandler(string a, string b)
-		//{
-		//	cp.assertSpaceUnlocked(this);
-		//	collisionHandlers.Remove(cp.hashPair(a, b));
-
-		//}
 
 		#region DEBUG DRAW
 
@@ -868,7 +765,7 @@ namespace ChipmunkSharp
 			m_debugDraw.DrawString(0, 50, string.Format("Bodies : {0}/{1}", dynamicBodies.Count + staticBodies.Count, dynamicBodies.Capacity));
 			m_debugDraw.DrawString(0, 80, string.Format("Arbiters: {0}/{1}", arbiters.Count, arbiters.Capacity));
 
-			if (m_debugDraw.Flags == cpDrawFlags.All || m_debugDraw.Flags == cpDrawFlags.Shapes)
+			if (m_debugDraw.Flags == cpDrawFlags.All || m_debugDraw.Flags == cpDrawFlags.BB || m_debugDraw.Flags == cpDrawFlags.Shapes)
 			{
 				EachShape(s => s.Draw(m_debugDraw));
 			}
@@ -894,8 +791,6 @@ namespace ChipmunkSharp
 
 			m_debugDraw.DrawString(0, 110, "Contact points: " + contacts);
 			m_debugDraw.DrawString(0, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}", cp.numLeaves, cp.numNodes, cp.numPairs));
-
-
 		}
 
 		//public void DrawShape(cpShape shape, CCColor4B color)

@@ -63,7 +63,7 @@ namespace ChipmunkSharp
 			this.r2 = r2;
 			//this.dist = dist;
 
-		//	this.r1 = this.r2 = cpVect.Zero;
+			//	this.r1 = this.r2 = cpVect.Zero;
 			this.nMass = this.tMass = this.bounce = this.bias = 0;
 
 			this.jnAcc = this.jtAcc = this.jBias = 0;
@@ -73,7 +73,10 @@ namespace ChipmunkSharp
 
 		public void Draw(cpDebugDraw m_debugDraw)
 		{
-			//m_debugDraw.DrawPoint(p, 1, cpColor.Red);
+			//m_debugDraw.DrawPoint(r1, 1, cpColor.Green);
+			//if (m_debugDraw.Flags == cpDrawFlags.ContactPoints)
+			m_debugDraw.DrawPoint(r2, 1, cpColor.Red);
+
 		}
 
 	};
