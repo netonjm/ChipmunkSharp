@@ -261,6 +261,7 @@ namespace ChipmunkSharp
 
 		public void Clear()
 		{
+
 			//TODO: Add static/dinamic bodies
 			List<object> safeList = new List<object>();
 			EachBody((b) => safeList.Add(b), null);
@@ -793,78 +794,7 @@ namespace ChipmunkSharp
 			m_debugDraw.DrawString(0, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}", cp.numLeaves, cp.numNodes, cp.numPairs));
 		}
 
-		//public void DrawShape(cpShape shape, CCColor4B color)
-		//{
 
-		//    // if (fixture.type == cpShapeType.CP_CIRCLE_SHAPE)
-
-		//    switch (shape.klass.type)
-		//    {
-		//        case cpShapeType.CP_CIRCLE_SHAPE:
-		//            {
-
-		//                cpCircleShape circle = (cpCircleShape)shape;
-
-		//                //circle.Draw(_)
-
-		//                //b2CircleShape circle = (b2CircleShape)fixture.Shape;
-
-		//                //b2Vec2 center = b2Math.b2Mul(ref xf, ref circle.Position);
-		//                //float radius = circle.Radius;
-		//                //cpVect v = new cpVect(1.0f, 0.0f);
-		//                //cpVect axis = cpVect b2Math.b2Mul(ref xf.q, ref v);
-
-		//                //m_debugDraw.DrawSolidCircle(center, circle.r, axis, color);
-		//            }
-		//            break;
-
-		//        //case cpShapeType.e_edge:
-		//        //    {
-		//        //        b2EdgeShape edge = (b2EdgeShape)fixture.Shape;
-		//        //        b2Vec2 v1 = b2Math.b2Mul(ref xf, ref edge.Vertex1);
-		//        //        b2Vec2 v2 = b2Math.b2Mul(ref xf, ref edge.Vertex2);
-		//        //        m_debugDraw.DrawSegment(v1, v2, color);
-		//        //    }
-		//        //    break;
-
-		//        //case b2ShapeType.e_chain:
-		//        //    {
-		//        //        b2ChainShape chain = (b2ChainShape)fixture.Shape;
-		//        //        int count = chain.Count;
-		//        //        b2Vec2[] vertices = chain.Vertices;
-
-		//        //        b2Vec2 v1 = b2Math.b2Mul(ref xf, ref vertices[0]);
-		//        //        for (int i = 1; i < count; ++i)
-		//        //        {
-		//        //            b2Vec2 v2 = b2Math.b2Mul(ref xf, ref vertices[i]);
-		//        //            m_debugDraw.DrawSegment(v1, v2, color);
-		//        //            m_debugDraw.DrawCircle(v1, 0.05f, color);
-		//        //            v1 = v2;
-		//        //        }
-		//        //    }
-		//        //    break;
-
-		//        case cpShapeType.CP_POLY_SHAPE:
-		//            {
-		//                //b2PolygonShape poly = (b2PolygonShape)fixture.Shape;
-		//                //int vertexCount = poly.VertexCount;
-		//                //var vertices = b2ArrayPool<b2Vec2>.Create(b2Settings.b2_maxPolygonVertices, true);
-
-		//                //for (int i = 0; i < vertexCount; ++i)
-		//                //{
-		//                //    vertices[i] = b2Math.b2Mul(ref xf, ref poly.Vertices[i]);
-		//                //}
-
-		//                //m_debugDraw.DrawSolidPolygon(vertices, vertexCount, color);
-
-		//                //b2ArrayPool<b2Vec2>.Free(vertices);
-		//            }
-		//            break;
-
-		//        default:
-		//            break;
-		//    }
-		//}
 
 		#endregion
 

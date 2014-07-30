@@ -101,7 +101,7 @@ namespace ChipmunkSharp
 
 		};
 
-		public static void InfoPushContact(cpCollisionInfo info, cpVect p1, cpVect p2, ulong hash)
+		public static void InfoPushContact(ref cpCollisionInfo info, cpVect p1, cpVect p2, ulong hash)
 		{
 			cp.assertSoft(info.count <= cpArbiter.CP_MAX_CONTACTS_PER_ARBITER, "Internal error: Tried to push too many contacts.");
 			info.arr.Add(new cpContact(p1, p2, hash));
@@ -147,7 +147,8 @@ namespace ChipmunkSharp
 
 			public static MinkowskiPoint MinkowskiPointNew(SupportPoint a, SupportPoint b)
 			{
-				var point = new MinkowskiPoint(a.p, b.p, b.p.Sub(a.p),
+				var point = new MinkowskiPoint(a.p, b.p,
+					cpVect.cpvsub(b.p, a.p),
 					((a.id & 0xFF) << 8 | (b.id & 0xFF)));
 				return point;
 			}
@@ -368,12 +369,12 @@ namespace ChipmunkSharp
 
 		// Recursive implementation of the EPA loop.
 		// Each recursion adds a point to the convex hull until it's known that we have the closest point on the surface.
-		public static ClosestPoints EPARecurse(SupportContext ctx, MinkowskiPoint[] hull, int iteration)
+		public static ClosestPoints EPARecurse(ref SupportContext ctx, int count, MinkowskiPoint[] hull, int iteration)
 		{
 			int mini = 0;
 			float minDist = cp.Infinity;
 
-			int count = hull.Length;
+			//int count = hull.Length;
 
 			// TODO: precalculate this when building the hull and save a step.
 			for (int j = 0, i = count - 1; j < count; i = j, j++)
@@ -403,7 +404,10 @@ namespace ChipmunkSharp
 	ChipmunkDebugDrawPoints(5, 1, (cpVect[]){p.ab}, RGBAColor(1, 1, 1, 1));
 #endif
 
-			if (CheckArea(cpVect.cpvsub(v1.ab, v0.ab), cpVect.cpvadd(cpVect.cpvsub(p.ab, v0.ab), cpVect.cpvsub(p.ab, v1.ab))) && iteration < MAX_EPA_ITERATIONS)
+			if (CheckArea(
+				cpVect.cpvsub(v1.ab, v0.ab),
+				cpVect.cpvadd(cpVect.cpvsub(p.ab, v0.ab), cpVect.cpvsub(p.ab, v1.ab)))
+				&& iteration < MAX_EPA_ITERATIONS)
 			{
 
 				MinkowskiPoint[] hull2 = new MinkowskiPoint[count + 1];
@@ -425,7 +429,7 @@ namespace ChipmunkSharp
 					}
 				}
 
-				return EPARecurse(ctx, hull2, iteration + 1);
+				return EPARecurse(ref ctx, count2, hull2, iteration + 1);
 			}
 			else
 			{
@@ -441,7 +445,7 @@ namespace ChipmunkSharp
 		{
 			// TODO: allocate a NxM array here and do an in place convex hull reduction in EPARecurse
 			MinkowskiPoint[] hull = new MinkowskiPoint[] { v0, v1, v2 };
-			return EPARecurse(ctx, hull, 1);
+			return EPARecurse(ref ctx, 3, hull, 1);
 
 		}
 
@@ -571,8 +575,9 @@ namespace ChipmunkSharp
 			if (points.d <= mindist)
 			{
 
+				info.n = new cpVect(points.n);
 
-				cpVect n = info.n = points.n;
+				cpVect n = new cpVect(points.n);
 
 				// Distances along the axis parallel to n
 				float d_e1_a = cpVect.cpvcross(e1.a.p, n);
@@ -592,7 +597,7 @@ namespace ChipmunkSharp
 					if (dist <= 0.0f)
 					{
 						ulong hash_1a2b = cp.CP_HASH_PAIR(e1.a.hash, e2.b.hash);
-						InfoPushContact(info, p1, p2, hash_1a2b);
+						InfoPushContact(ref info, p1, p2, hash_1a2b);
 					}
 				}
 				{
@@ -602,7 +607,7 @@ namespace ChipmunkSharp
 					if (dist <= 0.0f)
 					{
 						ulong hash_1b2a = cp.CP_HASH_PAIR(e1.b.hash, e2.a.hash);
-						InfoPushContact(info, p1, p2, hash_1b2a);
+						InfoPushContact(ref info, p1, p2, hash_1b2a);
 					}
 				}
 			}
@@ -626,7 +631,7 @@ namespace ChipmunkSharp
 			{
 				float dist = cp.cpfsqrt(distsq);
 				cpVect n = info.n = (dist > 0 ? cpVect.cpvmult(delta, 1.0f / dist) : cpVect.cpv(1.0f, 0.0f));
-				InfoPushContact(info, cpVect.cpvadd(c1.tc, cpVect.cpvmult(n, c1.r)), cpVect.cpvadd(c2.tc, cpVect.cpvmult(n, -c2.r)), 0);
+				InfoPushContact(ref info, cpVect.cpvadd(c1.tc, cpVect.cpvmult(n, c1.r)), cpVect.cpvadd(c2.tc, cpVect.cpvmult(n, -c2.r)), 0);
 			}
 		}
 
@@ -661,7 +666,7 @@ namespace ChipmunkSharp
 					(closest_t != 1.0f || cpVect.cpvdot(n, cpVect.cpvrotate(segment.b_tangent, rot)) >= 0.0)
 				)
 				{
-					InfoPushContact(info, cpVect.cpvadd(center, cpVect.cpvmult(n, circle.r)), cpVect.cpvadd(closest, cpVect.cpvmult(n, -segment.r)), 0);
+					InfoPushContact(ref info, cpVect.cpvadd(center, cpVect.cpvmult(n, circle.r)), cpVect.cpvadd(closest, cpVect.cpvmult(n, -segment.r)), 0);
 				}
 			}
 		}
@@ -712,8 +717,8 @@ namespace ChipmunkSharp
 			if (points.d - poly1.r - poly2.r <= 0.0f)
 			{
 				ContactPoints(
-					Edge.SupportEdgeForPoly(poly1, points.n), 
-					Edge.SupportEdgeForPoly(poly2, cpVect.cpvneg(points.n)), 
+					Edge.SupportEdgeForPoly(poly1, points.n),
+					Edge.SupportEdgeForPoly(poly2, cpVect.cpvneg(points.n)),
 					points,
 					ref info);
 			}
@@ -740,11 +745,11 @@ namespace ChipmunkSharp
 
 			if (
 				// If the closest points are nearer than the sum of the radii...
-				points.d - seg.r - poly.r <= 0.0 &&
+				points.d - seg.r - poly.r <= 0.0f &&
 				(
 				// Reject endcap collisions if tangents are provided.
-					(!cpVect.cpveql(points.a, seg.ta) || cpVect.cpvdot(n, cpVect.cpvrotate(seg.a_tangent, rot)) <= 0.0) &&
-					(!cpVect.cpveql(points.a, seg.tb) || cpVect.cpvdot(n, cpVect.cpvrotate(seg.b_tangent, rot)) <= 0.0)
+					(!cpVect.cpveql(points.a, seg.ta) || cpVect.cpvdot(n, cpVect.cpvrotate(seg.a_tangent, rot)) <= 0.0f) &&
+					(!cpVect.cpveql(points.a, seg.tb) || cpVect.cpvdot(n, cpVect.cpvrotate(seg.b_tangent, rot)) <= 0.0f)
 				)
 			)
 			{
@@ -772,7 +777,7 @@ namespace ChipmunkSharp
 			if (points.d <= circle.r + poly.r)
 			{
 				cpVect n = info.n = points.n;
-				InfoPushContact(info, cpVect.cpvadd(points.a, cpVect.cpvmult(n, circle.r)), cpVect.cpvadd(points.b, cpVect.cpvmult(n, poly.r)), 0);
+				InfoPushContact(ref info, cpVect.cpvadd(points.a, cpVect.cpvmult(n, circle.r)), cpVect.cpvadd(points.b, cpVect.cpvmult(n, poly.r)), 0);
 			}
 		}
 
