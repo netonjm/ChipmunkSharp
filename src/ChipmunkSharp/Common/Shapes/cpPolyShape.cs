@@ -174,11 +174,11 @@ namespace ChipmunkSharp
 		public static cpShapeMassInfo MassInfo(float mass, cpVect[] verts, float radius)
 		{
 			// TODO moment is approximate due to radius.
-			cpVect centroid = cp.centroidForPoly(verts);
+			cpVect centroid = cp.CentroidForPoly(verts);
 			cpShapeMassInfo info = new cpShapeMassInfo(
 				mass, cp.MomentForPoly(1.0f, verts, cpVect.cpvneg(centroid), radius),
 				centroid,
-				cp.areaForPoly(verts, radius)
+				cp.AreaForPoly(verts, radius)
 				);
 
 			return info;

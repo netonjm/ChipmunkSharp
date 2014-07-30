@@ -328,6 +328,7 @@ namespace ChipmunkSharp
 				// Find colliding pairs.
 				this.dynamicShapes.Each(shape => cpShape.UpdateFunc(shape as cpShape, null));
 
+				if (CollisionEnabled)
 				this.dynamicShapes.ReindexQuery(
 					(shape1, shape2, key, data) => CollideShapes(shape1 as cpShape, shape2 as cpShape, key),
 					null);
@@ -417,6 +418,8 @@ namespace ChipmunkSharp
 
 
 
+
+		
 	}
 }
 

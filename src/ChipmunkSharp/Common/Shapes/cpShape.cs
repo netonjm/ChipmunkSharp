@@ -135,7 +135,7 @@ namespace ChipmunkSharp
 		public static cpShapeMassInfo cpPolyShapeMassInfo(float mass, cpVect[] verts, float radius)
 		{
 
-			cpVect centroid = cp.centroidForPoly(verts);
+			cpVect centroid = cp.CentroidForPoly(verts);
 
 			var info = new cpShapeMassInfo(
 				mass,

@@ -38,6 +38,7 @@ namespace ChipmunkSharp
 
 		#region PARAMS
 		// public float damping;
+		public bool CollisionEnabled = true;
 
 		/// Number of iterations to use in the impulse solver to solve contacts.
 		public int iterations;

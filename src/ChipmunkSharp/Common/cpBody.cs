@@ -648,7 +648,7 @@ namespace ChipmunkSharp
 			return cpVect.cpvadd(this.v, cpVect.cpvmult(cpVect.cpvperp(r), this.w));
 		}
 
-		public cpVect cpBodyGetVelocityAtWorldPoint(cpVect point)
+		public cpVect GetVelocityAtWorldPoint(cpVect point)
 		{
 			cpVect r = cpVect.cpvsub(point, cpTransform.cpTransformPoint(this.transform, this.cog));
 			return cpVect.cpvadd(this.v, cpVect.cpvmult(cpVect.cpvperp(r), this.w));

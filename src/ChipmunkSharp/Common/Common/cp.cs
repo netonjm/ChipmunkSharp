@@ -550,7 +550,7 @@ namespace ChipmunkSharp
 			return (m * sum1) / (6.0f * sum2);
 		}
 
-		public static float areaForPoly(cpVect[] verts, float r)
+		public static float AreaForPoly(cpVect[] verts, float r)
 		{
 			float area = 0.0f;
 			float perimeter = 0.0f;
@@ -567,7 +567,7 @@ namespace ChipmunkSharp
 
 			return r * ((float)Math.PI * cpfabs(r) + perimeter) + area / 2.0f;
 		}
-		public static cpVect centroidForPoly(cpVect[] verts)
+		public static cpVect CentroidForPoly(cpVect[] verts)
 		{
 			float sum = 0.0f;
 			cpVect vsum = cpVect.Zero;
@@ -605,7 +605,7 @@ namespace ChipmunkSharp
 
 		//MARK: Quick Hull
 
-		public static void LoopIndexes(cpVect[] verts, ref int start, ref int end)
+		public static void LoopIndexes(ref cpVect[] verts, ref int start, ref int end)
 		{
 			start = 0;
 			end = 0;
@@ -668,60 +668,93 @@ namespace ChipmunkSharp
 			//return head;
 		}
 
-		public static int QHullReduce(float tol, cpVect[] verts, int offs, int count, cpVect a, cpVect pivot, cpVect b, cpVect[] result)
-		{
-			throw new NotImplementedException();
-			//if (count < 0)
-			//{
-			//	return 0;
-			//}
-			//else if (count == 0)
-			//{
-			//	result[0] = pivot;
-			//	return 1;
-			//}
-			//else
-			//{
-			//	int left_count = QHullPartition(verts, a, pivot, tol);
-			//	int index = QHullReduce(tol, verts + 1, left_count - 1, a, verts[0], pivot, result);
+		//public static int QHullReduce(float tol, cpVect[] verts, int offs, int count, cpVect a, cpVect pivot, cpVect b,ref cpVect[] result)
+		//{
+		//	//throw new NotImplementedException();
+		//	if (count < 0)
+		//	{
+		//		return 0;
+		//	}
+		//	else if (count == 0)
+		//	{
+		//		result[0] = pivot;
+		//		return 1;
+		//	}
+		//	else
+		//	{
+		//		int left_count = QHullPartition(verts, a, pivot, tol);
+		//		int index = QHullReduce(tol, verts + 1, left_count - 1, a, verts[0], pivot, result);
 
-			//	result[index++] = pivot;
+		//		result[index++] = pivot;
 
-			//	int right_count = QHullPartition(verts + left_count, count - left_count, pivot, b, tol);
-			//	return index + QHullReduce(tol, verts + left_count + 1, right_count - 1, pivot, verts[left_count], b, result + index);
-			//}
-		}
+		//		int right_count = QHullPartition(verts + left_count, count - left_count, pivot, b, tol);
+		//		return index + QHullReduce(tol, verts + left_count + 1, right_count - 1, pivot, verts[left_count], b, result + index);
+		//	}
+		//}
 
 
 		// QuickHull seemed like a neat algorithm, and efficient-ish for large input sets.
 		// My implementation performs an in place reduction using the result array as scratch space.
-		public int cpConvexHull(int count, cpVect[] verts, cpVect[] result, int first, float tol)
+		//public int ConvexHull(int count, cpVect[] verts, ref cpVect[] result, ref int first, float tol)
+		//{
+
+		//	if (verts != result)
+		//	{
+
+		//		for (int i = 0; i < verts.Length; i++)
+		//		{
+		//			result[i] = new cpVect(verts[i]);
+		//		}
+
+
+		//		// Copy the line vertexes into the empty part of the result polyline to use as a scratch buffer.
+		//		//memcpy(result, verts, count * sizeof(cpVect));
+		//		//TODO: NOT IMPLEMENTED
+		//	}
+
+		//	// Degenerate case, all points are the same.
+		//	int start, end;
+
+		//	LoopIndexes(ref verts, ref start, ref end);
+		//	if (start == end)
+		//	{
+		//		if (first > 0)
+		//			first = 0;
+
+		//		return 1;
+		//	}
+
+		//	SWAP(ref result[0], ref result[start]);
+		//	SWAP(ref result[1], ref result[end == 0 ? start : end]);
+
+		//	cpVect a = result[0];
+		//	cpVect b = result[1];
+
+		//	if (first > 0)
+		//		first = start;
+
+
+
+		//	cpVect[] vertices = new cpVect[verts.Length];
+		//	for (int i = 0; i < verts.Length; i++)
+		//		vertices[i] = new cpVect(verts[i]);
+
+
+		//	Array.Resize(ref result, result.Length + 2);
+		//	Array.Resize(ref vertices, vertices.Length + 1);
+
+		//	return QHullReduce(tol, result, count - 2, a, b, a, vertices) + 1;
+
+		//}
+
+
+
+
+		private void SWAP(ref cpVect first, ref cpVect second)
 		{
-			throw new NotImplementedException();
-			//if (verts != result)
-			//{
-			//	// Copy the line vertexes into the empty part of the result polyline to use as a scratch buffer.
-			//	//memcpy(result, verts, count * sizeof(cpVect));
-			//	//TODO: NOT IMPLEMENTED
-			//}
-
-			// Degenerate case, all points are the same.
-			//int start, end;
-			//cpLoopIndexes(verts, count, &start, &end);
-			//if (start == end)
-			//{
-			//	if (first) (*first) = 0;
-			//	return 1;
-			//}
-
-			//SWAP(result[0], result[start]);
-			//SWAP(result[1], result[end == 0 ? start : end]);
-
-			//cpVect a = result[0];
-			//cpVect b = result[1];
-
-			//if (first) (*first) = start;
-			//return QHullReduce(tol, result + 2, count - 2, a, b, a, result + 1) + 1;
+			var tmp = first;
+			first = second;
+			second = tmp;
 		}
 
 
