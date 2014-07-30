@@ -78,13 +78,13 @@ namespace ChipmunkSharp
 		/// Must agree with cpBody.m_inv! Use cpBodySetMass() when changing the mass for this reason.
 		internal float m;
 		/// Mass inverse.
-		public float m_inv;
+		internal float m_inv;
 
 		/// Moment of inertia of the body.
 		/// Must agree with cpBody.i_inv! Use cpBodySetMoment() when changing the moment for this reason.
-		public float i;
+		internal float i;
 		/// Moment of inertia inverse.
-		public float i_inv;
+		internal float i_inv;
 
 		/// Cached unit length vector representing the angle of the body.
 		/// Used for fast rotations using cpvrotate().
@@ -92,32 +92,32 @@ namespace ChipmunkSharp
 
 
 		/// Position of the rigid body's center of gravity.
-		public cpVect p;
+		internal cpVect p;
 		/// Velocity of the rigid body's center of gravity.
-		public cpVect v;
+		internal cpVect v;
 		/// Force acting on the rigid body's center of gravity.
-		public cpVect f;
+		internal cpVect f;
 
 		/// Rotation of the body around it's center of gravity in radians.
 		/// Must agree with cpBody.rot! Use cpBodySetAngle() when changing the angle for this reason.
-		public float a;
+		internal float a;
 		/// Angular velocity of the body around it's center of gravity in radians/second.
-		public float w;
+		internal float w;
 		/// Torque applied to the body around it's center of gravity.
-		public float t;
+		internal float t;
 
 
-		public cpTransform transform;
+		internal cpTransform transform;
 
 		/// User definable data pointer.
 		/// Generally this points to your the game object class so you can access it
 		/// when given a cpBody reference in a callback.
-		public object userData;
+		internal object userData;
 
 		/// Maximum velocity allowed when updating the velocity.
-		float v_limit;
+		internal float v_limit;
 		/// Maximum rotational rate (in radians/second) allowed when updating the angular velocity.
-		float w_limit;
+		internal float w_limit;
 
 		public cpVect v_bias;
 		public float w_bias;

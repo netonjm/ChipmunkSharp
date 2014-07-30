@@ -525,11 +525,8 @@ namespace ChipmunkSharp
 			return r * ((float)Math.PI * r + 2 * a.Distance(b));
 		}
 
-
-		public static float MomentForPoly(float m, cpVect[] verts, cpVect offset, float r)
+		public static float MomentForPoly(float m, int count, cpVect[] verts, cpVect offset, float r)
 		{
-			int count = verts.Length;
-
 			// TODO account for radius.
 			if (count == 2) return MomentForSegment(m, verts[0], verts[1], 0.0f);
 
@@ -550,12 +547,16 @@ namespace ChipmunkSharp
 			return (m * sum1) / (6.0f * sum2);
 		}
 
-		public static float AreaForPoly(cpVect[] verts, float r)
+		public static float MomentForPoly(float m, cpVect[] verts, cpVect offset, float r)
+		{
+			return MomentForPoly(m, verts.Length, verts, offset, r);
+		}
+
+		public static float AreaForPoly(int count, cpVect[] verts, float r)
 		{
 			float area = 0.0f;
 			float perimeter = 0.0f;
 
-			int count = verts.Length;
 			for (int i = 0; i < count; i++)
 			{
 				cpVect v1 = verts[i];
@@ -567,11 +568,16 @@ namespace ChipmunkSharp
 
 			return r * ((float)Math.PI * cpfabs(r) + perimeter) + area / 2.0f;
 		}
-		public static cpVect CentroidForPoly(cpVect[] verts)
+
+		public static float AreaForPoly(cpVect[] verts, float r)
+		{
+			return AreaForPoly(verts.Length, verts, r);
+		}
+
+		public static cpVect CentroidForPoly(int count, cpVect[] verts)
 		{
 			float sum = 0.0f;
 			cpVect vsum = cpVect.Zero;
-			int count = verts.Length;
 			for (int i = 0; i < count; i++)
 			{
 				cpVect v1 = verts[i];
@@ -583,6 +589,11 @@ namespace ChipmunkSharp
 			}
 
 			return cpVect.cpvmult(vsum, 1.0f / (3.0f * sum));
+		}
+
+		public static cpVect CentroidForPoly(cpVect[] verts)
+		{
+			return CentroidForPoly(verts.Length, verts);
 		}
 
 		public static float momentForBox2(float m, cpBB box)

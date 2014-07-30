@@ -44,7 +44,7 @@ namespace ChipmunkSharp
 		public int iterations;
 
 		/// Gravity to pass to rigid bodies when integrating velocity.
-		public cpVect gravity;
+		internal cpVect gravity;
 
 		/// Damping rate expressed as the fraction of velocity bodies retain each second.
 		/// A value of 0.9 would mean that each body's velocity will drop 10% per second.
@@ -54,18 +54,18 @@ namespace ChipmunkSharp
 
 		/// Speed threshold for a body to be considered idle.
 		/// The default value of 0 means to let the space guess a good threshold based on gravity.
-		public float idleSpeedThreshold;
+		internal float idleSpeedThreshold;
 
 		/// Time a group of bodies must remain idle in order to fall asleep.
 		/// Enabling sleeping also implicitly enables the the contact graph.
 		/// The default value of INFINITY disables the sleeping algorithm.
-		public float sleepTimeThreshold;
+		internal float sleepTimeThreshold;
 
 		/// Amount of encouraged penetration between colliding shapes.
 		/// Used to reduce oscillating contacts and keep the collision cache warm.
 		/// Defaults to 0.1. If you have poor simulation quality,
 		/// increase this number as much as possible without allowing visible amounts of overlap.
-		public float collisionSlop;
+		internal float collisionSlop;
 
 		/// Determines how fast overlapping shapes are pushed apart.
 		/// Expressed as a fraction of the error remaining after each second.
@@ -80,7 +80,7 @@ namespace ChipmunkSharp
 		/// User definable data pointer.
 		/// Generally this points to your game's controller or game state
 		/// class so you can access it when given a cpSpace reference in a callback.
-		public object userData;
+		internal object userData;
 
 		public int stamp;
 		public float curr_dt;
@@ -104,7 +104,7 @@ namespace ChipmunkSharp
 		// public cpArray allocatedBuffers;
 		public int locked;
 
-		public bool usesWildcards;
+		internal bool usesWildcards;
 		public Dictionary<ulong, cpCollisionHandler> collisionHandlers;
 		public cpCollisionHandler defaultHandler;
 
@@ -117,7 +117,7 @@ namespace ChipmunkSharp
 		/// The designated static body for this space.
 		/// You can modify this body, or replace it with your own static body.
 		/// By default it points to a statically allocated cpBody in the cpSpace struct.
-		public cpBody staticBody;
+		internal cpBody staticBody;
 		// public cpBody _staticBody;
 
 		/// returns true from inside a callback and objects cannot be added/removed.
