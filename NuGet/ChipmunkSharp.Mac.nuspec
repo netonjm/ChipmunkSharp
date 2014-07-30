@@ -18,7 +18,7 @@
 
   <files>
    
-    <file src="/src/ChipmunkSharpJS/macosx/bin/Release/ChipmunkSharp.dll" target="lib/net40" />
+    <file src="/src/ChipmunkSharp/macosx/bin/Release/ChipmunkSharp.dll" target="lib/net40" />
    
 
   </files>

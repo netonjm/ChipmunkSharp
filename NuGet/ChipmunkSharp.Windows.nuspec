@@ -19,7 +19,7 @@
   <files>
    
      <!--Windows DX-->
-    <file src="..\src\ChipmunkSharpJS\win32\bin\Release\ChipmunkSharp.dll" target="lib\net40" />
+    <file src="..\src\ChipmunkSharp\win32\bin\Release\ChipmunkSharp.dll" target="lib\net40" />
    
 
   </files>
