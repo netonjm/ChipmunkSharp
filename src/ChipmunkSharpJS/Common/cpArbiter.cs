@@ -284,16 +284,15 @@ namespace ChipmunkSharp
 		public static void UnthreadHelper(cpArbiter arb, cpBody body)
 		{
 
-			cpArbiterThread thread;
-			arb.ThreadForBody(body, out thread);
+			cpArbiterThread thread = arb.ThreadForBody(body);
+
 			cpArbiter prev = thread.prev;
 			cpArbiter next = thread.next;
 
 			// thread_x_y is quite ugly, but it avoids making unnecessary js objects per arbiter.
 			if (prev != null)
 			{
-				cpArbiterThread nextPrev;
-				prev.ThreadForBody(body, out nextPrev);
+				cpArbiterThread nextPrev = prev.ThreadForBody(body);
 				nextPrev.next = next;
 			}
 			else if (body.arbiterList == arb)
@@ -306,8 +305,7 @@ namespace ChipmunkSharp
 
 			if (next != null)
 			{
-				cpArbiterThread threadNext;
-				next.ThreadForBody(body, out threadNext);
+				cpArbiterThread threadNext = next.ThreadForBody(body);
 				threadNext.prev = prev;
 			}
 
@@ -686,13 +684,13 @@ namespace ChipmunkSharp
 			return (arb.body_a == body ? arb.thread_a : arb.thread_b);
 		}
 
-		public void ThreadForBody(cpBody body, out cpArbiterThread thread)
+		public cpArbiterThread ThreadForBody(cpBody body)
 		{
 			//TODO: THIS NEEDS RETURN THE ORIGINAL MEMORY REFERENCE IN ARBITER
 			if (this.body_a == body)
-				thread = thread_a;
+				return thread_a;
 			else
-				thread = thread_b;
+				return thread_b;
 		}
 
 

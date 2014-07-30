@@ -147,10 +147,12 @@ namespace ChipmunkSharp
 
 			public static MinkowskiPoint MinkowskiPointNew(SupportPoint a, SupportPoint b)
 			{
-				return new MinkowskiPoint(a.p, b.p, b.p.Sub(a.p), ((a.id & 0xFF) << 8 | (b.id & 0xFF)));
+				var point = new MinkowskiPoint(a.p, b.p, b.p.Sub(a.p),
+					((a.id & 0xFF) << 8 | (b.id & 0xFF)));
+				return point;
 			}
 
-			public static MinkowskiPoint Support(SupportContext ctx, cpVect n)
+			public static MinkowskiPoint Support(ref SupportContext ctx, cpVect n)
 			{
 				SupportPoint a = ctx.func1(ctx.shape1, cpVect.cpvneg(n));
 				SupportPoint b = ctx.func2(ctx.shape2, n);
@@ -222,13 +224,15 @@ namespace ChipmunkSharp
 				ulong i0 = (ulong)((i1 - 1 + count) % count);
 				ulong i2 = (ulong)((i1 + 1) % count);
 
+				cpSplittingPlane[] planes = poly.planes;
+				ulong hashid = poly.hashid;
 
-				if (cpVect.cpvdot(n, poly.planes[i1].n) > cpVect.cpvdot(n, poly.planes[i2].n))
+				if (cpVect.cpvdot(n, planes[i1].n) > cpVect.cpvdot(n, planes[i2].n))
 				{
 					Edge edge = new Edge(
 
-					 new EdgePoint(poly.planes[i0].v0, cp.CP_HASH_PAIR(poly.hashid, i0)),
-					 new EdgePoint(poly.planes[i1].v0, cp.CP_HASH_PAIR(poly.hashid, (ulong)i1)),
+					 new EdgePoint(planes[i0].v0, cp.CP_HASH_PAIR(hashid, i0)),
+					 new EdgePoint(planes[i1].v0, cp.CP_HASH_PAIR(hashid, i1)),
 
 					 poly.r, poly.planes[i1].n);
 
@@ -238,9 +242,11 @@ namespace ChipmunkSharp
 				{
 
 					Edge edge = new Edge(
-					new EdgePoint(poly.planes[i1].v0, cp.CP_HASH_PAIR(poly.hashid, (ulong)i1)),
-					new EdgePoint(poly.planes[i2].v0, cp.CP_HASH_PAIR(poly.hashid, i2)),
+
+					new EdgePoint(planes[i1].v0, cp.CP_HASH_PAIR(hashid, i1)),
+					new EdgePoint(planes[i2].v0, cp.CP_HASH_PAIR(hashid, i2)),
 					poly.r, poly.planes[i2].n);
+
 					return edge;
 				}
 			}
@@ -326,13 +332,13 @@ namespace ChipmunkSharp
 				// First try calculating the MSA from the minkowski difference edge.
 				// This gives us a nice, accurate MSA when the surfaces are close together.
 				cpVect delta = cpVect.cpvsub(v1.ab, v0.ab);
-				cpVect n = cpVect.cpvnormalize(cpVect.cpvperp(delta));
+				cpVect n = cpVect.cpvnormalize(cpVect.cpvrperp(delta));
 				float d = cpVect.cpvdot(n, p);
 
 				if (d <= 0.0f || (-1.0f < t && t < 1.0f))
 				{
 					// If the shapes are overlapping, or we have a regular vertex/edge collision, we are done.
-					ClosestPoints points = new ClosestPoints(pa, pb, n, d, (ulong)id);
+					ClosestPoints points = new ClosestPoints(pa, pb, n, d, id);
 					return points;
 				}
 				else
@@ -381,10 +387,11 @@ namespace ChipmunkSharp
 			}
 
 			MinkowskiPoint v0 = hull[mini];
-			MinkowskiPoint v1 = hull[(mini + 1) % hull.Length];
+			MinkowskiPoint v1 = hull[(mini + 1) % count];
 			cp.assertSoft(!cpVect.cpveql(v0.ab, v1.ab), string.Format("Internal Error: EPA vertexes are the same ({0} and {1})", mini, (mini + 1) % count));
 
-			MinkowskiPoint p = MinkowskiPoint.Support(ctx, cpVect.cpvperp(cpVect.cpvsub(v1.ab, v0.ab)));
+			MinkowskiPoint p = MinkowskiPoint.Support(ref ctx,
+				cpVect.cpvperp(cpVect.cpvsub(v1.ab, v0.ab)));
 
 #if DRAW_EPA
 	cpVect verts[count];
@@ -430,7 +437,7 @@ namespace ChipmunkSharp
 		// Find the closest points on the surface of two overlapping shapes using the EPA algorithm.
 		// EPA is called from GJK when two shapes overlap.
 		// This is moderately expensive step! Avoid it by adding radii to your shapes so their inner polygons won't overlap.
-		public static ClosestPoints EPA(SupportContext ctx, MinkowskiPoint v0, MinkowskiPoint v1, MinkowskiPoint v2)
+		public static ClosestPoints EPA(ref SupportContext ctx, ref MinkowskiPoint v0, ref MinkowskiPoint v1, ref MinkowskiPoint v2)
 		{
 			// TODO: allocate a NxM array here and do an in place convex hull reduction in EPARecurse
 			MinkowskiPoint[] hull = new MinkowskiPoint[] { v0, v1, v2 };
@@ -440,7 +447,7 @@ namespace ChipmunkSharp
 
 
 		//MARK: GJK Functions.
-		public static ClosestPoints GJKRecurse(SupportContext ctx, MinkowskiPoint v0, MinkowskiPoint v1, int iteration)
+		public static ClosestPoints GJKRecurse(ref SupportContext ctx, ref MinkowskiPoint v0, ref MinkowskiPoint v1, int iteration)
 		{
 
 			if (iteration > MAX_GJK_ITERATIONS)
@@ -450,16 +457,16 @@ namespace ChipmunkSharp
 			}
 
 			cpVect delta = cpVect.cpvsub(v1.ab, v0.ab);
-			if (cpVect.cpvcross(delta, cpVect.cpvadd(v0.ab, v1.ab)) > 0.0f)
+			if (CheckArea(delta, cpVect.cpvadd(v0.ab, v1.ab)))
 			{
 				// Origin is behind axis. Flip and try again.
-				return GJKRecurse(ctx, v1, v0, iteration);
+				return GJKRecurse(ref ctx, ref v1, ref v0, iteration);
 			}
 			else
 			{
 				float t = ClosestT(v0.ab, v1.ab);
 				cpVect n = (-1.0f < t && t < 1.0f ? cpVect.cpvperp(delta) : cpVect.cpvneg(LerpT(v0.ab, v1.ab, t)));
-				MinkowskiPoint p = MinkowskiPoint.Support(ctx, n);
+				MinkowskiPoint p = MinkowskiPoint.Support(ref ctx, n);
 
 #if DRAW_GJK
 		ChipmunkDebugDrawSegment(v0.ab, v1.ab, RGBAColor(1, 1, 1, 1));
@@ -475,7 +482,7 @@ namespace ChipmunkSharp
 				{
 					// The triangle v0, p, v1 contains the origin. Use EPA to find the MSA.
 					cp.assertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK->EPA iterations: {0}", iteration));
-					return EPA(ctx, v0, p, v1);
+					return EPA(ref ctx, ref  v0, ref  p, ref  v1);
 				}
 				else
 				{
@@ -491,11 +498,11 @@ namespace ChipmunkSharp
 						// Need to figure out which existing point to drop.
 						if (ClosestDist(v0.ab, p.ab) < ClosestDist(p.ab, v1.ab))
 						{
-							return GJKRecurse(ctx, v0, p, iteration + 1);
+							return GJKRecurse(ref ctx, ref  v0, ref  p, iteration + 1);
 						}
 						else
 						{
-							return GJKRecurse(ctx, p, v1, iteration + 1);
+							return GJKRecurse(ref ctx, ref  p, ref  v1, iteration + 1);
 						}
 					}
 				}
@@ -525,7 +532,7 @@ namespace ChipmunkSharp
 		}
 
 
-		public static ClosestPoints GJK(SupportContext ctx, ref ulong id)
+		public static ClosestPoints GJK(ref SupportContext ctx, ref ulong id)
 		{
 			MinkowskiPoint v0, v1;
 			if (id > 0 && ENABLE_CACHING == 0)
@@ -547,18 +554,18 @@ namespace ChipmunkSharp
 					cpBB.Center(ctx.shape1.bb),
 					cpBB.Center(ctx.shape2.bb)));
 
-				v0 = MinkowskiPoint.Support(ctx, axis);
-				v1 = MinkowskiPoint.Support(ctx, cpVect.cpvneg(axis));
+				v0 = MinkowskiPoint.Support(ref ctx, axis);
+				v1 = MinkowskiPoint.Support(ref ctx, cpVect.cpvneg(axis));
 			}
 
-			ClosestPoints points = GJKRecurse(ctx, v0, v1, 1);
+			ClosestPoints points = GJKRecurse(ref ctx, ref  v0, ref  v1, 1);
 			id = points.id;
 			return points;
 		}
 
 		//MARK: Contact Clipping
 
-		public static void ContactPoints(Edge e1, Edge e2, ClosestPoints points, cpCollisionInfo info)
+		public static void ContactPoints(Edge e1, Edge e2, ClosestPoints points, ref cpCollisionInfo info)
 		{
 			float mindist = e1.r + e2.r;
 			if (points.d <= mindist)
@@ -604,8 +611,13 @@ namespace ChipmunkSharp
 		//MARK: Collision Functions
 
 		// Collide circle shapes.
-		public static void CircleToCircle(cpCircleShape c1, cpCircleShape c2, cpCollisionInfo info)
+
+
+		public static void CircleToCircle(cpShape cir1, cpShape cir2, ref cpCollisionInfo info)
 		{
+			cpCircleShape c1 = (cpCircleShape)cir1;
+			cpCircleShape c2 = (cpCircleShape)cir2;
+
 			float mindist = c1.r + c2.r;
 			cpVect delta = cpVect.cpvsub(c2.tc, c1.tc);
 			float distsq = cpVect.cpvlengthsq(delta);
@@ -618,8 +630,10 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public static void CircleToSegment(cpCircleShape circle, cpSegmentShape segment, cpCollisionInfo info)
+		public static void CircleToSegment(cpShape circle1, cpShape segment2, ref cpCollisionInfo info)
 		{
+			cpCircleShape circle = (cpCircleShape)circle1;
+			cpSegmentShape segment = (cpSegmentShape)segment2;
 
 			cpVect seg_a = segment.ta;
 			cpVect seg_b = segment.tb;
@@ -652,11 +666,14 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public static void SegmentToSegment(cpSegmentShape seg1, cpSegmentShape seg2, cpCollisionInfo info)
+		public static void SegmentToSegment(cpShape segment1, cpShape segment2, ref cpCollisionInfo info)
 		{
 
+			cpSegmentShape seg1 = (cpSegmentShape)segment1;
+			cpSegmentShape seg2 = (cpSegmentShape)segment2;
+
 			SupportContext context = new SupportContext(seg1, seg2, (s0, s1) => SupportPoint.SegmentSupportPoint(s0 as cpSegmentShape, s1), (s0, s1) => SupportPoint.SegmentSupportPoint(s0 as cpSegmentShape, s1));
-			ClosestPoints points = GJK(context, ref info.id);
+			ClosestPoints points = GJK(ref context, ref info.id);
 
 			cpVect n = points.n;
 			cpVect rot1 = seg1.body.GetRotation();
@@ -674,32 +691,48 @@ namespace ChipmunkSharp
 				)
 			)
 			{
-				ContactPoints(Edge.SupportEdgeForSegment(seg1, n), Edge.SupportEdgeForSegment(seg2, cpVect.cpvneg(n)), points, info);
+				ContactPoints(Edge.SupportEdgeForSegment(seg1, n), Edge.SupportEdgeForSegment(seg2, cpVect.cpvneg(n)), points, ref info);
 			}
 		}
 
-		public static void PolyToPoly(cpPolyShape poly1, cpPolyShape poly2, cpCollisionInfo info)
+		public static void PolyToPoly(cpShape polygon1, cpShape polygon2, ref cpCollisionInfo info)
 		{
 
-			SupportContext context = new SupportContext(poly1, poly2, (s0, s1) => PolySupportPoint(s0 as cpPolyShape, s1), (s0, s1) => PolySupportPoint(s0 as cpPolyShape, s1));
-			ClosestPoints points = GJK(context, ref info.id);
+			cpPolyShape poly1 = (cpPolyShape)polygon1;
+			cpPolyShape poly2 = (cpPolyShape)polygon2;
+
+			SupportContext context = new SupportContext(poly1, poly2,
+				(s0, s1) => PolySupportPoint(s0 as cpPolyShape, s1),
+				(s0, s1) => PolySupportPoint(s0 as cpPolyShape, s1));
+
+			ClosestPoints points = GJK(ref context, ref info.id);
 
 
 			// If the closest points are nearer than the sum of the radii...
 			if (points.d - poly1.r - poly2.r <= 0.0f)
 			{
-				ContactPoints(Edge.SupportEdgeForPoly(poly1, points.n), Edge.SupportEdgeForPoly(poly2, cpVect.cpvneg(points.n)), points, info);
+				ContactPoints(
+					Edge.SupportEdgeForPoly(poly1, points.n), 
+					Edge.SupportEdgeForPoly(poly2, cpVect.cpvneg(points.n)), 
+					points,
+					ref info);
 			}
 		}
 
-		public static void SegmentToPoly(cpSegmentShape seg, cpPolyShape poly, cpCollisionInfo info)
+
+
+		public static void SegmentToPoly(cpShape seg1, cpShape poly2, ref cpCollisionInfo info)
 		{
+
+			cpSegmentShape seg = (cpSegmentShape)seg1;
+			cpPolyShape poly = (cpPolyShape)poly2;
+
 			SupportContext context = new SupportContext(seg, poly,
 				(s, p) => SupportPoint.SegmentSupportPoint(s as cpSegmentShape, p),
 
 				(s, p) => SupportPoint.PolySupportPoint(s as cpPolyShape, p));
 
-			ClosestPoints points = GJK(context, ref info.id);
+			ClosestPoints points = GJK(ref context, ref info.id);
 
 
 			cpVect n = points.n;
@@ -715,13 +748,16 @@ namespace ChipmunkSharp
 				)
 			)
 			{
-				ContactPoints(Edge.SupportEdgeForSegment(seg, n), Edge.SupportEdgeForPoly(poly, cpVect.cpvneg(n)), points, info);
+				ContactPoints(Edge.SupportEdgeForSegment(seg, n), Edge.SupportEdgeForPoly(poly, cpVect.cpvneg(n)), points, ref info);
 			}
 		}
 
 		// This one is less gross, but still gross.
-		public static void CircleToPoly(cpCircleShape circle, cpPolyShape poly, cpCollisionInfo info)
+		public static void CircleToPoly(cpShape circle1, cpShape poly2, ref cpCollisionInfo info)
 		{
+
+			cpCircleShape circle = (cpCircleShape)circle1;
+			cpPolyShape poly = (cpPolyShape)poly2;
 
 			SupportContext context = new SupportContext(
 				circle,
@@ -729,7 +765,7 @@ namespace ChipmunkSharp
 				(s, o) => SupportPoint.CircleSupportPoint(s as cpCircleShape, o),
 				(s, o) => SupportPoint.PolySupportPoint(s as cpPolyShape, o));
 
-			ClosestPoints points = GJK(context, ref info.id);
+			ClosestPoints points = GJK(ref context, ref info.id);
 
 
 			// If the closest points are nearer than the sum of the radii...
@@ -740,40 +776,28 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public static void CollisionError(cpShape circle, cpShape poly, cpCollisionInfo info)
+		public static void CollisionError(cpShape circle, cpShape poly, ref cpCollisionInfo info)
 		{
 			cp.assertHard(false, "Internal Error: Shape types are not sorted.");
 		}
 
-		static Action<cpShape, cpShape, cpCollisionInfo>[] BuiltinCollisionFuncs = new Action<cpShape, cpShape, cpCollisionInfo>[9]
+		public delegate void ShapeToShapeDelegate(cpShape shape1, cpShape shape2, ref cpCollisionInfo info);
+
+		static ShapeToShapeDelegate[] BuiltinCollisionFuncs = new ShapeToShapeDelegate[9]
 		{
-			new Action<cpShape, cpShape, cpCollisionInfo> (
-				(s,e,r) => CircleToCircle(s as cpCircleShape, e as cpCircleShape, r as cpCollisionInfo)
-				),
+			CircleToCircle,
 			CollisionError,
 			CollisionError,
-			new Action<cpShape, cpShape, cpCollisionInfo> (
-				(s,e,r) => CircleToSegment(s as cpCircleShape, e as cpSegmentShape, r as cpCollisionInfo)
-				),	
-			new Action<cpShape, cpShape, cpCollisionInfo> (
-				(s,e,r) => SegmentToSegment(s as cpSegmentShape, e as cpSegmentShape, r as cpCollisionInfo)
-				),	
+			CircleToSegment,	
+			SegmentToSegment,	
 			CollisionError,
-			new Action<cpShape, cpShape, cpCollisionInfo> (
-			
-				(s,e,r) => CircleToPoly(s as cpCircleShape, e as cpPolyShape, r as cpCollisionInfo)
-			
-				),
-			new Action<cpShape, cpShape, cpCollisionInfo> (
-				(s,e,r) => SegmentToPoly(s as cpSegmentShape, e as cpPolyShape, r as cpCollisionInfo)
-				),
-			new Action<cpShape, cpShape, cpCollisionInfo> (
-				(s,e,r) => PolyToPoly(s as cpPolyShape, e as cpPolyShape, r as cpCollisionInfo)
-				),
+			CircleToPoly,
+			SegmentToPoly,
+			PolyToPoly,
 };
 
 
-		public static Action<cpShape, cpShape, cpCollisionInfo>[] CollisionFuncs = BuiltinCollisionFuncs;
+		public static ShapeToShapeDelegate[] CollisionFuncs = BuiltinCollisionFuncs;
 
 
 		public static cpCollisionInfo cpCollide(cpShape a, cpShape b, ulong id, ref List<cpContact> contacts)
@@ -788,7 +812,7 @@ namespace ChipmunkSharp
 			}
 
 			int idSelected = (int)info.a.shapeType + (int)info.b.shapeType * (int)cpShapeType.NumShapes;
-			CollisionFuncs[idSelected](info.a, info.b, info);
+			CollisionFuncs[idSelected](info.a, info.b, ref info);
 			return info;
 		}
 
