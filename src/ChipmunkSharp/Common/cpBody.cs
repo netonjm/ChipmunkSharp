@@ -33,9 +33,9 @@ namespace ChipmunkSharp
 	///// @{
 
 	///// Rigid body velocity update function type.
-	//public delegate void cpBodyVelocityFunc(cpVect gravity, float damping, float dt);
+	//public delegate void cpBodyVelocityFunc(cpVect gravity, double damping, double dt);
 	///// Rigid body position update function type.
-	//public delegate void cpBodyPositionFunc(cpBody body, float dt);
+	//public delegate void cpBodyPositionFunc(cpBody body, double dt);
 
 
 	/// Used internally to track information on the collision graph.
@@ -44,9 +44,9 @@ namespace ChipmunkSharp
 	{
 		public cpBody root;
 		public cpBody next;
-		public float idleTime;
+		public double idleTime;
 
-		public cpComponentNode(cpBody root, cpBody next, float idleTime)
+		public cpComponentNode(cpBody root, cpBody next, double idleTime)
 		{
 			this.root = root;
 			this.next = next;
@@ -69,22 +69,22 @@ namespace ChipmunkSharp
 		#region PROPS
 
 		/// Function that is called to integrate the body's velocity. (Defaults to cpBodyUpdateVelocity)
-		public Action<cpVect, float, float> velocity_func;
+		public Action<cpVect, double, double> velocity_func;
 
 		/// Function that is called to integrate the body's position. (Defaults to cpBodyUpdatePosition)
-		public Action<float> position_func;
+		public Action<double> position_func;
 
 		/// Mass of the body.
 		/// Must agree with cpBody.m_inv! Use cpBodySetMass() when changing the mass for this reason.
-		internal float m;
+		internal double m;
 		/// Mass inverse.
-		internal float m_inv;
+		internal double m_inv;
 
 		/// Moment of inertia of the body.
 		/// Must agree with cpBody.i_inv! Use cpBodySetMoment() when changing the moment for this reason.
-		internal float i;
+		internal double i;
 		/// Moment of inertia inverse.
-		internal float i_inv;
+		internal double i_inv;
 
 		/// Cached unit length vector representing the angle of the body.
 		/// Used for fast rotations using cpvrotate().
@@ -100,11 +100,11 @@ namespace ChipmunkSharp
 
 		/// Rotation of the body around it's center of gravity in radians.
 		/// Must agree with cpBody.rot! Use cpBodySetAngle() when changing the angle for this reason.
-		internal float a;
+		internal double a;
 		/// Angular velocity of the body around it's center of gravity in radians/second.
-		internal float w;
+		internal double w;
 		/// Torque applied to the body around it's center of gravity.
-		internal float t;
+		internal double t;
 
 
 		internal cpTransform transform;
@@ -115,12 +115,12 @@ namespace ChipmunkSharp
 		internal object userData;
 
 		/// Maximum velocity allowed when updating the velocity.
-		internal float v_limit;
+		internal double v_limit;
 		/// Maximum rotational rate (in radians/second) allowed when updating the angular velocity.
-		internal float w_limit;
+		internal double w_limit;
 
 		public cpVect v_bias;
-		public float w_bias;
+		public double w_bias;
 
 		public cpSpace space;
 
@@ -131,7 +131,7 @@ namespace ChipmunkSharp
 
 		public cpBody nodeRoot { get; set; }
 		public cpBody nodeNext { get; set; }
-		public float nodeIdleTime { get; set; }
+		public double nodeIdleTime { get; set; }
 
 		#endregion
 
@@ -168,7 +168,7 @@ namespace ChipmunkSharp
 		/// </summary>
 		/// <param name="mass"></param>
 		/// <param name="moment"></param>
-		public cpBody(float mass, float moment)
+		public cpBody(double mass, double moment)
 		{
 
 			transform = new cpTransform();
@@ -315,11 +315,11 @@ namespace ChipmunkSharp
 			eachShape((shape, o) =>
 			{
 				cpShapeMassInfo info = shape.massInfo;
-				float m = info.m;
+				double m = info.m;
 
 				if (m > 0.0f)
 				{
-					float msum = this.m + m;
+					double msum = this.m + m;
 
 					this.i += m * info.i + cpVect.cpvdistsq(this.cog, info.cog) * (m * this.m) / msum;
 					this.cog = cpVect.cpvlerp(this.cog, info.cog, m / msum);
@@ -344,13 +344,13 @@ namespace ChipmunkSharp
 			return this.space;
 		}
 
-		public float GetMass()
+		public double GetMass()
 		{
 			return this.m;
 		}
 
 		/// Set the mass of a body.
-		public void SetMass(float mass)
+		public void SetMass(double mass)
 		{
 			cp.assertHard(this.bodyType == cpBodyType.DYNAMIC, "You cannot set the mass of kinematic or static bodies.");
 			cp.assertHard(0.0f <= mass && mass < cp.Infinity, "Mass must be positive and finite.");
@@ -362,13 +362,13 @@ namespace ChipmunkSharp
 		}
 
 
-		public float GetMoment()
+		public double GetMoment()
 		{
 			return this.i;
 		}
 
 		/// Set the moment of a body.
-		public void SetMoment(float moment)
+		public void SetMoment(double moment)
 		{
 			cp.assertHard(moment >= 0.0f, "Moment of Inertia must be positive and non-zero.");
 
@@ -436,7 +436,7 @@ namespace ChipmunkSharp
 
 
 		// 'p' is the position of the CoG
-		public void SetTransform(cpVect p, float a)
+		public void SetTransform(cpVect p, double a)
 		{
 			cpVect rot = cpVect.cpvforangle(a);
 			cpVect c = this.cog;
@@ -447,7 +447,7 @@ namespace ChipmunkSharp
 			);
 		}
 
-		public static float SetAngle(cpBody body, float angle)
+		public static double SetAngle(cpBody body, double angle)
 		{
 			body.a = angle;
 			body.AssertSaneBody();
@@ -509,35 +509,35 @@ namespace ChipmunkSharp
 			AssertSaneBody();
 		}
 
-		public float GetAngle()
+		public double GetAngle()
 		{
 			return this.a;
 		}
 
-		public void SetAngle(float angle)
+		public void SetAngle(double angle)
 		{
 			Activate();
 			SetAngle(this, angle);
 			SetTransform(this.p, angle);
 		}
 
-		public float GetAngularVelocity()
+		public double GetAngularVelocity()
 		{
 			return this.w;
 		}
-		public void SetAngularVelocity(float angularVelocity)
+		public void SetAngularVelocity(double angularVelocity)
 		{
 			this.Activate();
 			this.w = angularVelocity;
 			AssertSaneBody();
 		}
 
-		public float GetTorque()
+		public double GetTorque()
 		{
 			return this.t;
 		}
 
-		public void SetTorque(float torque)
+		public void SetTorque(double torque)
 		{
 			Activate();
 			this.t = torque;
@@ -555,17 +555,17 @@ namespace ChipmunkSharp
 		}
 
 
-		public void SetVelocityUpdateFunc(Action<cpVect, float, float> velocityFunc)
+		public void SetVelocityUpdateFunc(Action<cpVect, double, double> velocityFunc)
 		{
 			this.velocity_func = velocityFunc;
 		}
 
-		public void SetPositionUpdateFunc(Action<float> positionFunc)
+		public void SetPositionUpdateFunc(Action<double> positionFunc)
 		{
 			this.position_func = positionFunc;
 		}
 
-		public void UpdateVelocity(cpVect gravity, float damping, float dt)
+		public void UpdateVelocity(cpVect gravity, double damping, double dt)
 		{
 			// Skip kinematic bodies.
 			if (bodyType == cpBodyType.KINEMATIC) return;
@@ -582,10 +582,10 @@ namespace ChipmunkSharp
 			AssertSaneBody();
 		}
 
-		public void UpdatePosition(float dt)
+		public void UpdatePosition(double dt)
 		{
 			cpVect p = this.p = cpVect.cpvadd(this.p, cpVect.cpvmult(cpVect.cpvadd(this.v, this.v_bias), dt));
-			float a = SetAngle(this, this.a + (this.w + this.w_bias) * dt);
+			double a = SetAngle(this, this.a + (this.w + this.w_bias) * dt);
 
 			SetTransform(p, a);
 
@@ -655,11 +655,11 @@ namespace ChipmunkSharp
 		}
 
 		// Get the kinetic energy of a body.
-		public float KineticEnergy()
+		public double KineticEnergy()
 		{
 			// Need to do some fudging to avoid NaNs
-			float vsq = cpVect.cpvdot(this.v, this.v);
-			float wsq = this.w * this.w;
+			double vsq = cpVect.cpvdot(this.v, this.v);
+			double wsq = this.w * this.w;
 			return (vsq != 0 ? vsq * this.m : 0.0f) + (wsq != 0 ? wsq * this.i : 0.0f);
 		}
 
@@ -850,10 +850,10 @@ namespace ChipmunkSharp
 
 		//public cpVect GetVel() { return v; }
 
-		public void SetAngleInternal(float angle)
+		public void SetAngleInternal(double angle)
 		{
-			cp.assertHard(!float.IsNaN(angle), "Internal Error: Attempting to set body's angle to NaN");
-			this.a = angle;//fmod(a, (cpFloat)M_PI*2.0f);
+			cp.assertHard(!double.IsNaN(angle), "Internal Error: Attempting to set body's angle to NaN");
+			this.a = angle;//fmod(a, (cpdouble)M_PI*2.0f);
 
 			//this.rot = vforangle(angle);
 			this.cog.x = cp.cpfcos(angle);
@@ -942,7 +942,7 @@ namespace ChipmunkSharp
 
 
 		/// Allocate and initialize a cpBody.
-		public static cpBody New(float mass, float moment)
+		public static cpBody New(double mass, double moment)
 		{
 			cpBody tmp = new cpBody(mass, moment);
 			return tmp;
@@ -1023,7 +1023,7 @@ namespace ChipmunkSharp
 		//}
 
 		//[Obsolete("OBSOLETE JS CODE")]
-		//public void VelocityFunc(cpVect gravity, float damping, float dt)
+		//public void VelocityFunc(cpVect gravity, double damping, double dt)
 		//{
 		//	//this.v = vclamp(vadd(vmult(this.v, damping), vmult(vadd(gravity, vmult(this.f, this.m_inv)), dt)), this.v_limit);
 		//	var vx = this.v.x * damping + (gravity.x + this.f.x * this.m_inv) * dt;
@@ -1044,7 +1044,7 @@ namespace ChipmunkSharp
 		//}
 
 		//[Obsolete("OBSOLETE JS CODE")]
-		//public void PositionFunc(float dt)
+		//public void PositionFunc(double dt)
 		//{
 		//	//this.p = vadd(this.p, vmult(vadd(this.v, this.v_bias), dt));
 

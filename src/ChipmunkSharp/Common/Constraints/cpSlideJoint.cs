@@ -27,17 +27,17 @@ namespace ChipmunkSharp
 
 
 		internal cpVect anchorA, anchorB;
-		internal float min, max;
+		internal double min, max;
 
 		internal cpVect r1, r2;
 		internal cpVect n;
-		internal float nMass;
+		internal double nMass;
 
-		internal float jnAcc;
-		internal float bias;
+		internal double jnAcc;
+		internal double bias;
 
 
-		public override void PreStep(float dt)
+		public override void PreStep(double dt)
 		{
 
 			cpBody a = this.a;
@@ -47,8 +47,8 @@ namespace ChipmunkSharp
 			this.r2 = cpTransform.cpTransformVect(b.transform, cpVect.cpvsub(this.anchorB, b.cog));
 
 			cpVect delta = cpVect.cpvsub(cpVect.cpvadd(b.p, this.r2), cpVect.cpvadd(a.p, this.r1));
-			float dist = cpVect.cpvlength(delta);
-			float pdist = 0.0f;
+			double dist = cpVect.cpvlength(delta);
+			double pdist = 0.0f;
 			if (dist > this.max)
 			{
 				pdist = dist - this.max;
@@ -69,11 +69,11 @@ namespace ChipmunkSharp
 			this.nMass = 1.0f / cp.k_scalar(a, b, this.r1, this.r2, this.n);
 
 			// calculate bias velocity
-			float maxBias = this.maxBias;
+			double maxBias = this.maxBias;
 			this.bias = cp.cpfclamp(-cp.bias_coef(this.errorBias, dt) * pdist / dt, -maxBias, maxBias);
 		}
 
-		public override void ApplyCachedImpulse(float dt_coef)
+		public override void ApplyCachedImpulse(double dt_coef)
 		{
 			cpBody a = this.a;
 			cpBody b = this.b;
@@ -83,7 +83,7 @@ namespace ChipmunkSharp
 		}
 
 
-		public override void ApplyImpulse(float dt)
+		public override void ApplyImpulse(double dt)
 		{
 			if (cpVect.cpveql(this.n, cpVect.Zero)) return;  // early exit
 
@@ -96,11 +96,11 @@ namespace ChipmunkSharp
 
 			// compute relative velocity
 			cpVect vr = cp.relative_velocity(a, b, r1, r2);
-			float vrn = cpVect.cpvdot(vr, n);
+			double vrn = cpVect.cpvdot(vr, n);
 
 			// compute normal impulse
-			float jn = (this.bias - vrn) * this.nMass;
-			float jnOld = this.jnAcc;
+			double jn = (this.bias - vrn) * this.nMass;
+			double jnOld = this.jnAcc;
 			this.jnAcc = cp.cpfclamp(jnOld + jn, -this.maxForce * dt, 0.0f);
 			jn = this.jnAcc - jnOld;
 
@@ -109,12 +109,12 @@ namespace ChipmunkSharp
 
 		}
 
-		public override float GetImpulse()
+		public override double GetImpulse()
 		{
 			return cp.cpfabs(jnAcc);
 		}
 
-		public cpSlideJoint(cpBody a, cpBody b, cpVect anchorA, cpVect anchorB, float min, float max)
+		public cpSlideJoint(cpBody a, cpBody b, cpVect anchorA, cpVect anchorB, double min, double max)
 			: base(a, b)
 		{
 
@@ -151,25 +151,25 @@ namespace ChipmunkSharp
 		}
 
 
-		public override float GetMin()
+		public override double GetMin()
 		{
 			return this.min;
 		}
 
-		public override void SetMin(float min)
+		public override void SetMin(double min)
 		{
 			ActivateBodies();
 			this.min = min;
 		}
 
-		public override void SetMax(float max)
+		public override void SetMax(double max)
 		{
 			ActivateBodies();
 			this.max = max;
 		}
 
 
-		public override float GetMax()
+		public override double GetMax()
 		{
 			return this.max;
 		}

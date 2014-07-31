@@ -38,13 +38,13 @@ namespace ChipmunkSharp
 
 		#region PROPERTIES
 
-		public float x { get; set; }
-		public float y { get; set; }
+		public double x { get; set; }
+		public double y { get; set; }
 
 		#endregion
 
 
-		public cpVect(float _x, float _y)
+		public cpVect(double _x, double _y)
 		{
 			x = _x;
 			y = _y;
@@ -61,7 +61,7 @@ namespace ChipmunkSharp
 			return ((point1.x == point2.x) && (point1.y == point2.y));
 		}
 
-		public cpVect Offset(float dx, float dy)
+		public cpVect Offset(double dx, double dy)
 		{
 			return new cpVect(
 				 x + dx,
@@ -97,32 +97,32 @@ namespace ChipmunkSharp
 			return string.Format("cpVect : ({0:N3} {1:N3})", x, y);
 		}
 
-		public float DistanceSQ(cpVect v2)
+		public double DistanceSQ(cpVect v2)
 		{
 			return Sub(v2).LengthSQ;
 		}
 
-		public static float DistanceSQ(cpVect v1, cpVect v2)
+		public static double DistanceSQ(cpVect v1, cpVect v2)
 		{
 			return v1.Sub(v2).LengthSQ;
 		}
 
-		//public static float Distance(cpVect v1, cpVect v2)
+		//public static double Distance(cpVect v1, cpVect v2)
 		//{
 		//    return (v1 - v2).Length;
 		//}
 
-		public float Distance(cpVect v2)
+		public double Distance(cpVect v2)
 		{
 			return Distance(this, v2);
 		}
 
-		public static float Distance(cpVect v1, cpVect v2)
+		public static double Distance(cpVect v1, cpVect v2)
 		{
-			return (float)Math.Sqrt(v1.Sub(v2).LengthSQ);
+			return cp.cpfsqrt(v1.Sub(v2).LengthSQ);
 		}
 
-		public static cpVect Multiply(cpVect v1, float v)
+		public static cpVect Multiply(cpVect v1, double v)
 		{
 			return new cpVect(
 				v1.x * v,
@@ -130,7 +130,7 @@ namespace ChipmunkSharp
 				);
 		}
 
-		public cpVect Clamp(float len)
+		public cpVect Clamp(double len)
 		{
 			return cpvclamp(this, len);
 		}
@@ -164,12 +164,12 @@ namespace ChipmunkSharp
 				);
 		}
 
-		public float LengthSQ
+		public double LengthSQ
 		{
 			get { return x * x + y * y; }
 		}
 
-		public float LengthSquare
+		public double LengthSquare
 		{
 			get { return LengthSQ; }
 		}
@@ -179,9 +179,9 @@ namespace ChipmunkSharp
 		///     origin. This is computed each time this property is accessed, so cache the value that is
 		///     returned.
 		/// </summary>
-		public float Length
+		public double Length
 		{
-			get { return (float)System.Math.Sqrt(x * x + y * y); }
+			get { return cp.cpfsqrt(x * x + y * y); }
 		}
 
 		/// <summary>
@@ -198,32 +198,16 @@ namespace ChipmunkSharp
 			}
 		}
 
-		///// <summary>
-		/////     Normalizes the components of this point (convert to mag 1), and returns the orignial
-		/////     magnitude of the vector defined by the XY components of this point.
-		///// </summary>
-		///// <returns></returns>
-		//public float Normalize()
-		//{
-		//    var mag = (float)System.Math.Sqrt(x * x + y * y);
-		//    if (mag < float.Epsilon)
-		//    {
-		//        return (0f);
-		//    }
-		//    float l = 1f / mag;
-		//    x *= l;
-		//    y *= l;
-		//    return (mag);
-		//}
+		
 
 		#region Static Methods
 
-		public static cpVect Lerp(cpVect a, cpVect b, float alpha)
+		public static cpVect Lerp(cpVect a, cpVect b, double alpha)
 		{
 			return (a * (1f - alpha) + b * alpha);
 		}
 
-		public cpVect Lerp(cpVect a, float alpha)
+		public cpVect Lerp(cpVect a, double alpha)
 		{
 			return Lerp(this, a, alpha);
 		}
@@ -233,7 +217,7 @@ namespace ChipmunkSharp
 			@since v0.99.1
 		*/
 
-		public static bool FuzzyEqual(cpVect a, cpVect b, float variance)
+		public static bool FuzzyEqual(cpVect a, cpVect b, double variance)
 		{
 			if (a.x - variance <= b.x && b.x <= a.x + variance)
 				if (a.y - variance <= b.y && b.y <= a.y + variance)
@@ -260,13 +244,13 @@ namespace ChipmunkSharp
 			@since v0.99.1
 		*/
 
-		public static float AngleSigned(cpVect a, cpVect b)
+		public static double AngleSigned(cpVect a, cpVect b)
 		{
 			cpVect a2 = Normalize(a);
 			cpVect b2 = Normalize(b);
-			var angle = (float)System.Math.Atan2(a2.x * b2.y - a2.y * b2.x, DotProduct(a2, b2));
+			var angle = cp.cpfatan2(a2.x * b2.y - a2.y * b2.x, DotProduct(a2, b2));
 
-			if (System.Math.Abs(angle) < float.Epsilon)
+			if (cp.cpfabs(angle) < double.Epsilon)
 			{
 				return 0.0f;
 			}
@@ -282,11 +266,11 @@ namespace ChipmunkSharp
 			@since v0.99.1
 		*/
 
-		public static cpVect RotateByAngle(cpVect v, cpVect pivot, float angle)
+		public static cpVect RotateByAngle(cpVect v, cpVect pivot, double angle)
 		{
 			cpVect r = v - pivot;
-			float cosa = (float)Math.Cos(angle), sina = (float)Math.Sin(angle);
-			float t = r.x;
+			double cosa = cp.cpfcos(angle), sina = cp.cpfsin(angle);
+			double t = r.x;
 
 			r.x = t * cosa - r.y * sina + pivot.x;
 			r.y = t * sina + r.y * cosa + pivot.y;
@@ -316,7 +300,7 @@ namespace ChipmunkSharp
 		 @since v0.99.1
 		 */
 
-		public static bool LineIntersect(cpVect A, cpVect B, cpVect C, cpVect D, float S, float T)
+		public static bool LineIntersect(cpVect A, cpVect B, cpVect C, cpVect D, double S, double T)
 		{
 			// FAIL: Line undefined
 			if ((A.x == B.x && A.y == B.y) || (C.x == D.x && C.y == D.y))
@@ -324,14 +308,14 @@ namespace ChipmunkSharp
 				return false;
 			}
 
-			float BAx = B.x - A.x;
-			float BAy = B.y - A.y;
-			float DCx = D.x - C.x;
-			float DCy = D.y - C.y;
-			float ACx = A.x - C.x;
-			float ACy = A.y - C.y;
+			double BAx = B.x - A.x;
+			double BAy = B.y - A.y;
+			double DCx = D.x - C.x;
+			double DCy = D.y - C.y;
+			double ACx = A.x - C.x;
+			double ACy = A.y - C.y;
 
-			float denom = DCy * BAx - DCx * BAy;
+			double denom = DCy * BAx - DCx * BAy;
 
 			S = DCx * ACy - DCy * ACx;
 			T = BAx * ACy - BAy * ACx;
@@ -365,7 +349,7 @@ namespace ChipmunkSharp
 
 		public static bool SegmentIntersect(cpVect A, cpVect B, cpVect C, cpVect D)
 		{
-			float S = 0, T = 0;
+			double S = 0, T = 0;
 
 			if (LineIntersect(A, B, C, D, S, T)
 				&& (S >= 0.0f && S <= 1.0f && T >= 0.0f && T <= 1.0f))
@@ -383,7 +367,7 @@ namespace ChipmunkSharp
 
 		public static cpVect IntersectPoint(cpVect A, cpVect B, cpVect C, cpVect D)
 		{
-			float S = 0, T = 0;
+			double S = 0, T = 0;
 
 			if (LineIntersect(A, B, C, D, S, T))
 			{
@@ -403,24 +387,24 @@ namespace ChipmunkSharp
 			@since v0.7.2
 		*/
 
-		public static cpVect ForAngle(float a)
+		public static cpVect ForAngle(double a)
 		{
 			return new cpVect(
-				 (float)Math.Cos(a),
-				 (float)Math.Sin(a)
+				cp.cpfcos(a),
+				cp.cpfsin(a)
 
 				);
-			//            return CreatePoint((float)Math.Cos(a), (float)Math.Sin(a));
+			
 		}
 
 		/** Converts a vector to radians.
-			@return CGfloat
+			@return CGdouble
 			@since v0.7.2
 		*/
 
-		public static float ToAngle(cpVect v)
+		public static double ToAngle(cpVect v)
 		{
-			return (float)Math.Atan2(v.y, v.x);
+			return cp.cpfatan2(v.y, v.x);
 		}
 
 
@@ -469,21 +453,21 @@ namespace ChipmunkSharp
 			return new cpVect(-p.y, p.x);
 		}
 
-		public static float Dot(cpVect p1, cpVect p2)
+		public static double Dot(cpVect p1, cpVect p2)
 		{
 			return p1.x * p2.x + p1.y * p2.y;
 		}
 
-		public float Dot(cpVect p1)
+		public double Dot(cpVect p1)
 		{
 			return Dot(this, p1);
 		}
 
 		public static cpVect Normalize(cpVect p)
 		{
-			float x = p.x;
-			float y = p.y;
-			float l = 1f / (float)Math.Sqrt(x * x + y * y);
+			double x = p.x;
+			double y = p.y;
+			double l = 1f / cp.cpfsqrt(x * x + y * y);
 			return new cpVect(x * l, y * l);
 		}
 
@@ -500,22 +484,22 @@ namespace ChipmunkSharp
 				);
 		}
 
-		public static float DotProduct(cpVect v1, cpVect v2)
+		public static double DotProduct(cpVect v1, cpVect v2)
 		{
 			return v1.x * v2.x + v1.y * v2.y;
 		}
 
 		/** Calculates cross product of two points.
-			@return CGfloat
+			@return CGdouble
 			@since v0.7.2
 		*/
 
-		public static float CrossProduct(cpVect v1, cpVect v2)
+		public static double CrossProduct(cpVect v1, cpVect v2)
 		{
 			return v1.x * v2.y - v1.y * v2.x;
 		}
 
-		public float CrossProduct(cpVect v1)
+		public double CrossProduct(cpVect v1)
 		{
 			return CrossProduct(this, v1);
 		}
@@ -552,9 +536,9 @@ namespace ChipmunkSharp
 
 		static cpVect Project(cpVect v1, cpVect v2)
 		{
-			float dp1 = v1.x * v2.x + v1.y * v2.y;
-			float dp2 = v2.LengthSQ;
-			float f = dp1 / dp2;
+			double dp1 = v1.x * v2.x + v1.y * v2.y;
+			double dp2 = v2.LengthSQ;
+			double f = dp1 / dp2;
 			return new cpVect(v2.x * f, v2.y * f);
 			// return Multiply(v2, DotProduct(v1, v2) / DotProduct(v2, v2));
 		}
@@ -635,7 +619,7 @@ namespace ChipmunkSharp
 				);
 		}
 
-		public static cpVect operator *(cpVect p, float value)
+		public static cpVect operator *(cpVect p, double value)
 		{
 			return new cpVect(
 				p.x * value,
@@ -650,7 +634,7 @@ namespace ChipmunkSharp
 			return new cpVect(-x, -y);
 		}
 
-		public cpVect Multiply(float p)
+		public cpVect Multiply(double p)
 		{
 			return Multiply(this, p);
 		}
@@ -659,12 +643,12 @@ namespace ChipmunkSharp
 		#region POINT OPERATIONS NOT NORMALICED
 
 		/// Convenience constructor for cpVect structs.
-		public static cpVect cpv(float x, float y)
+		public static cpVect cpv(double x, double y)
 		{
 			return new cpVect(x, y);
 		}
 
-		/// Check if two vectors are equal. (Be careful when comparing floating point numbers!)
+		/// Check if two vectors are equal. (Be careful when comparing doubleing point numbers!)
 		/// 
 		public static bool cpveql(cpVect v1, cpVect v2)
 		{
@@ -690,18 +674,18 @@ namespace ChipmunkSharp
 		}
 
 		/// Scalar multiplication.
-		public static cpVect cpvmult(cpVect v, float s)
+		public static cpVect cpvmult(cpVect v, double s)
 		{
 			return cpv(v.x * s, v.y * s);
 		}
 
-		public static float cpvdot(cpVect v1, cpVect v2)
+		public static double cpvdot(cpVect v1, cpVect v2)
 		{
 			return v1.x * v2.x + v1.y * v2.y;
 		}
 
 		/// Vector dot product.
-		public static float cpvdot2(float x1, float y1, float x2, float y2)
+		public static double cpvdot2(double x1, double y1, double x2, double y2)
 		{
 			return x1 * x2 + y1 * y2;
 		}
@@ -709,12 +693,12 @@ namespace ChipmunkSharp
 		/// 2D vector cross product analog.
 		/// The cross product of 2D vectors results in a 3D vector with only a z component.
 		/// This function returns the magnitude of the z value.
-		public static float cpvcross(cpVect v1, cpVect v2)
+		public static double cpvcross(cpVect v1, cpVect v2)
 		{
 			return v1.x * v2.y - v1.y * v2.x;
 		}
 
-		public static float cpvcross2(float x1, float y1, float x2, float y2)
+		public static double cpvcross2(double x1, double y1, double x2, double y2)
 		{
 			return x1 * y2 - y1 * x2;
 			//return v1.x * v2.y - v1.y * v2.x;
@@ -743,7 +727,7 @@ namespace ChipmunkSharp
 		}
 
 		/// Returns the unit length vector for the given angle (in radians).
-		public static cpVect cpvforangle(float a)
+		public static cpVect cpvforangle(double a)
 		{
 			return cpv(cp.cpfcos(a), cp.cpfsin(a));
 		}
@@ -761,25 +745,25 @@ namespace ChipmunkSharp
 			return cpv(v1.x * v2.x + v1.y * v2.y, v1.y * v2.x - v1.x * v2.y);
 		}
 
-		//static float cpvlength(cpVect v)
+		//static double cpvlength(cpVect v)
 		//{
 		//    return v.Length;
 		//}
 
-		public static float cpvlength(cpVect v)
+		public static double cpvlength(cpVect v)
 		{
-			return (float)Math.Sqrt(v.Dot(v));
+			return cp.cpfsqrt(v.Dot(v));
 			//return v.Length;
 		}
 
 		/// Returns the squared length of v. Faster than cpvlength() when you only need to compare lengths.
-		public static float cpvlengthsq(cpVect v)
+		public static double cpvlengthsq(cpVect v)
 		{
 			return cpvdot(v, v);
 		}
 
 		/// Linearly interpolate between v1 and v2.
-		public static cpVect cpvlerp(cpVect v1, cpVect v2, float t)
+		public static cpVect cpvlerp(cpVect v1, cpVect v2, double t)
 		{
 			return cpvadd(cpvmult(v1, 1.0f - t), cpvmult(v2, t));
 		}
@@ -793,14 +777,14 @@ namespace ChipmunkSharp
 		//static cpVect cpvnormalize2(cpVect v)
 		//{
 		//    // Neat trick I saw somewhere to avoid div/0.
-		//    return cpvmult(v, 1.0f / (cpvlength(v) + float_MIN));
+		//    return cpvmult(v, 1.0f / (cpvlength(v) + double_MIN));
 		//}
 
 		/// Spherical linearly interpolate between v1 and v2.
-		public static cpVect cpvslerp(cpVect v1, cpVect v2, float t)
+		public static cpVect cpvslerp(cpVect v1, cpVect v2, double t)
 		{
-			float dot = cpVect.Dot(cpVect.Normalize(v1), cpvnormalize(v2));
-			float omega = (float)System.Math.Acos(cp.cpfclamp(dot, -1.0f, 1.0f));
+			double dot = cpVect.Dot(cpVect.Normalize(v1), cpvnormalize(v2));
+			double omega = cp.cpfacos(cp.cpfclamp(dot, -1.0f, 1.0f));
 
 			if (omega < 1e-3)
 			{
@@ -809,46 +793,46 @@ namespace ChipmunkSharp
 			}
 			else
 			{
-				float denom = 1.0f / (float)Math.Sin(omega);
-				return cpVect.Add(cpVect.Multiply(v1, (float)System.Math.Sin((1.0f - t) * omega) * denom), cpVect.Multiply(v2, (float)System.Math.Sin(t * omega) * denom));
+				double denom = 1.0f / cp.cpfsin(omega);
+				return cpVect.Add(cpVect.Multiply(v1, cp.cpfsin((1.0f - t) * omega) * denom), cpVect.Multiply(v2, (double)System.Math.Sin(t * omega) * denom));
 			}
 		}
 
 		/// Spherical linearly interpolate between v1 towards v2 by no more than angle a radians
-		public static cpVect cpvslerpconst(cpVect v1, cpVect v2, float a)
+		public static cpVect cpvslerpconst(cpVect v1, cpVect v2, double a)
 		{
-			float dot = cpVect.Dot(cpvnormalize(v1), cpvnormalize(v2));
-			float omega = (float)System.Math.Acos(cp.cpfclamp(dot, -1.0f, 1.0f));
+			double dot = cpVect.Dot(cpvnormalize(v1), cpvnormalize(v2));
+			double omega = cp.cpfacos(cp.cpfclamp(dot, -1.0d, 1.0d));
 
-			return cpvslerp(v1, v2, System.Math.Min(a, omega) / omega);
+			return cpvslerp(v1, v2, cp.cpfmin(a, omega) / omega);
 		}
 
 		/// Clamp v to length len.
-		public static cpVect cpvclamp(cpVect v, float len)
+		public static cpVect cpvclamp(cpVect v, double len)
 		{
 			return (cpvdot(v, v) > len * len) ? cpvmult(cpvnormalize(v), len) : v;
 		}
 
 		/// Linearly interpolate between v1 towards v2 by distance d.
-		public static cpVect cpvlerpconst(cpVect v1, cpVect v2, float d)
+		public static cpVect cpvlerpconst(cpVect v1, cpVect v2, double d)
 		{
 			return cpvadd(v1, cpvclamp(cpvsub(v2, v1), d));
 		}
 
 		/// Returns the distance between v1 and v2.
-		public static float cpvdist(cpVect v1, cpVect v2)
+		public static double cpvdist(cpVect v1, cpVect v2)
 		{
 			return cpvlength(cpvsub(v1, v2));
 		}
 
 		/// Returns the squared distance between v1 and v2. Faster than cpvdist() when you only need to compare distances.
-		public static float cpvdistsq(cpVect v1, cpVect v2)
+		public static double cpvdistsq(cpVect v1, cpVect v2)
 		{
 			return cpvlengthsq(cpvsub(v1, v2));
 		}
 
 		/// Returns true if the distance between v1 and v2 is less than dist.
-		public static bool cpvnear(cpVect v1, cpVect v2, float dist)
+		public static bool cpvnear(cpVect v1, cpVect v2, double dist)
 		{
 			return cpvdistsq(v1, v2) < dist * dist;
 		}
@@ -860,7 +844,7 @@ namespace ChipmunkSharp
 		/// @{
 
 		// NUKE
-		public static cpMat2x2 cpMat2x2New(float a, float b, float c, float d)
+		public static cpMat2x2 cpMat2x2New(double a, double b, double c, double d)
 		{
 			return new cpMat2x2(a, b, c, d);
 		}
@@ -881,10 +865,10 @@ namespace ChipmunkSharp
 			return (string.Format("({0:N3}, {1:N3})", v.x, v.y));
 		}
 
-		public static float cplength2(float v1, float v2)
+		public static double cplength2(double v1, double v2)
 		{
 			//TODO: Revisar si es correcta
-			return Math.Abs(v1 - v2);
+			return cp.cpfabs(v1 - v2);
 		}
 
 		public static cpVect closestPointOnSegment(cpVect p, cpVect a, cpVect b)
@@ -902,7 +886,7 @@ namespace ChipmunkSharp
 		}
 
 		/// Clamp v to length len.
-		public static cpVect vnormalize_safe(cpVect v, float len)
+		public static cpVect vnormalize_safe(cpVect v, double len)
 		{
 			return (cpvdot(v, v) > len * len) ? cpvmult(cpvnormalize(v), len) : v;
 		}
@@ -914,38 +898,38 @@ namespace ChipmunkSharp
 		}
 
 		/// Linearly interpolate between v1 and v2.
-		public static cpVect vlerp(cpVect v1, cpVect v2, float t)
+		public static cpVect vlerp(cpVect v1, cpVect v2, double t)
 		{
 			return cpvadd(cpvmult(v1, 1 - t), cpvmult(v2, t));
 		}
 
 		/// Returns the squared length of v. Faster than vlength() when you only need to compare lengths.
-		public static float vlengthsq2(float x, float y)
+		public static double vlengthsq2(double x, double y)
 		{
 			return x * x + y * y;
 		}
 
-		//public static float vlengthsq2(float x, float y)
+		//public static double vlengthsq2(double x, double y)
 		//{
 		//    return x * x + y * y;
 		//}
 
 		/// Linearly interpolate between v1 towards v2 by distance d.
-		public static cpVect vlerpconst(cpVect v1, cpVect v2, float d)
+		public static cpVect vlerpconst(cpVect v1, cpVect v2, double d)
 		{
 			return v1.Add(v2.Sub(v1).Clamp(d));
 			//return cpVect.cpvadd(v1, cpvclamp(cpvsub(v2, v1), d));
 		}
 
 		/// Returns the squared distance between v1 and v2. Faster than vdist() when you only need to compare distances.
-		public static float vdistsq(cpVect v1, cpVect v2)
+		public static double vdistsq(cpVect v1, cpVect v2)
 		{
 			return v1.Sub(v2).LengthSQ;
 			//return cpvlengthsq(cpvsub(v1, v2));
 		}
 
 		/// Returns true if the distance between v1 and v2 is less than dist.
-		public static bool vnear(cpVect v1, cpVect v2, float dist)
+		public static bool vnear(cpVect v1, cpVect v2, double dist)
 		{
 			return v1.DistanceSQ(v2) < dist * dist;
 		}

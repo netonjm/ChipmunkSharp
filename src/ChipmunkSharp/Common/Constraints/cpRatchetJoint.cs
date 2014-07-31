@@ -25,26 +25,26 @@ namespace ChipmunkSharp
 	public class cpRatchetJoint : cpConstraint
 	{
 
-		internal float angle, phase, ratchet;
+		internal double angle, phase, ratchet;
 
-		internal float iSum;
+		internal double iSum;
 
-		internal float bias;
-		internal float jAcc;
+		internal double bias;
+		internal double jAcc;
 
-		public override void PreStep(float dt)
+		public override void PreStep(double dt)
 		{
 
 			cpBody a = this.a;
 			cpBody b = this.b;
 
-			float angle = this.angle;
-			float phase = this.phase;
-			float ratchet = this.ratchet;
+			double angle = this.angle;
+			double phase = this.phase;
+			double ratchet = this.ratchet;
 
-			float delta = b.a - a.a;
-			float diff = angle - delta;
-			float pdist = 0.0f;
+			double delta = b.a - a.a;
+			double diff = angle - delta;
+			double pdist = 0.0f;
 
 			if (diff * ratchet > 0.0f)
 			{
@@ -59,25 +59,25 @@ namespace ChipmunkSharp
 			this.iSum = 1.0f / (a.i_inv + b.i_inv);
 
 			// calculate bias velocity
-			float maxBias = this.maxBias;
+			double maxBias = this.maxBias;
 			this.bias = cp.cpfclamp(-cp.bias_coef(this.errorBias, dt) * pdist / dt, -maxBias, maxBias);
 
 			// If the bias is 0, the joint is not at a limit. Reset the impulse.
 			if (this.bias == 0) this.jAcc = 0.0f;
 		}
 
-		public override void ApplyCachedImpulse(float dt_coef)
+		public override void ApplyCachedImpulse(double dt_coef)
 		{
 
 			cpBody a = this.a;
 			cpBody b = this.b;
 
-			float j = this.jAcc * dt_coef;
+			double j = this.jAcc * dt_coef;
 			a.w -= j * a.i_inv;
 			b.w += j * b.i_inv;
 		}
 
-		public override void ApplyImpulse(float dt)
+		public override void ApplyImpulse(double dt)
 		{
 			if (this.bias != 0) return; // early exit
 
@@ -85,14 +85,14 @@ namespace ChipmunkSharp
 			cpBody b = this.b;
 
 			// compute relative rotational velocity
-			float wr = b.w - a.w;
-			float ratchet = this.ratchet;
+			double wr = b.w - a.w;
+			double ratchet = this.ratchet;
 
-			float jMax = this.maxForce * dt;
+			double jMax = this.maxForce * dt;
 
 			// compute normal impulse	
-			float j = -(this.bias + wr) * this.iSum;
-			float jOld = this.jAcc;
+			double j = -(this.bias + wr) * this.iSum;
+			double jOld = this.jAcc;
 			this.jAcc = cp.cpfclamp((jOld + j) * ratchet, 0.0f, jMax * cp.cpfabs(ratchet)) / ratchet;
 			j = this.jAcc - jOld;
 
@@ -101,12 +101,12 @@ namespace ChipmunkSharp
 			b.w += j * b.i_inv;
 		}
 
-		public override float GetImpulse()
+		public override double GetImpulse()
 		{
 			return cp.cpfabs(jAcc);
 		}
 
-		public cpRatchetJoint(cpBody a, cpBody b, float phase, float ratchet)
+		public cpRatchetJoint(cpBody a, cpBody b, double phase, double ratchet)
 			: base(a, b)
 		{
 
@@ -122,37 +122,37 @@ namespace ChipmunkSharp
 		}
 
 
-		public override float GetAngle()
+		public override double GetAngle()
 		{
 			return this.angle;
 		}
 
-		public override void SetAngle(float angle)
+		public override void SetAngle(double angle)
 		{
 			ActivateBodies();
 			this.angle = angle;
 		}
 
-		public override float GetPhase()
+		public override double GetPhase()
 		{
 			return this.phase;
 		}
 
 
-		public override void SetPhase(float phase)
+		public override void SetPhase(double phase)
 		{
 			ActivateBodies();
 			this.phase = phase;
 		}
 
 
-		public override float GetRatchet()
+		public override double GetRatchet()
 		{
 			return this.ratchet;
 		}
 
 
-		public override void SetRatchet(float ratchet)
+		public override void SetRatchet(double ratchet)
 		{
 			ActivateBodies();
 			this.ratchet = ratchet;

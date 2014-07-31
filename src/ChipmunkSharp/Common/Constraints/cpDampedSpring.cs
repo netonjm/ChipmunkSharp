@@ -26,27 +26,27 @@ namespace ChipmunkSharp
 	{
 
 		internal cpVect anchorA, anchorB;
-		internal float restLength;
-		internal float stiffness;
-		internal float damping;
-		internal Func<cpDampedSpring, float, float> springForceFunc;
+		internal double restLength;
+		internal double stiffness;
+		internal double damping;
+		internal Func<cpDampedSpring, double, double> springForceFunc;
 
-		internal float v_coef;
-		internal float target_vrn;
+		internal double v_coef;
+		internal double target_vrn;
 
 		internal cpVect n;
 		internal cpVect r1, r2;
-		internal float nMass;
+		internal double nMass;
 
-		internal float jAcc;
+		internal double jAcc;
 
 
-		public float defaultSpringForce(cpDampedSpring spring, float dist)
+		public double defaultSpringForce(cpDampedSpring spring, double dist)
 		{
 			return (spring.restLength - dist) * spring.stiffness;
 		}
 
-		public override void PreStep(float dt)
+		public override void PreStep(double dt)
 		{
 
 			cpBody a = this.a;
@@ -56,10 +56,10 @@ namespace ChipmunkSharp
 			this.r2 = cpTransform.cpTransformVect(b.transform, cpVect.cpvsub(this.anchorB, b.cog));
 
 			cpVect delta = cpVect.cpvsub(cpVect.cpvadd(b.p, this.r2), cpVect.cpvadd(a.p, this.r1));
-			float dist = cpVect.cpvlength(delta);
+			double dist = cpVect.cpvlength(delta);
 			this.n = cpVect.cpvmult(delta, 1.0f / (dist > 0 ? dist : cp.Infinity));
 
-			float k = cp.k_scalar(a, b, this.r1, this.r2, this.n);
+			double k = cp.k_scalar(a, b, this.r1, this.r2, this.n);
 			cp.assertSoft(k != 0.0, "Unsolvable this.");
 			this.nMass = 1.0f / k;
 
@@ -67,16 +67,16 @@ namespace ChipmunkSharp
 			this.v_coef = 1.0f - cp.cpfexp(-this.damping * dt * k);
 
 			// apply spring force
-			float f_spring = this.springForceFunc(this, dist);
-			float j_spring = this.jAcc = f_spring * dt;
+			double f_spring = this.springForceFunc(this, dist);
+			double j_spring = this.jAcc = f_spring * dt;
 			cp.apply_impulses(a, b, this.r1, this.r2, cpVect.cpvmult(this.n, j_spring));
 		}
 
-		public override void ApplyCachedImpulse(float coef)
+		public override void ApplyCachedImpulse(double coef)
 		{
 		}
 
-		public override void ApplyImpulse(float dt)
+		public override void ApplyImpulse(double dt)
 		{
 			cpBody a = this.a;
 			cpBody b = this.b;
@@ -86,18 +86,18 @@ namespace ChipmunkSharp
 			cpVect r2 = this.r2;
 
 			// compute relative velocity
-			float vrn = cp.normal_relative_velocity(a, b, r1, r2, n);
+			double vrn = cp.normal_relative_velocity(a, b, r1, r2, n);
 
 			// compute velocity loss from drag
-			float v_damp = (this.target_vrn - vrn) * this.v_coef;
+			double v_damp = (this.target_vrn - vrn) * this.v_coef;
 			this.target_vrn = vrn + v_damp;
 
-			float j_damp = v_damp * this.nMass;
+			double j_damp = v_damp * this.nMass;
 			this.jAcc += j_damp;
 			cp.apply_impulses(a, b, this.r1, this.r2, cpVect.cpvmult(this.n, j_damp));
 		}
 
-		public cpDampedSpring(cpBody a, cpBody b, cpVect anchr1, cpVect anchr2, float restLength, float stiffness, float damping)
+		public cpDampedSpring(cpBody a, cpBody b, cpVect anchr1, cpVect anchr2, double restLength, double stiffness, double damping)
 			: base(a, b)
 		{
 
@@ -126,12 +126,12 @@ namespace ChipmunkSharp
 		#region PROPS OVERIDE
 
 
-		public override void SetStiffness(float stiffness)
+		public override void SetStiffness(double stiffness)
 		{
 			this.stiffness = stiffness;
 		}
 
-		public override float GetStiffness()
+		public override double GetStiffness()
 		{
 			return base.GetStiffness();
 		}
@@ -156,22 +156,22 @@ namespace ChipmunkSharp
 			return anchorB;
 		}
 
-		public override void SetRestLength(float restLength)
+		public override void SetRestLength(double restLength)
 		{
 			this.restLength = restLength;
 		}
 
-		public override float GetRestLength()
+		public override double GetRestLength()
 		{
 			return restLength;
 		}
 
-		public override float GetDamping()
+		public override double GetDamping()
 		{
 			return damping;
 		}
 
-		public override void SetDamping(float damping)
+		public override void SetDamping(double damping)
 		{
 			this.damping = damping;
 		}
@@ -179,7 +179,7 @@ namespace ChipmunkSharp
 		#endregion
 
 
-		public override float GetImpulse()
+		public override double GetImpulse()
 		{
 			return this.jAcc;
 		}

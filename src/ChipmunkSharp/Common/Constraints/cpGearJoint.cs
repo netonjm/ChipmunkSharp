@@ -25,16 +25,16 @@ namespace ChipmunkSharp
 	public class cpGearJoint : cpConstraint
 	{
 
-		internal float phase, ratio;
-		internal float ratio_inv;
+		internal double phase, ratio;
+		internal double ratio_inv;
 
-		internal float iSum;
+		internal double iSum;
 
-		internal float bias;
-		internal float jAcc;
+		internal double bias;
+		internal double jAcc;
 
 
-		public override void PreStep(float dt)
+		public override void PreStep(double dt)
 		{
 			cpBody a = this.a;
 			cpBody b = this.b;
@@ -43,35 +43,35 @@ namespace ChipmunkSharp
 			this.iSum = 1.0f / (a.i_inv * this.ratio_inv + this.ratio * b.i_inv);
 
 			// calculate bias velocity
-			float maxBias = this.maxBias;
+			double maxBias = this.maxBias;
 			this.bias = cp.cpfclamp(-cp.bias_coef(this.errorBias, dt) * (b.a * this.ratio - a.a - this.phase) / dt, -maxBias, maxBias);
 		}
 
-		public override void ApplyCachedImpulse(float dt_coef)
+		public override void ApplyCachedImpulse(double dt_coef)
 		{
 
 			cpBody a = this.a;
 			cpBody b = this.b;
 
-			float j = this.jAcc * dt_coef;
+			double j = this.jAcc * dt_coef;
 			a.w -= j * a.i_inv * this.ratio_inv;
 			b.w += j * b.i_inv;
 		}
 
-		public override void ApplyImpulse(float dt)
+		public override void ApplyImpulse(double dt)
 		{
 
 			cpBody a = this.a;
 			cpBody b = this.b;
 
 			// compute relative rotational velocity
-			float wr = b.w * this.ratio - a.w;
+			double wr = b.w * this.ratio - a.w;
 
-			float jMax = this.maxForce * dt;
+			double jMax = this.maxForce * dt;
 
 			// compute normal impulse	
-			float j = (this.bias - wr) * this.iSum;
-			float jOld = this.jAcc;
+			double j = (this.bias - wr) * this.iSum;
+			double jOld = this.jAcc;
 			this.jAcc = cp.cpfclamp(jOld + j, -jMax, jMax);
 			j = this.jAcc - jOld;
 
@@ -80,13 +80,13 @@ namespace ChipmunkSharp
 			b.w += j * b.i_inv;
 		}
 
-		public override float GetImpulse()
+		public override double GetImpulse()
 		{
 			return cp.cpfabs(this.jAcc);
 		}
 
 
-		public cpGearJoint(cpBody a, cpBody b, float phase, float ratio)
+		public cpGearJoint(cpBody a, cpBody b, double phase, double ratio)
 			: base(a, b)
 		{
 
@@ -101,23 +101,23 @@ namespace ChipmunkSharp
 
 
 
-		public float GetPhase()
+		public double GetPhase()
 		{
 			return this.phase;
 		}
 
-		public void SetPhase(float phase)
+		public void SetPhase(double phase)
 		{
 			ActivateBodies();
 			this.phase = phase;
 		}
 
-		public float GetRatio()
+		public double GetRatio()
 		{
 			return this.ratio;
 		}
 
-		public override void SetRatio(float value)
+		public override void SetRatio(double value)
 		{
 			this.ActivateBodies();
 			this.ratio = value;

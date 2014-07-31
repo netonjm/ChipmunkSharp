@@ -47,7 +47,7 @@ namespace ChipmunkSharp
 
 		public const int CP_POLY_SHAPE_INLINE_ALLOC = 6;
 
-		internal float r;
+		internal double r;
 		internal cpSplittingPlane[] planes;
 
 		public int Count;
@@ -58,8 +58,8 @@ namespace ChipmunkSharp
 			int dst = 0;
 			int src = dst + count;
 
-			float l = cp.Infinity, r = -cp.Infinity;
-			float b = cp.Infinity, t = -cp.Infinity;
+			double l = cp.Infinity, r = -cp.Infinity;
+			double b = cp.Infinity, t = -cp.Infinity;
 
 			for (int i = 0; i < count; i++)
 			{
@@ -74,7 +74,7 @@ namespace ChipmunkSharp
 				t = cp.cpfmax(t, v.y);
 			}
 
-			float radius = this.r;
+			double radius = this.r;
 			return (this.bb = new cpBB(l - radius, b - radius, r + radius, t + radius));
 		}
 
@@ -82,10 +82,10 @@ namespace ChipmunkSharp
 		{
 			int count = Count;
 			cpSplittingPlane[] planes = this.planes;
-			float r = this.r;
+			double r = this.r;
 
 			cpVect v0 = planes[count - 1].v0;
-			float minDist = cp.Infinity;
+			double minDist = cp.Infinity;
 			cpVect closestPoint = cpVect.Zero;
 			cpVect closestNormal = cpVect.Zero;
 			bool outside = false;
@@ -99,7 +99,7 @@ namespace ChipmunkSharp
 				cpVect closest = cp.closestPointOnSegment(p, v0, v1);
 
 				{
-					float dista = cpVect.cpvdist(p, closest);
+					double dista = cpVect.cpvdist(p, closest);
 					if (dista < minDist)
 					{
 						minDist = dista;
@@ -111,7 +111,7 @@ namespace ChipmunkSharp
 				v0 = v1;
 			}
 
-			float dist = (outside ? minDist : -minDist);
+			double dist = (outside ? minDist : -minDist);
 			cpVect g = cpVect.cpvmult(cpVect.cpvsub(p, closestPoint), 1.0f / dist);
 
 			info.shape = this;
@@ -122,29 +122,29 @@ namespace ChipmunkSharp
 			info.gradient = (minDist > cp.MAGIC_EPSILON ? g : closestNormal);
 		}
 
-		protected override void segmentQuery(cpVect a, cpVect b, float r2, ref cpSegmentQueryInfo info)
+		protected override void segmentQuery(cpVect a, cpVect b, double r2, ref cpSegmentQueryInfo info)
 		{
 
 			cpSplittingPlane[] planes = this.planes;
 			int count = this.Count;
-			float r = this.r;
-			float rsum = r + r2;
+			double r = this.r;
+			double rsum = r + r2;
 
 			for (int i = 0; i < count; i++)
 			{
 				cpVect n = planes[i].n;
-				float an = cpVect.cpvdot(a, n);
-				float d = an - cpVect.cpvdot(planes[i].v0, n) - rsum;
+				double an = cpVect.cpvdot(a, n);
+				double d = an - cpVect.cpvdot(planes[i].v0, n) - rsum;
 				if (d < 0.0f) continue;
 
-				float bn = cpVect.cpvdot(b, n);
-				float t = d / (an - bn);
+				double bn = cpVect.cpvdot(b, n);
+				double t = d / (an - bn);
 				if (t < 0.0f || 1.0f < t) continue;
 
 				cpVect point = cpVect.cpvlerp(a, b, t);
-				float dt = cpVect.cpvcross(n, point);
-				float dtMin = cpVect.cpvcross(n, planes[(i - 1 + count) % count].v0);
-				float dtMax = cpVect.cpvcross(n, planes[i].v0);
+				double dt = cpVect.cpvcross(n, point);
+				double dtMin = cpVect.cpvcross(n, planes[(i - 1 + count) % count].v0);
+				double dtMax = cpVect.cpvcross(n, planes[i].v0);
 
 				if (dtMin <= dt && dt <= dtMax)
 				{
@@ -171,7 +171,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public static cpShapeMassInfo MassInfo(float mass, cpVect[] verts, float radius)
+		public static cpShapeMassInfo MassInfo(double mass, cpVect[] verts, double radius)
 		{
 			// TODO moment is approximate due to radius.
 			cpVect centroid = cp.CentroidForPoly(verts);
@@ -185,13 +185,13 @@ namespace ChipmunkSharp
 		}
 
 		public cpPolyShape(cpBody body, cpVect[] verts, cpTransform transform,
-		float radius)
+		double radius)
 			: this(body, GetVertices(transform, verts), radius)
 		{
 
 		}
 
-		public cpPolyShape(cpBody body, cpVect[] verts, float radius)
+		public cpPolyShape(cpBody body, cpVect[] verts, double radius)
 			: base(body, cpShapeMassInfo.cpPolyShapeMassInfo(0.0f, verts, radius))
 		{
 			this.SetVerts(verts);
@@ -206,7 +206,7 @@ namespace ChipmunkSharp
 			return this.planes[i + Count].v0;
 		}
 
-		public float GetRadius()
+		public double GetRadius()
 		{
 			return this.r;
 		}
@@ -243,7 +243,7 @@ namespace ChipmunkSharp
 		public void SetVertsRaw(cpVect[] verts)
 		{
 			SetVerts(verts);
-			float mass = this.massInfo.m;
+			double mass = this.massInfo.m;
 
 			this.massInfo = MassInfo(this.massInfo.m, verts, this.r);
 
@@ -252,7 +252,7 @@ namespace ChipmunkSharp
 		}
 
 
-		public void SetRadius(float radius)
+		public void SetRadius(double radius)
 		{
 			this.r = radius;
 		}
@@ -288,7 +288,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public static cpPolyShape BoxShape(cpBody body, float width, float height, float radius)
+		public static cpPolyShape BoxShape(cpBody body, double width, double height, double radius)
 		{
 			var hw = width / 2;
 			var hh = height / 2;
@@ -298,7 +298,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public static cpPolyShape BoxShape2(cpBody body, cpBB box, float radius)
+		public static cpPolyShape BoxShape2(cpBody body, cpBB box, double radius)
 		{
 
 			cpVect[] verts = new cpVect[] {

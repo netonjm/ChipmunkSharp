@@ -37,7 +37,7 @@ namespace ChipmunkSharp
 		private cpDebugDraw m_debugDraw;
 
 		#region PARAMS
-		// public float damping;
+		// public double damping;
 		public bool CollisionEnabled = true;
 
 		/// Number of iterations to use in the impulse solver to solve contacts.
@@ -50,27 +50,27 @@ namespace ChipmunkSharp
 		/// A value of 0.9 would mean that each body's velocity will drop 10% per second.
 		/// The default value is 1.0, meaning no damping is applied.
 		/// @note This damping value is different than those of cpDampedSpring and cpDampedRotarySpring.
-		internal float damping;
+		internal double damping;
 
 		/// Speed threshold for a body to be considered idle.
 		/// The default value of 0 means to let the space guess a good threshold based on gravity.
-		internal float idleSpeedThreshold;
+		internal double idleSpeedThreshold;
 
 		/// Time a group of bodies must remain idle in order to fall asleep.
 		/// Enabling sleeping also implicitly enables the the contact graph.
 		/// The default value of INFINITY disables the sleeping algorithm.
-		internal float sleepTimeThreshold;
+		internal double sleepTimeThreshold;
 
 		/// Amount of encouraged penetration between colliding shapes.
 		/// Used to reduce oscillating contacts and keep the collision cache warm.
 		/// Defaults to 0.1. If you have poor simulation quality,
 		/// increase this number as much as possible without allowing visible amounts of overlap.
-		internal float collisionSlop;
+		internal double collisionSlop;
 
 		/// Determines how fast overlapping shapes are pushed apart.
 		/// Expressed as a fraction of the error remaining after each second.
 		/// Defaults to pow(1.0 - 0.1, 60.0) meaning that Chipmunk fixes 10% of overlap each frame at 60Hz.
-		public float collisionBias;
+		public double collisionBias;
 
 		/// Number of frames that contact information should persist.
 		/// Defaults to 3. There is probably never a reason to change this value.
@@ -83,7 +83,7 @@ namespace ChipmunkSharp
 		internal object userData;
 
 		public int stamp;
-		public float curr_dt;
+		public double curr_dt;
 
 		public List<cpBody> dynamicBodies;
 		public List<cpBody> staticBodies;
@@ -318,58 +318,58 @@ namespace ChipmunkSharp
 			this.gravity = gravity;
 		}
 
-		public float GetDamping()
+		public double GetDamping()
 		{
 			return this.damping;
 		}
 
-		public void SetDamping(float damping)
+		public void SetDamping(double damping)
 		{
 			cp.assertHard(damping >= 0.0, "Damping must be positive.");
 			this.damping = damping;
 		}
 
-		public float GetIdleSpeedThreshold()
+		public double GetIdleSpeedThreshold()
 		{
 			return this.idleSpeedThreshold;
 		}
 
-		public void SetIdleSpeedThreshold(float idleSpeedThreshold)
+		public void SetIdleSpeedThreshold(double idleSpeedThreshold)
 		{
 			this.idleSpeedThreshold = idleSpeedThreshold;
 		}
 
-		public float GetSleepTimeThreshold()
+		public double GetSleepTimeThreshold()
 		{
 			return this.sleepTimeThreshold;
 		}
 
-		public void SetSleepTimeThreshold(float sleepTimeThreshold)
+		public void SetSleepTimeThreshold(double sleepTimeThreshold)
 		{
 			this.sleepTimeThreshold = sleepTimeThreshold;
 		}
 
-		public float GetCollisionSlop()
+		public double GetCollisionSlop()
 		{
 			return this.collisionSlop;
 		}
 
-		public void SetCollisionSlop(float collisionSlop)
+		public void SetCollisionSlop(double collisionSlop)
 		{
 			this.collisionSlop = collisionSlop;
 		}
 
-		public float GetCollisionBias()
+		public double GetCollisionBias()
 		{
 			return this.collisionBias;
 		}
 
-		public void SetCollisionBias(float collisionBias)
+		public void SetCollisionBias(double collisionBias)
 		{
 			this.collisionBias = collisionBias;
 		}
 
-		public float GetCollisionPersistence()
+		public double GetCollisionPersistence()
 		{
 			return this.collisionPersistence;
 		}
@@ -394,7 +394,7 @@ namespace ChipmunkSharp
 			return this.staticBody;
 		}
 
-		public float GetCurrentTimeStep()
+		public double GetCurrentTimeStep()
 		{
 			return this.curr_dt;
 		}
@@ -804,7 +804,7 @@ namespace ChipmunkSharp
 	public class cpPointQueryInfo
 	{
 
-		public cpPointQueryInfo(cpShape shape, cpVect point, float distance, cpVect gradient)
+		public cpPointQueryInfo(cpShape shape, cpVect point, double distance, cpVect gradient)
 		{
 			/// The nearest shape, NULL if no shape was within range.
 			this.shape = shape;
@@ -831,7 +831,7 @@ namespace ChipmunkSharp
 		/// The closest point on the shape's surface. (in world space coordinates)
 		public cpVect point;
 		/// The distance to the point. The distance is negative if the point is inside the shape.
-		public float distance;
+		public double distance;
 		/// The gradient of the signed distance function.
 		/// The same as info.p/info.d, but accurate even for very small values of info.d.
 		public cpVect gradient;

@@ -116,22 +116,22 @@ namespace ChipmunkSharp
 		public abstract void DrawSolidPolygon(List<cpVect> vertices, int vertexCount, cpColor color);
 
 		/// Draw a circle.
-		public abstract void DrawCircle(cpVect center, float radius, cpColor color);
+		public abstract void DrawCircle(cpVect center, double radius, cpColor color);
 
 		/// Draw a solid circle.
-		public abstract void DrawSolidCircle(cpVect center, float radius, cpVect axis, cpColor color);
+		public abstract void DrawSolidCircle(cpVect center, double radius, cpVect axis, cpColor color);
 
 		/// Draw a line segment.
 		public abstract void DrawSegment(cpVect p1, cpVect p2, cpColor color);
 
 		/// Draw a line segment with a strokeWidth.
-		public abstract void DrawSegment(cpVect p1, cpVect p2, float lineWidth, cpColor color);
+		public abstract void DrawSegment(cpVect p1, cpVect p2, double lineWidth, cpColor color);
 
 		public abstract void DrawString(int x, int y, string format, params object[] objects);
 
 		public abstract void DrawSpring(cpVect a, cpVect b, cpColor cpColor);
 
-		public abstract void DrawPoint(cpVect p, float size, cpColor color);
+		public abstract void DrawPoint(cpVect p, double size, cpColor color);
 
 		public abstract void DrawBB(cpBB bb, cpColor color);
 

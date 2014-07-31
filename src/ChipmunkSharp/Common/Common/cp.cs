@@ -59,9 +59,9 @@ namespace ChipmunkSharp
 	public struct cpMat2x2
 	{
 		// Row major [[a, b][c d]]
-		public float a, b, c, d;
+		public double a, b, c, d;
 
-		public cpMat2x2(float a, float b, float c, float d)
+		public cpMat2x2(double a, double b, double c, double d)
 		{
 			this.a = a;
 			this.b = b;
@@ -113,13 +113,13 @@ namespace ChipmunkSharp
 		public static int numApplyImpulse = 0;
 		public static int numApplyContact = 0;
 
-		public static float scale;
+		public static double scale;
 
 		public static byte[] INFINITY = { 0x00, 0x00, 0x80, 0x7F };
 
-		public static float MAGIC_EPSILON = 1e-5F;
+		public static double MAGIC_EPSILON = 1e-5F;
 
-		public static float Infinity
+		public static double Infinity
 		{
 			get
 			{
@@ -138,7 +138,7 @@ namespace ChipmunkSharp
 		//#define CP_HASH_PAIR(A, B) ((cpHashValue)(A)*CP_HASH_COEF ^ (cpHashValue)(B)*CP_HASH_COEF)
 
 
-		public static float PHYSICS_INFINITY { get { return Infinity; } }
+		public static double PHYSICS_INFINITY { get { return Infinity; } }
 
 		public static void resetShapeIdCounter()
 		{
@@ -169,21 +169,21 @@ namespace ChipmunkSharp
 
 		//}
 
-		public static void CircleSegmentQuery(cpShape shape, cpVect center, float r1, cpVect a, cpVect b, float r2, ref cpSegmentQueryInfo info)
+		public static void CircleSegmentQuery(cpShape shape, cpVect center, double r1, cpVect a, cpVect b, double r2, ref cpSegmentQueryInfo info)
 		{
 			// offset the line to be relative to the circle
 			cpVect da = cpVect.cpvsub(a, center);
 			cpVect db = cpVect.cpvsub(b, center);
-			float rsum = r1 + r2;
+			double rsum = r1 + r2;
 
 
-			float qa = cpVect.cpvdot(da, da) - 2 * cpVect.cpvdot(da, db) + cpVect.cpvdot(db, db);
-			float qb = cpVect.cpvdot(da, db) - cpVect.cpvdot(da, da);
-			float det = qb * qb - qa * (cpVect.cpvdot(da, da) - rsum * rsum);
+			double qa = cpVect.cpvdot(da, da) - 2 * cpVect.cpvdot(da, db) + cpVect.cpvdot(db, db);
+			double qb = cpVect.cpvdot(da, db) - cpVect.cpvdot(da, da);
+			double det = qb * qb - qa * (cpVect.cpvdot(da, da) - rsum * rsum);
 
 			if (det >= 0.0f)
 			{
-				float t = (-qb - cp.cpfsqrt(det)) / (qa);
+				double t = (-qb - cp.cpfsqrt(det)) / (qa);
 				if (0.0f <= t && t <= 1.0f)
 				{
 					{
@@ -211,7 +211,7 @@ namespace ChipmunkSharp
 			return cpVect.cpvsub(v2_sum, v1_sum);
 		}
 
-		public static float normal_relative_velocity(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect n)
+		public static double normal_relative_velocity(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect n)
 		{
 			return cpVect.cpvdot(relative_velocity(a, b, r1, r2), n);
 		}
@@ -228,14 +228,14 @@ namespace ChipmunkSharp
 			apply_impulse(b, j, r2);
 		}
 
-		//public static void apply_impulses(cpBody a, cpBody b, cpVect r1, cpVect r2, float jx, float jy)
+		//public static void apply_impulses(cpBody a, cpBody b, cpVect r1, cpVect r2, double jx, double jy)
 		//{
 		//	apply_impulse(a, -jx, -jy, r1);
 		//	apply_impulse(b, jx, jy, r2);
 		//}
 
 
-		//public static void apply_impulse(cpBody body, float jx, float jy, cpVect r)
+		//public static void apply_impulse(cpBody body, double jx, double jy, cpVect r)
 		//{
 		//	//	body.v = body.v.add(vmult(j, body.m_inv));
 		//	body.v.x += jx * body.m_inv;
@@ -259,13 +259,13 @@ namespace ChipmunkSharp
 		}
 
 
-		public static float k_scalar_body(cpBody body, cpVect r, cpVect n)
+		public static double k_scalar_body(cpBody body, cpVect r, cpVect n)
 		{
 			var rcn = cpVect.cpvcross(r, n);
 			return body.m_inv + body.i_inv * rcn * rcn;
 		}
 
-		public static float k_scalar(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect n)
+		public static double k_scalar(cpBody a, cpBody b, cpVect r1, cpVect r2, cpVect n)
 		{
 			var value = k_scalar_body(a, r1, n) + k_scalar_body(b, r2, n);
 
@@ -278,40 +278,40 @@ namespace ChipmunkSharp
 
 		public static cpMat2x2 k_tensor(cpBody a, cpBody b, cpVect r1, cpVect r2)
 		{
-			float m_sum = a.m_inv + b.m_inv;
+			double m_sum = a.m_inv + b.m_inv;
 
 			// start with Identity*m_sum
-			float k11 = m_sum, k12 = 0.0f;
-			float k21 = 0.0f, k22 = m_sum;
+			double k11 = m_sum, k12 = 0.0f;
+			double k21 = 0.0f, k22 = m_sum;
 
 			// add the influence from r1
-			float a_i_inv = a.i_inv;
-			float r1xsq = r1.x * r1.x * a_i_inv;
-			float r1ysq = r1.y * r1.y * a_i_inv;
-			float r1nxy = -r1.x * r1.y * a_i_inv;
+			double a_i_inv = a.i_inv;
+			double r1xsq = r1.x * r1.x * a_i_inv;
+			double r1ysq = r1.y * r1.y * a_i_inv;
+			double r1nxy = -r1.x * r1.y * a_i_inv;
 			k11 += r1ysq; k12 += r1nxy;
 			k21 += r1nxy; k22 += r1xsq;
 
 			// add the influnce from r2
-			float b_i_inv = b.i_inv;
-			float r2xsq = r2.x * r2.x * b_i_inv;
-			float r2ysq = r2.y * r2.y * b_i_inv;
-			float r2nxy = -r2.x * r2.y * b_i_inv;
+			double b_i_inv = b.i_inv;
+			double r2xsq = r2.x * r2.x * b_i_inv;
+			double r2ysq = r2.y * r2.y * b_i_inv;
+			double r2nxy = -r2.x * r2.y * b_i_inv;
 			k11 += r2ysq; k12 += r2nxy;
 			k21 += r2nxy; k22 += r2xsq;
 
 			// invert
-			float det = k11 * k22 - k12 * k21;
+			double det = k11 * k22 - k12 * k21;
 			cp.assertSoft(det != 0.0f, "Unsolvable constraint.");
 
-			float det_inv = 1.0f / det;
+			double det_inv = 1.0f / det;
 			return new cpMat2x2(
 				 k22 * det_inv, -k12 * det_inv,
 				-k21 * det_inv, k11 * det_inv
 			);
 		}
 
-		public static float bias_coef(float errorBias, float dt)
+		public static double bias_coef(double errorBias, double dt)
 		{
 			return 1.0f - cpfpow(errorBias, dt);
 		}
@@ -328,85 +328,85 @@ namespace ChipmunkSharp
 	   */
 		#region Mathemathical Operations and variables
 
-		public static float cpfceil(float a)
+		public static double cpfceil(double a)
 		{
-			return (float)Math.Ceiling((double)a);
+			return Math.Ceiling(a);
 		}
 
-		public static float cpffloor(float a)
+		public static double cpffloor(double a)
 		{
-			return (float)Math.Floor((double)a);
+			return Math.Floor(a);
 		}
 
-		public static float cpfpow(float a, float b)
+		public static double cpfpow(double a, double b)
 		{
-			return (float)Math.Pow((double)a, (double)b);
+			return Math.Pow(a, b);
 		}
 
-		public static float cpfexp(float a)
+		public static double cpfexp(double a)
 		{
-			return (float)Math.Exp((double)a);
+			return Math.Exp(a);
 		}
 
-		public static float cpfmod(float a, float b)
+		public static double cpfmod(double a, double b)
 		{
 			return a % b;
 		}
 
-		public static float cpfatan2(float a, float b)
+		public static double cpfatan2(double a, double b)
 		{
-			return (float)Math.Atan2((double)a, (double)b);
+			return Math.Atan2(a, b);
 		}
 
-		public static float cpfacos(float a)
+		public static double cpfacos(double a)
 		{
-			return (float)Math.Acos((double)a);
+			return Math.Acos(a);
 		}
 
-		public static float cpfsqrt(float a)
+		public static double cpfsqrt(double a)
 		{
-			return (float)Math.Sqrt((double)a);
+			return Math.Sqrt(a);
 		}
 
-		public static float cpfsin(float a)
+		public static double cpfsin(double a)
 		{
-			return (float)Math.Sin((double)a);
+			return Math.Sin(a);
 		}
 
-		public static float cpfcos(float a)
+		public static double cpfcos(double a)
 		{
-			return (float)Math.Cos((double)a);
+			return Math.Cos(a);
 		}
 
-		/// Return the max of two cpFloats.
-		public static float cpfmax(float a, float b)
+		/// Return the max of two cpdoubles.
+		public static double cpfmax(double a, double b)
 		{
 			return (a > b) ? a : b;
 		}
 
-		/// Return the min of two floats.
-		public static float cpfmin(float a, float b)
+		/// Return the min of two doubles.
+		public static double cpfmin(double a, double b)
 		{
 			return (a < b) ? a : b;
 		}
 
-		/// Return the absolute value of a float.
-		public static float cpfabs(float f)
+		/// Return the absolute value of a double.
+		public static double cpfabs(double f)
 		{
 			return (f < 0) ? -f : f;
 		}
 
 		/// Clamp @c f to be between @c min and @c max.
-		public static float cpfclamp(float f, float min, float max)
+		public static double cpfclamp(double f, double min, double max)
 		{
 			return cpfmin(cpfmax(f, min), max);
 		}
 
-		public static float cpclamp(float value, float min_inclusive, float max_inclusive)
+		public static double cpclamp(double value, double min_inclusive, double max_inclusive)
 		{
 			if (min_inclusive > max_inclusive)
 			{
-				float ftmp = min_inclusive;
+				double ftmp = min_inclusive;
 				min_inclusive = max_inclusive;
 				max_inclusive = ftmp;
 			}
@@ -415,19 +415,19 @@ namespace ChipmunkSharp
 		}
 
 		/// Clamp @c f to be between 0 and 1.
-		public static float cpfclamp01(float f)
+		public static double cpfclamp01(double f)
 		{
 			return cpfmax(0.0f, cpfmin(f, 1.0f));
 		}
 
 		/// Linearly interpolate (or extrapolate) between @c f1 and @c f2 by @c t percent.
-		public static float cpflerp(float f1, float f2, float t)
+		public static double cpflerp(double f1, double f2, double t)
 		{
 			return f1 * (1.0f - t) + f2 * t;
 		}
 
 		/// Linearly interpolate from @c f1 to @c f2 by no more than @c d.
-		public static float cpflerpconst(float f1, float f2, float d)
+		public static double cpflerpconst(double f1, double f2, double d)
 		{
 			return f1 + cpfclamp(f2 - f1, -d, d);
 		}
@@ -500,45 +500,45 @@ namespace ChipmunkSharp
 
 		#region MOMENTS
 
-		public static float momentForCircle(float m, float r1, float r2, cpVect offset)
+		public static double momentForCircle(double m, double r1, double r2, cpVect offset)
 		{
 
 			return m * (0.5f * (r1 * r1 + r2 * r2) + offset.LengthSQ);
 		}
 
-		public static float areaForCircle(float r1, float r2)
+		public static double areaForCircle(double r1, double r2)
 		{
-			return (float)Math.PI * (float)Math.Abs(r1 * r1 - r2 * r2);
+			return (double)Math.PI * (double)Math.Abs(r1 * r1 - r2 * r2);
 		}
 
-		public static float MomentForSegment(float m, cpVect a, cpVect b, float r)
+		public static double MomentForSegment(double m, cpVect a, cpVect b, double r)
 		{
 			cpVect offset = cpVect.cpvlerp(a, b, 0.5f);
 
 			// This approximates the shape as a box for rounded segments, but it's quite close.
-			float length = cpVect.cpvdist(b, a) + 2.0f * r;
+			double length = cpVect.cpvdist(b, a) + 2.0f * r;
 			return m * ((length * length + 4.0f * r * r) / 12.0f + cpVect.cpvlengthsq(offset));
 		}
 
-		public static float areaForSegment(cpVect a, cpVect b, float r)
+		public static double areaForSegment(cpVect a, cpVect b, double r)
 		{
-			return r * ((float)Math.PI * r + 2 * a.Distance(b));
+			return r * (Math.PI * r + 2 * a.Distance(b));
 		}
 
-		public static float MomentForPoly(float m, int count, cpVect[] verts, cpVect offset, float r)
+		public static double MomentForPoly(double m, int count, cpVect[] verts, cpVect offset, double r)
 		{
 			// TODO account for radius.
 			if (count == 2) return MomentForSegment(m, verts[0], verts[1], 0.0f);
 
-			float sum1 = 0.0f;
-			float sum2 = 0.0f;
+			double sum1 = 0.0f;
+			double sum2 = 0.0f;
 			for (int i = 0; i < count; i++)
 			{
 				cpVect v1 = cpVect.cpvadd(verts[i], offset);
 				cpVect v2 = cpVect.cpvadd(verts[(i + 1) % count], offset);
 
-				float a = cpVect.cpvcross(v2, v1);
-				float b = cpVect.cpvdot(v1, v1) + cpVect.cpvdot(v1, v2) + cpVect.cpvdot(v2, v2);
+				double a = cpVect.cpvcross(v2, v1);
+				double b = cpVect.cpvdot(v1, v1) + cpVect.cpvdot(v1, v2) + cpVect.cpvdot(v2, v2);
 
 				sum1 += a * b;
 				sum2 += a;
@@ -547,15 +547,15 @@ namespace ChipmunkSharp
 			return (m * sum1) / (6.0f * sum2);
 		}
 
-		public static float MomentForPoly(float m, cpVect[] verts, cpVect offset, float r)
+		public static double MomentForPoly(double m, cpVect[] verts, cpVect offset, double r)
 		{
 			return MomentForPoly(m, verts.Length, verts, offset, r);
 		}
 
-		public static float AreaForPoly(int count, cpVect[] verts, float r)
+		public static double AreaForPoly(int count, cpVect[] verts, double r)
 		{
-			float area = 0.0f;
-			float perimeter = 0.0f;
+			double area = 0.0f;
+			double perimeter = 0.0f;
 
 			for (int i = 0; i < count; i++)
 			{
@@ -566,23 +566,23 @@ namespace ChipmunkSharp
 				perimeter += cpVect.cpvdist(v1, v2);
 			}
 
-			return r * ((float)Math.PI * cpfabs(r) + perimeter) + area / 2.0f;
+			return r * (Math.PI * cpfabs(r) + perimeter) + area / 2.0f;
 		}
 
-		public static float AreaForPoly(cpVect[] verts, float r)
+		public static double AreaForPoly(cpVect[] verts, double r)
 		{
 			return AreaForPoly(verts.Length, verts, r);
 		}
 
 		public static cpVect CentroidForPoly(int count, cpVect[] verts)
 		{
-			float sum = 0.0f;
+			double sum = 0.0f;
 			cpVect vsum = cpVect.Zero;
 			for (int i = 0; i < count; i++)
 			{
 				cpVect v1 = verts[i];
 				cpVect v2 = verts[(i + 1) % count];
-				float cross = cpVect.cpvcross(v1, v2);
+				double cross = cpVect.cpvcross(v1, v2);
 
 				sum += cross;
 				vsum = cpVect.cpvadd(vsum, cpVect.cpvmult(cpVect.cpvadd(v1, v2), cross));
@@ -596,7 +596,7 @@ namespace ChipmunkSharp
 			return CentroidForPoly(verts.Length, verts);
 		}
 
-		public static float momentForBox2(float m, cpBB box)
+		public static double momentForBox2(double m, cpBB box)
 		{
 			var width = box.r - box.l;
 			var height = box.t - box.b;
@@ -606,7 +606,7 @@ namespace ChipmunkSharp
 			return momentForBox(m, width, height) + m * offset.LengthSQ;
 		}
 
-		public static float momentForBox(float m, float width, float height)
+		public static double momentForBox(double m, double width, double height)
 		{
 			return m * (width * width + height * height) / 12f;
 		}
@@ -642,21 +642,21 @@ namespace ChipmunkSharp
 			}
 		}
 
-		private static int QHullPartition(cpVect[] verts, cpVect a, cpVect b, float tol)
+		private static int QHullPartition(cpVect[] verts, cpVect a, cpVect b, double tol)
 		{
 			throw new NotImplementedException();
 			//int count = verts.Length;
 
-			//float max = 0;
+			//double max = 0;
 			//int pivot = 0;
 
 			//cpVect delta = cpVect.cpvsub(b, a);
-			//float valueTol = tol * cpVect.cpvlength(delta);
+			//double valueTol = tol * cpVect.cpvlength(delta);
 
 			//int head = 0;
 			//for (int tail = count - 1; head <= tail; )
 			//{
-			//	float value = cpVect.cpvcross(cpVect.cpvsub(verts[head], a), delta);
+			//	double value = cpVect.cpvcross(cpVect.cpvsub(verts[head], a), delta);
 			//	if (value > valueTol)
 			//	{
 			//		if (value > max)
@@ -679,7 +679,7 @@ namespace ChipmunkSharp
 			//return head;
 		}
 
-		//public static int QHullReduce(float tol, cpVect[] verts, int offs, int count, cpVect a, cpVect pivot, cpVect b,ref cpVect[] result)
+		//public static int QHullReduce(double tol, cpVect[] verts, int offs, int count, cpVect a, cpVect pivot, cpVect b,ref cpVect[] result)
 		//{
 		//	//throw new NotImplementedException();
 		//	if (count < 0)
@@ -706,7 +706,7 @@ namespace ChipmunkSharp
 
 		// QuickHull seemed like a neat algorithm, and efficient-ish for large input sets.
 		// My implementation performs an in place reduction using the result array as scratch space.
-		//public int ConvexHull(int count, cpVect[] verts, ref cpVect[] result, ref int first, float tol)
+		//public int ConvexHull(int count, cpVect[] verts, ref cpVect[] result, ref int first, double tol)
 		//{
 
 		//	if (verts != result)
@@ -776,10 +776,9 @@ namespace ChipmunkSharp
 
 
 
-		public static float bbTreeMergedArea2(Node node, float l, float b, float r, float t)
+		public static double bbTreeMergedArea2(Node node, double l, double b, double r, double t)
 		{
-			return (Math.Max(node.bb.r, r) - Math.Min(node.bb.l, l)) * (Math.Max(node.bb.t, t) - Math.Min(node.bb.b, b));
-			//return (Math.Max(node.bb.r, r) - Math.Min(node.bb.l, l)) * (Math.Max(node.bb.t, t) - Math.Min(node.bb.b, b));
+			return (cp.cpfmax(node.bb.r, r) - cp.cpfmin(node.bb.l, l)) * (cp.cpfmax(node.bb.t, t) - cp.cpfmin(node.bb.b, b));
 		}
 
 		public static void nodeRender(Node node, int depth)
@@ -873,20 +872,19 @@ namespace ChipmunkSharp
 			return (a.l <= b.r && b.l <= a.r && a.b <= b.t && b.b <= a.t); ;
 		}
 
-		public static bool bbIntersects2(cpBB bb, float l, float b, float r, float t)
+		public static bool bbIntersects2(cpBB bb, double l, double b, double r, double t)
 		{
 			return (bb.l <= r && l <= bb.r && bb.b <= t && b <= bb.t);
 		}
 
-		public static float bbProximity(Node a, Node b)
+		public static double bbProximity(Node a, Node b)
 		{
-			return Math.Abs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + Math.Abs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
-			// return Math.Abs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + Math.Abs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
+			return cp.cpfabs(a.bb.l + a.bb.r - b.bb.l - b.bb.r) + cp.cpfabs(a.bb.b + a.bb.t - b.bb.b - b.bb.t);
 		}
 
-		public static float bbTreeMergedArea(Node a, Node b)
+		public static double bbTreeMergedArea(Node a, Node b)
 		{
-			return (Math.Max(a.bb.r, b.bb.r) - Math.Min(a.bb.l, b.bb.l)) * (Math.Max(a.bb.t, b.bb.t) - Math.Min(a.bb.b, b.bb.b));
+			return (cp.cpfmax(a.bb.r, b.bb.r) - cp.cpfmin(a.bb.l, b.bb.l)) * (cp.cpfmax(a.bb.t, b.bb.t) - cp.cpfmin(a.bb.b, b.bb.b));
 		}
 
 		public static bool bbTreeIntersectsNode(Node a, Node b)
@@ -895,7 +893,7 @@ namespace ChipmunkSharp
 		}
 
 		/// Check that a set of vertexes is convex and has a clockwise winding.
-		public static bool polyValidate(float[] verts)
+		public static bool polyValidate(double[] verts)
 		{
 			var len = verts.Length;
 			for (var i = 0; i < len; i += 2)
@@ -917,7 +915,7 @@ namespace ChipmunkSharp
 			return true;
 		}
 
-		internal static cpVect closestPointOnSegment2(float px, float py, float ax, float ay, float bx, float by)
+		internal static cpVect closestPointOnSegment2(double px, double py, double ax, double ay, double bx, double by)
 		{
 			var deltax = ax - bx;
 			var deltay = ay - by;
@@ -948,7 +946,7 @@ namespace ChipmunkSharp
 
 
 
-		public static void SWAP(float[] arr, int idx1, int idx2)
+		public static void SWAP(double[] arr, int idx1, int idx2)
 		{
 			var tmp = arr[idx1 * 2];
 			arr[idx1 * 2] = arr[idx2 * 2];
@@ -961,7 +959,7 @@ namespace ChipmunkSharp
 
 		public static List<cpColor> _styles;
 
-		public static float[] colorRanges = new float[] {
+		public static double[] colorRanges = new double[] {
 			//0.2f,0.4f,0.5f,0.7f,0.8f,1f
 						178,1,255
 		};
@@ -994,7 +992,7 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public static cpVect canvas2point(float x, float y, float scale)
+		public static cpVect canvas2point(double x, double y, double scale)
 		{
 			return new cpVect(x / scale, 480 - y / scale);
 		}
@@ -1022,14 +1020,14 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public static cpVect point2canvas(cpVect point, float scale)
+		public static cpVect point2canvas(cpVect point, double scale)
 		{
 			return new cpVect(point.x * scale, (480 - point.y) * scale);
 		}
 
-		public static float last_MSA_min = 0;
+		public static double last_MSA_min = 0;
 
-		internal static cpBB bbNewForCircle(cpVect p, float r)
+		internal static cpBB bbNewForCircle(cpVect p, double r)
 		{
 			return new cpBB(
 			p.x - r,
@@ -1039,9 +1037,9 @@ namespace ChipmunkSharp
 		);
 		}
 
-		public static float[] ConvertToFloatArray(List<cpVect> vec)
+		public static double[] ConvertTodoubleArray(List<cpVect> vec)
 		{
-			float[] dev = new float[vec.Count];
+			double[] dev = new double[vec.Count];
 			int sum = 0;
 
 			for (int i = 0; i < vec.Count; i++)
@@ -1060,7 +1058,7 @@ namespace ChipmunkSharp
 			return (cpVect.cpvlengthsq(v) < 1.0f ? v : frand_unit_circle());
 		}
 
-		public static float frand()
+		public static double frand()
 		{
 
 			//double tmp = ((rand.NextDouble() *  f) / ((double) (/*(uint)~0*/ 0xFFFFFFFF /*or is it -1 :P */)));
@@ -1076,7 +1074,7 @@ namespace ChipmunkSharp
 
 	}
 
-}		//public static float[] convexHull(float[] verts, float[] result, float tolerance)
+}		//public static double[] convexHull(double[] verts, double[] result, double tolerance)
 //{
 //	if (result != null)
 //	{
@@ -1098,13 +1096,13 @@ namespace ChipmunkSharp
 //	int start = indexes[0], end = indexes[1];
 
 //	int position;
-//	float[] dev;
+//	double[] dev;
 
 //	if (start == end)
 //	{
 //		//if(first) (*first) = 0;
 //		position = 2;
-//		dev = new float[position];
+//		dev = new double[position];
 //		for (int i = 0; i < position; i++)
 //			dev[i] = result[i];
 //		return dev;
@@ -1122,7 +1120,7 @@ namespace ChipmunkSharp
 
 //	position = resultCount * 2;
 
-//	dev = new float[position];
+//	dev = new double[position];
 //	for (int i = 0; i < position; i++)
 //		dev[i] = result[i];
 

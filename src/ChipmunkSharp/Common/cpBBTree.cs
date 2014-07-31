@@ -297,7 +297,7 @@ namespace ChipmunkSharp
 		}
 
 		//MARK: Marking Functions
-		public float bbArea()
+		public double bbArea()
 		{
 			return (this.bb.r - this.bb.l) * (this.bb.t - this.bb.b);
 		}
@@ -555,9 +555,9 @@ namespace ChipmunkSharp
 			var velocityFunc = this.velocityFunc;// tree->velocityFunc;
 			if (velocityFunc != null)
 			{
-				float coef = 0.1f;
-				float x = (bb.r - bb.l) * coef;
-				float y = (bb.t - bb.b) * coef;
+				double coef = 0.1f;
+				double x = (bb.r - bb.l) * coef;
+				double y = (bb.t - bb.b) * coef;
 
 				cpVect v = cpVect.cpvmult(velocityFunc(obj), 0.1f);
 				return new cpBB(bb.l + cp.cpfmin(-x, v.x), bb.b + cp.cpfmin(-y, v.y), bb.r + cp.cpfmax(x, v.x), bb.t + cp.cpfmax(y, v.y));
@@ -577,16 +577,16 @@ namespace ChipmunkSharp
 			var velocityFunc = this.velocityFunc;
 			if (velocityFunc != null)
 			{
-				float coef = 0.1f;
-				float x = (obj.bb.r - obj.bb.l) * coef;
-				float y = (obj.bb.t - obj.bb.b) * coef;
+				double coef = 0.1f;
+				double x = (obj.bb.r - obj.bb.l) * coef;
+				double y = (obj.bb.t - obj.bb.b) * coef;
 
 				var v = cpVect.cpvmult(velocityFunc(obj), 0.1f);
 
-				dest.bb.l = obj.bb.l + Math.Min(-x, v.x);
-				dest.bb.b = obj.bb.b + Math.Min(-y, v.y);
-				dest.bb.r = obj.bb.r + Math.Max(x, v.x);
-				dest.bb.t = obj.bb.t + Math.Max(y, v.y);
+				dest.bb.l = obj.bb.l + cp.cpfmin(-x, v.x);
+				dest.bb.b = obj.bb.b + cp.cpfmin(-y, v.y);
+				dest.bb.r = obj.bb.r + cp.cpfmax(x, v.x);
+				dest.bb.t = obj.bb.t + cp.cpfmax(y, v.y);
 			}
 			else
 			{
@@ -724,8 +724,8 @@ namespace ChipmunkSharp
 			}
 			else
 			{
-				float cost_a = subtree.B.bb.Area() + subtree.A.bb.MergedArea(leaf.bb);// cpBBMergedArea(subtree->A->bb, leaf->bb);
-				float cost_b = subtree.A.bb.Area() + subtree.B.bb.MergedArea(leaf.bb);  //cpBBArea(subtree->A->bb) + cpBBMergedArea(subtree->B->bb, leaf->bb);
+				double cost_a = subtree.B.bb.Area() + subtree.A.bb.MergedArea(leaf.bb);// cpBBMergedArea(subtree->A->bb, leaf->bb);
+				double cost_b = subtree.A.bb.Area() + subtree.B.bb.MergedArea(leaf.bb);  //cpBBArea(subtree->A->bb) + cpBBMergedArea(subtree->B->bb, leaf->bb);
 
 				if (cost_a == cost_b)
 				{
@@ -748,7 +748,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public void SubtreeQuery(Node subtree, object obj, cpBB bb, Func<object, object, ulong, object, ulong> func,ref object data)
+		public void SubtreeQuery(Node subtree, object obj, cpBB bb, Func<object, object, ulong, object, ulong> func, ref object data)
 		{
 			//if(bbIntersectsBB(subtree.bb, bb)){
 			if (subtree.bb.Intersects(bb))
@@ -759,13 +759,13 @@ namespace ChipmunkSharp
 				}
 				else
 				{
-					SubtreeQuery(subtree.A, obj, bb, func,ref data);
-					SubtreeQuery(subtree.B, obj, bb, func,ref data);
+					SubtreeQuery(subtree.A, obj, bb, func, ref data);
+					SubtreeQuery(subtree.B, obj, bb, func, ref data);
 				}
 			}
 		}
 
-		public float SubtreeSegmentQuery(Node subtree, object obj, cpVect a, cpVect b, float t_exit, Func<object, object, object, float> func, object data)
+		public double SubtreeSegmentQuery(Node subtree, object obj, cpVect a, cpVect b, double t_exit, Func<object, object, object, double> func, object data)
 		{
 			if (subtree.isLeaf)
 			{
@@ -773,8 +773,8 @@ namespace ChipmunkSharp
 			}
 			else
 			{
-				float t_a = subtree.A.bb.SegmentQuery(a, b);
-				float t_b = subtree.B.bb.SegmentQuery(a, b);
+				double t_a = subtree.A.bb.SegmentQuery(a, b);
+				double t_b = subtree.B.bb.SegmentQuery(a, b);
 
 				if (t_a < t_b)
 				{
@@ -883,6 +883,7 @@ namespace ChipmunkSharp
 		public Leaf Insert(ulong hashid, IObjectBox obj)
 		{
 			Leaf leaf = new Leaf(this, obj);
+
 			this.leaves.Add(hashid, leaf);
 
 			Node root = this.root;
@@ -1028,7 +1029,7 @@ namespace ChipmunkSharp
 		}
 
 		//MARK: Query
-		public void SegmentQuery(object obj, cpVect a, cpVect b, float t_exit, Func<object, object, object, float> func, object data)
+		public void SegmentQuery(object obj, cpVect a, cpVect b, double t_exit, Func<object, object, object, double> func, object data)
 		{
 			//Node* root = root;
 			if (root != null)
@@ -1039,7 +1040,7 @@ namespace ChipmunkSharp
 		public void Query(object context, cpBB bb, Func<object, object, ulong, object, ulong> func, object node)
 		{
 			if (root != null)
-				SubtreeQuery(root, context, bb, func,ref node);
+				SubtreeQuery(root, context, bb, func, ref node);
 		}
 
 
@@ -1068,7 +1069,7 @@ namespace ChipmunkSharp
 			var splitWidth = (bb.r - bb.l > bb.t - bb.b);
 
 			// Sort the bounds and use the median as the splitting point
-			float[] bounds = new float[count * 2];
+			double[] bounds = new double[count * 2];
 			if (splitWidth)
 			{
 				for (var i = offset; i < count; i++)
@@ -1088,7 +1089,7 @@ namespace ChipmunkSharp
 
 			//TODO: ¿?
 
-			float split = (bounds[count - 1] + bounds[count]) * 0.5f; // use the median as the split
+			double split = (bounds[count - 1] + bounds[count]) * 0.5f; // use the median as the split
 
 			// Generate the child BBs
 			//var a = bb, b = bb;
@@ -1189,26 +1190,26 @@ namespace ChipmunkSharp
 		}
 
 
-		public float NodeSegmentQuery(Node node, cpVect a, cpVect b)
+		public double NodeSegmentQuery(Node node, cpVect a, cpVect b)
 		{
-			float idx = 1 / (b.x - a.x);
-			float tx1 = (node.bb.l == a.x ? -cp.Infinity : (node.bb.l - a.x) * idx);
-			float tx2 = (node.bb.r == a.x ? cp.Infinity : (node.bb.r - a.x) * idx);
-			float txmin = Math.Min(tx1, tx2);
-			float txmax = Math.Max(tx1, tx2);
+			double idx = 1 / (b.x - a.x);
+			double tx1 = (node.bb.l == a.x ? -cp.Infinity : (node.bb.l - a.x) * idx);
+			double tx2 = (node.bb.r == a.x ? cp.Infinity : (node.bb.r - a.x) * idx);
+			double txmin = cp.cpfmin(tx1, tx2);
+			double txmax = cp.cpfmax(tx1, tx2);
 
-			float idy = 1 / (b.y - a.y);
-			float ty1 = (node.bb.b == a.y ? -cp.Infinity : (node.bb.b - a.y) * idy);
-			float ty2 = (node.bb.t == a.y ? cp.Infinity : (node.bb.t - a.y) * idy);
-			float tymin = Math.Min(ty1, ty2);
-			float tymax = Math.Max(ty1, ty2);
+			double idy = 1 / (b.y - a.y);
+			double ty1 = (node.bb.b == a.y ? -cp.Infinity : (node.bb.b - a.y) * idy);
+			double ty2 = (node.bb.t == a.y ? cp.Infinity : (node.bb.t - a.y) * idy);
+			double tymin = cp.cpfmin(ty1, ty2);
+			double tymax = cp.cpfmax(ty1, ty2);
 
 			if (tymin <= txmax && txmin <= tymax)
 			{
-				var min_ = Math.Max(txmin, tymin);
-				var max_ = Math.Min(txmax, tymax);
+				double min_ = cp.cpfmax(txmin, tymin);
+				double max_ = cp.cpfmin(txmax, tymax);
 
-				if (0.0 <= max_ && min_ <= 1.0f) return Math.Max(min_, 0.0f);
+				if (0.0 <= max_ && min_ <= 1.0f) return cp.cpfmax(min_, 0.0f);
 			}
 
 			return cp.Infinity;

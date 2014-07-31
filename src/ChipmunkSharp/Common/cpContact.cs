@@ -31,13 +31,13 @@ namespace ChipmunkSharp
 	{
 
 		//public cpVect p, n;
-		//public float dist;
+		//public double dist;
 
 		public cpVect r1, r2;
-		public float nMass, tMass, bounce;
+		public double nMass, tMass, bounce;
 
-		public float jnAcc, jtAcc, jBias;
-		public float bias;
+		public double jnAcc, jtAcc, jBias;
+		public double bias;
 
 		public ulong hash;
 

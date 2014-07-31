@@ -38,14 +38,14 @@ namespace ChipmunkSharp
 
 		/// The maximum force that this constraint is allowed to use.
 		/// Defaults to infinity.
-		internal float maxForce;
+		internal double maxForce;
 		/// The rate at which joint error is corrected.
 		/// Defaults to pow(1.0 - 0.1, 60.0) meaning that it will
 		/// correct 10% of the error every 1/60th of a second.
-		internal float errorBias;
+		internal double errorBias;
 		/// The maximum rate at which joint error is corrected.
 		/// Defaults to infinity.
-		internal float maxBias;
+		internal double maxBias;
 
 		internal bool collideBodies;
 
@@ -84,7 +84,7 @@ namespace ChipmunkSharp
 			/// The rate at which joint error is corrected.
 			/// Defaults to pow(1 - 0.1, 60) meaning that it will
 			/// correct 10% of the error every 1/60th of a second.
-			this.errorBias = (float)Math.Pow(1 - 0.1, 60);
+			this.errorBias = cp.cpfpow(1 - 0.1, 60);
 			/// The maximum rate at which joint error is corrected.
 			this.maxBias = cp.Infinity;
 
@@ -111,36 +111,36 @@ namespace ChipmunkSharp
 			return this.b;
 		}
 
-		public float GetMaxForce()
+		public double GetMaxForce()
 		{
 			return maxForce;
 		}
 
-		public void SetMaxForce(float maxForce)
+		public void SetMaxForce(double maxForce)
 		{
 			cp.assertHard(maxForce >= 0.0f, "maxForce must be positive.");
 			ActivateBodies();// cpConstraintActivateBodies(constraint);
 			this.maxForce = maxForce;
 		}
 
-		public float GetErrorBias()
+		public double GetErrorBias()
 		{
 			return this.errorBias;
 		}
 
-		public void SetErrorBias(float errorBias)
+		public void SetErrorBias(double errorBias)
 		{
 			cp.assertHard(errorBias >= 0.0f, "errorBias must be positive.");
 			ActivateBodies();
 			this.errorBias = errorBias;
 		}
 
-		public float GetMaxBias()
+		public double GetMaxBias()
 		{
 			return this.maxBias;
 		}
 
-		public void SetMaxBias(float maxBias)
+		public void SetMaxBias(double maxBias)
 		{
 			cp.assertHard(maxBias >= 0.0f, "errorBias must be positive.");
 			ActivateBodies();
@@ -189,7 +189,7 @@ namespace ChipmunkSharp
 			this.userData = userData;
 		}
 
-		public virtual float GetImpulse()
+		public virtual double GetImpulse()
 		{
 			return 0;
 		}
@@ -204,14 +204,14 @@ namespace ChipmunkSharp
 
 		/// /////////////////////////////////////////////////////////////
 
-	
+
 
 		/// These methods are overridden by the constraint itself.
 		#region overriden methods
 
-		public virtual void PreStep(float dt) { }
-		public virtual void ApplyCachedImpulse(float dt_coef) { }
-		public virtual void ApplyImpulse(float dt)
+		public virtual void PreStep(double dt) { }
+		public virtual void ApplyCachedImpulse(double dt_coef) { }
+		public virtual void ApplyImpulse(double dt)
 		{
 		}
 
@@ -257,17 +257,17 @@ namespace ChipmunkSharp
 			throw new NotImplementedException();
 		}
 
-		public virtual float GetMin()
+		public virtual double GetMin()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float GetMax()
+		public virtual double GetMax()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetMax(float max)
+		public virtual void SetMax(double max)
 		{
 			throw new NotImplementedException();
 		}
@@ -282,47 +282,47 @@ namespace ChipmunkSharp
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetMin(float min)
+		public virtual void SetMin(double min)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float GetDist()
+		public virtual double GetDist()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetDist(float distance)
+		public virtual void SetDist(double distance)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float GetRestLength()
+		public virtual double GetRestLength()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetRestLength(float restLength)
+		public virtual void SetRestLength(double restLength)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float GetStiffness()
+		public virtual double GetStiffness()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float GetDamping()
+		public virtual double GetDamping()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetStiffness(float stiffness)
+		public virtual void SetStiffness(double stiffness)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetDamping(float damping)
+		public virtual void SetDamping(double damping)
 		{
 			throw new NotImplementedException();
 		}
@@ -347,62 +347,62 @@ namespace ChipmunkSharp
 			throw new NotImplementedException();
 		}
 
-		public virtual float GetRestAngle()
+		public virtual double GetRestAngle()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetRestAngle(float restAngle)
+		public virtual void SetRestAngle(double restAngle)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float GetRatchet()
+		public virtual double GetRatchet()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetRatchet(float ratchet)
+		public virtual void SetRatchet(double ratchet)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float GetPhase()
+		public virtual double GetPhase()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float GetAngle()
+		public virtual double GetAngle()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetAngle(float angle)
+		public virtual void SetAngle(double angle)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetPhase(float phase)
+		public virtual void SetPhase(double phase)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float GetRatio()
+		public virtual double GetRatio()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetRatio(float ratchet)
+		public virtual void SetRatio(double ratchet)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual float GetRate()
+		public virtual double GetRate()
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetRate(float rate)
+		public virtual void SetRate(double rate)
 		{
 			throw new NotImplementedException();
 		}

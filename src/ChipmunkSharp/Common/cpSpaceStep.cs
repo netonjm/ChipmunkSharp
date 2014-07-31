@@ -174,16 +174,18 @@ namespace ChipmunkSharp
 		public ulong CollideShapes(cpShape a, cpShape b, ulong id)
 		{
 
+
 			// It would be nicer to use .bind() or something, but this is faster.
 			//return new Action<object, object>((obj1, obj2) =>
 			//{// Reject any of the simple cases
 			if (QueryReject(a, b)) return id;
 
+			contactsBuffer.Clear();
 			// Narrow-phase collision detection.
 			//int numContacts = cpCollideShapes(a, b, contacts);
 			cpCollisionInfo info = cpCollision.cpCollide(a, b, id, ref this.contactsBuffer);
 
-			if (info.count == 0 )
+			if (info.count == 0)
 				return info.id; // Shapes are not colliding.
 
 			// Get an arbiter from space.arbiterSet for the two shapes.
@@ -284,14 +286,14 @@ namespace ChipmunkSharp
 		}
 
 
-		public void Step(float dt)
+		public void Step(double dt)
 		{
 			// don't step if the timestep is 0!
 			if (dt == 0) return;
 
 			this.stamp++;
 
-			float prev_dt = this.curr_dt;
+			double prev_dt = this.curr_dt;
 			this.curr_dt = dt;
 
 			int i, j;
@@ -329,9 +331,9 @@ namespace ChipmunkSharp
 				this.dynamicShapes.Each(shape => cpShape.UpdateFunc(shape as cpShape, null));
 
 				if (CollisionEnabled)
-				this.dynamicShapes.ReindexQuery(
-					(shape1, shape2, key, data) => CollideShapes(shape1 as cpShape, shape2 as cpShape, key),
-					null);
+					this.dynamicShapes.ReindexQuery(
+						(shape1, shape2, key, data) => CollideShapes(shape1 as cpShape, shape2 as cpShape, key),
+						null);
 
 			}
 			Unlock(false);
@@ -419,7 +421,7 @@ namespace ChipmunkSharp
 
 
 
-		
+
 	}
 }
 

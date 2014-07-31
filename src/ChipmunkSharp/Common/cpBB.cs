@@ -26,9 +26,9 @@ namespace ChipmunkSharp
 	{
 
 		public int numBB = 0;
-		public float l, b, r, t;
+		public double l, b, r, t;
 
-		public cpBB(float l1, float b1, float r1, float t1)
+		public cpBB(double l1, double b1, double r1, double t1)
 		{
 			l = l1;
 			b = b1;
@@ -37,7 +37,7 @@ namespace ChipmunkSharp
 			numBB++;
 		}
 
-		public cpBB(cpVect p, float r)
+		public cpBB(cpVect p, double r)
 			: this(p.x - r, p.y - r, p.x + r, p.y + r)
 		{
 
@@ -49,24 +49,24 @@ namespace ChipmunkSharp
 		}
 
 		/// ructs a cpBB for a circle with the given position and radius.
-		public static cpBB NewForCircle(cpVect p, float r)
+		public static cpBB NewForCircle(cpVect p, double r)
 		{
 			return new cpBB(p.x - r, p.y - r, p.x + r, p.y + r);
 		}
 
-		public float Proximity(cpBB b)
+		public double Proximity(cpBB b)
 		{
 			return Proximity(this, b);
 		}
 
-		public static float Proximity(Node a, Leaf b)
+		public static double Proximity(Node a, Leaf b)
 		{
 			return Proximity(a.bb, b.bb);
 		}
 
-		public static float Proximity(cpBB a, cpBB b)
+		public static double Proximity(cpBB a, cpBB b)
 		{
-			return Math.Abs(a.l + a.r - b.l - b.r) + Math.Abs(a.b + a.t - b.b - b.t);
+			return cp.cpfabs(a.l + a.r - b.l - b.r) + cp.cpfabs(a.b + a.t - b.b - b.t);
 		}
 
 		/// Returns true if @c a and @c b intersect.
@@ -141,47 +141,47 @@ namespace ChipmunkSharp
 
 
 		/// Returns the area of the bounding box.
-		public static float Area(cpBB bb)
+		public static double Area(cpBB bb)
 		{
 			return (bb.r - bb.l) * (bb.t - bb.b);
 		}
-		public float Area()
+		public double Area()
 		{
 			return Area(this);
 		}
 
 
 		/// Merges @c a and @c b and returns the area of the merged bounding box.
-		public static float MergedArea(cpBB a, cpBB b)
+		public static double MergedArea(cpBB a, cpBB b)
 		{
 			return (cp.cpfmax(a.r, b.r) - cp.cpfmin(a.l, b.l)) * (cp.cpfmax(a.t, b.t) - cp.cpfmin(a.b, b.b));
 		}
 
-		public float MergedArea(cpBB a)
+		public double MergedArea(cpBB a)
 		{
 			return MergedArea(this, a);
 		}
 
 
 		/// Returns the fraction along the segment query the cpBB is hit. Returns INFINITY if it doesn't hit.
-		public static float SegmentQuery(cpBB bb, cpVect a, cpVect b)
+		public static double SegmentQuery(cpBB bb, cpVect a, cpVect b)
 		{
-			float idx = 1.0f / (b.x - a.x);
-			float tx1 = (bb.l == a.x ? -cp.Infinity : (bb.l - a.x) * idx);
-			float tx2 = (bb.r == a.x ? cp.Infinity : (bb.r - a.x) * idx);
-			float txmin = cp.cpfmin(tx1, tx2);
-			float txmax = cp.cpfmax(tx1, tx2);
+			double idx = 1.0f / (b.x - a.x);
+			double tx1 = (bb.l == a.x ? -cp.Infinity : (bb.l - a.x) * idx);
+			double tx2 = (bb.r == a.x ? cp.Infinity : (bb.r - a.x) * idx);
+			double txmin = cp.cpfmin(tx1, tx2);
+			double txmax = cp.cpfmax(tx1, tx2);
 
-			float idy = 1.0f / (b.y - a.y);
-			float ty1 = (bb.b == a.y ? -cp.Infinity : (bb.b - a.y) * idy);
-			float ty2 = (bb.t == a.y ? cp.Infinity : (bb.t - a.y) * idy);
-			float tymin = cp.cpfmin(ty1, ty2);
-			float tymax = cp.cpfmax(ty1, ty2);
+			double idy = 1.0f / (b.y - a.y);
+			double ty1 = (bb.b == a.y ? -cp.Infinity : (bb.b - a.y) * idy);
+			double ty2 = (bb.t == a.y ? cp.Infinity : (bb.t - a.y) * idy);
+			double tymin = cp.cpfmin(ty1, ty2);
+			double tymax = cp.cpfmax(ty1, ty2);
 
 			if (tymin <= txmax && txmin <= tymax)
 			{
-				float min = cp.cpfmax(txmin, tymin);
-				float max = cp.cpfmin(txmax, tymax);
+				double min = cp.cpfmax(txmin, tymin);
+				double max = cp.cpfmin(txmax, tymax);
 
 				if (0.0 <= max && min <= 1.0) return cp.cpfmax(min, 0.0f);
 			}
@@ -189,7 +189,7 @@ namespace ChipmunkSharp
 			return cp.Infinity;
 		}
 
-		public float SegmentQuery(cpVect a, cpVect b)
+		public double SegmentQuery(cpVect a, cpVect b)
 		{
 			return SegmentQuery(this, a, b);
 		}
@@ -221,32 +221,32 @@ namespace ChipmunkSharp
 		public static cpVect WrapVect(cpBB bb, cpVect v)
 		{
 			// wrap a vector to a bbox
-			float ix = Math.Abs(bb.r - bb.l);
-			float modx = (v.x - bb.l) % ix;
-			float x = (modx > 0) ? modx : modx + ix;
+			double ix = cp.cpfabs(bb.r - bb.l);
+			double modx = (v.x - bb.l) % ix;
+			double x = (modx > 0) ? modx : modx + ix;
 
-			float iy = Math.Abs(bb.t - bb.b);
-			float mody = (v.y - bb.b) % iy;
-			float y = (mody > 0) ? mody : mody + iy;
+			double iy = cp.cpfabs(bb.t - bb.b);
+			double mody = (v.y - bb.b) % iy;
+			double y = (mody > 0) ? mody : mody + iy;
 
 			return new cpVect(x + bb.l, y + bb.b);
 		}
 
 		/// Constructs a cpBB for a circle with the given position and radius.
-		public static cpBB cpBBNewForCircle(cpVect p, float r)
+		public static cpBB cpBBNewForCircle(cpVect p, double r)
 		{
 			return cpBBNew(p.x - r, p.y - r, p.x + r, p.y + r);
 		}
 
 		/// Convenience constructor for cpBB structs.
-		public static cpBB cpBBNew(float l, float b, float r, float t)
+		public static cpBB cpBBNew(double l, double b, double r, double t)
 		{
 			cpBB bb = new cpBB(l, b, r, t);
 			return bb;
 		}
 
 		/// Constructs a cpBB centered on a point with the given extents (half sizes).
-		public static cpBB NewForExtents(cpVect c, float hw_max, float hh_max)
+		public static cpBB NewForExtents(cpVect c, double hw_max, double hh_max)
 		{
 			return cpBBNew(c.x - hw_max, c.y - hh_max, c.x + hw_max, c.y + hh_max);
 		}

@@ -9,19 +9,19 @@ namespace ChipmunkSharp
 	{
 		public static cpTransform cpTransformIdentity = new cpTransform(1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
 
-		public float a;
-		public float b;
-		public float c;
-		public float d;
-		public float tx;
-		public float ty;
+		public double a;
+		public double b;
+		public double c;
+		public double d;
+		public double tx;
+		public double ty;
 
 		public cpTransform()
 		{
 
 		}
 
-		public cpTransform(float a, float b, float c, float d, float tx, float ty)
+		public cpTransform(double a, double b, double c, double d, double tx, double ty)
 		{
 			// TODO: Complete member initialization
 			this.a = a;
@@ -37,7 +37,7 @@ namespace ChipmunkSharp
 		/// (a, b) is the x basis vector.
 		/// (c, d) is the y basis vector.
 		/// (tx, ty) is the translation.
-		public static cpTransform cpTransformNew(float a, float b, float c, float d, float tx, float ty)
+		public static cpTransform cpTransformNew(double a, double b, double c, double d, double tx, double ty)
 		{
 			cpTransform t = new cpTransform(a, b, c, d, tx, ty);
 			return t;
@@ -45,7 +45,7 @@ namespace ChipmunkSharp
 
 
 		/// Construct a new transform matrix in transposed order.
-		public static cpTransform cpTransformNewTranspose(float a, float c, float tx, float b, float d, float ty)
+		public static cpTransform cpTransformNewTranspose(double a, double c, double tx, double b, double d, double ty)
 		{
 			cpTransform t = new cpTransform(a, b, c, d, tx, ty);
 			return t;
@@ -54,7 +54,7 @@ namespace ChipmunkSharp
 		/// Get the inverse of a transform matrix.
 		public static cpTransform cpTransformInverse(cpTransform t)
 		{
-			float inv_det = 1.0f / (t.a * t.d - t.c * t.b);
+			double inv_det = 1.0f / (t.a * t.d - t.c * t.b);
 			return cpTransformNewTranspose(
 			   t.d * inv_det, -t.c * inv_det, (t.c * t.ty - t.tx * t.d) * inv_det,
 			  -t.b * inv_det, t.a * inv_det, (t.tx * t.b - t.a * t.ty) * inv_det
@@ -87,12 +87,12 @@ namespace ChipmunkSharp
 		public static cpBB cpTransformbBB(cpTransform t, cpBB bb)
 		{
 			cpVect center = cpBB.Center(bb);
-			float hw = (bb.r - bb.l) * 0.5f;
-			float hh = (bb.t - bb.b) * 0.5f;
+			double hw = (bb.r - bb.l) * 0.5f;
+			double hh = (bb.t - bb.b) * 0.5f;
 
-			float a = t.a * hw, b = t.c * hh, d = t.b * hw, e = t.d * hh;
-			float hw_max = cp.cpfmax(cp.cpfabs(a + b), cp.cpfabs(a - b));
-			float hh_max = cp.cpfmax(cp.cpfabs(d + e), cp.cpfabs(d - e));
+			double a = t.a * hw, b = t.c * hh, d = t.b * hw, e = t.d * hh;
+			double hw_max = cp.cpfmax(cp.cpfabs(a + b), cp.cpfabs(a - b));
+			double hh_max = cp.cpfmax(cp.cpfabs(d + e), cp.cpfabs(d - e));
 			return cpBB.NewForExtents(cpTransformPoint(t, center), hw_max, hh_max);
 		}
 
@@ -106,7 +106,7 @@ namespace ChipmunkSharp
 		}
 
 		/// Create a scale matrix.
-		public static cpTransform cpTransformScale(float scaleX, float scaleY)
+		public static cpTransform cpTransformScale(double scaleX, double scaleY)
 		{
 			return cpTransformNewTranspose(
 				scaleX, 0.0f, 0.0f,
@@ -115,7 +115,7 @@ namespace ChipmunkSharp
 		}
 
 		/// Create a rotation matrix.
-		public static cpTransform cpTransformRotate(float radians)
+		public static cpTransform cpTransformRotate(double radians)
 		{
 			cpVect rot = cpVect.cpvforangle(radians);
 			return cpTransformNewTranspose(
@@ -125,7 +125,7 @@ namespace ChipmunkSharp
 		}
 
 		/// Create a rigid transformation matrix. (transation + rotation)
-		public static cpTransform cpTransformRigid(cpVect translate, float radians)
+		public static cpTransform cpTransformRigid(cpVect translate, double radians)
 		{
 			cpVect rot = cpVect.cpvforangle(radians);
 			return cpTransformNewTranspose(
@@ -172,10 +172,10 @@ namespace ChipmunkSharp
 			);
 		}
 
-		public static cpTransform cpTransformAxialScale(cpVect axis, cpVect pivot, float scale)
+		public static cpTransform cpTransformAxialScale(cpVect axis, cpVect pivot, double scale)
 		{
-			float A = axis.x * axis.y * (scale - 1.0f);
-			float B = cpVect.cpvdot(axis, pivot) * (1.0f - scale);
+			double A = axis.x * axis.y * (scale - 1.0f);
+			double B = cpVect.cpvdot(axis, pivot) * (1.0f - scale);
 
 			return cpTransformNewTranspose(
 			  scale * axis.x * axis.x + axis.y * axis.y, A, axis.x * B,

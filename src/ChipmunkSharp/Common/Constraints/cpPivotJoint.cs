@@ -34,7 +34,7 @@ namespace ChipmunkSharp
 		internal cpVect jAcc;
 		internal cpVect bias;
 
-		public override void PreStep(float dt)
+		public override void PreStep(double dt)
 		{
 
 			cpBody a = this.a;
@@ -51,7 +51,7 @@ namespace ChipmunkSharp
 			this.bias = cpVect.cpvclamp(cpVect.cpvmult(delta, -cp.bias_coef(this.errorBias, dt) / dt), this.maxBias);
 		}
 
-		public override void ApplyCachedImpulse(float dt_coef)
+		public override void ApplyCachedImpulse(double dt_coef)
 		{
 			cpBody a = this.a;
 			cpBody b = this.b;
@@ -59,7 +59,7 @@ namespace ChipmunkSharp
 			cp.apply_impulses(a, b, this.r1, this.r2, cpVect.cpvmult(this.jAcc, dt_coef));
 		}
 
-		public override void ApplyImpulse(float dt)
+		public override void ApplyImpulse(double dt)
 		{
 
 			cpBody a = this.a;
@@ -100,7 +100,7 @@ namespace ChipmunkSharp
 		}
 
 
-		public override float GetImpulse()
+		public override double GetImpulse()
 		{
 			return cpVect.cpvlength(jAcc);//.Length;  //cpvlength(this.jAcc);
 		}
