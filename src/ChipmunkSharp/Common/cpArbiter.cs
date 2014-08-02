@@ -277,43 +277,81 @@ namespace ChipmunkSharp
 
 		public void Unthread()
 		{
-			UnthreadHelper(this, this.body_a);
-			UnthreadHelper(this, this.body_b);
+			UnthreadHelper(this, this.body_a, this.thread_a.prev, this.thread_a.next);
+			UnthreadHelper(this, this.body_b, this.thread_b.prev, this.thread_b.next);
+			this.thread_a.prev = null;
+			this.thread_a.next = null;
+			this.thread_b.prev = null;
+			this.thread_b.next = null;
 		}
 
-		public static void UnthreadHelper(cpArbiter arb, cpBody body)
+		//public static void UnthreadHelper(cpArbiter arb, cpBody body)
+		//{
+
+		//	cpArbiterThread thread = arb.ThreadForBody(body);
+
+		//	cpArbiter prev = thread.prev;
+		//	cpArbiter next = thread.next;
+
+		//	// thread_x_y is quite ugly, but it avoids making unnecessary js objects per arbiter.
+		//	if (prev != null)
+		//	{
+		//		cpArbiterThread nextPrev = prev.ThreadForBody(body);
+		//		nextPrev.next = next;
+		//	}
+		//	else if (body.arbiterList == arb)
+		//	{
+		//		// IFF prev is NULL and body->arbiterList == arb, is arb at the head of the list.
+		//		// This function may be called for an arbiter that was never in a list.
+		//		// In that case, we need to protect it from wiping out the body->arbiterList pointer.
+		//		body.arbiterList = next;
+		//	}
+
+		//	if (next != null)
+		//	{
+		//		cpArbiterThread threadNext = next.ThreadForBody(body);
+		//		threadNext.prev = prev;
+		//	}
+
+		//	thread.prev = null;
+		//	thread.next = null;
+
+		//}
+
+
+		public static void UnthreadHelper(cpArbiter arb, cpBody body, cpArbiter prev, cpArbiter next)
 		{
-
-			cpArbiterThread thread = arb.ThreadForBody(body);
-
-			cpArbiter prev = thread.prev;
-			cpArbiter next = thread.next;
-
 			// thread_x_y is quite ugly, but it avoids making unnecessary js objects per arbiter.
 			if (prev != null)
 			{
-				cpArbiterThread nextPrev = prev.ThreadForBody(body);
-				nextPrev.next = next;
+				// cpArbiterThreadForBody(prev, body)->next = next;
+				if (prev.body_a == body)
+				{
+					prev.thread_a.next = next;
+				}
+				else
+				{
+					prev.thread_b.next = next;
+				}
 			}
-			else if (body.arbiterList == arb)
+			else
 			{
-				// IFF prev is NULL and body->arbiterList == arb, is arb at the head of the list.
-				// This function may be called for an arbiter that was never in a list.
-				// In that case, we need to protect it from wiping out the body->arbiterList pointer.
 				body.arbiterList = next;
 			}
 
 			if (next != null)
 			{
-				cpArbiterThread threadNext = next.ThreadForBody(body);
-				threadNext.prev = prev;
+				// cpArbiterThreadForBody(next, body)->prev = prev;
+				if (next.body_a == body)
+				{
+					next.thread_a.prev = prev;
+				}
+				else
+				{
+					next.thread_b.prev = prev;
+				}
 			}
-
-			thread.prev = null;
-			thread.next = null;
-
 		}
-
 
 		/// Returns true if this is the first step a pair of objects started colliding.
 		public bool IsFirstContact()

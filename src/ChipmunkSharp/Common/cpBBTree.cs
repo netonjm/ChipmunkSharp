@@ -80,12 +80,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Linq;
+using System.Collections.Specialized;
 
 namespace ChipmunkSharp
 {
-
-
-
 
 	public interface IObjectBox
 	{
@@ -117,7 +115,7 @@ namespace ChipmunkSharp
 	public class Node : IObjectBox
 	{
 
-		public bool isLeaf;
+		public bool isLeaf { get { return (this.obj != null); } }
 
 		private Node a { get; set; }
 		private Node b { get; set; }
@@ -135,8 +133,8 @@ namespace ChipmunkSharp
 		public Node A { get { return a; } }
 		public Node B { get { return b; } }
 
-		public int STAMP { get { return stamp; } set { stamp = value; } }
-		public Pair PAIRS { get { return pairs; } set { pairs = value; } }
+		public int STAMP { get { return stamp; } set { this.stamp = value; } }
+		public Pair PAIRS { get { return pairs; } set { this.pairs = value; } }
 
 		public void SetA(Node value)
 		{
@@ -148,6 +146,12 @@ namespace ChipmunkSharp
 		{
 			this.b = value;
 			value.parent = this;
+		}
+
+		public virtual void Recycle(cpBBTree tree)
+		{
+			this.parent = tree.pooledNodes;
+			tree.pooledNodes = this;
 		}
 
 
@@ -196,97 +200,7 @@ namespace ChipmunkSharp
 			}
 		}
 
-		//MARK: Subtree Functions
-
-		public virtual void MarkLeafQuery(Node leaf, bool left, MarkContext context)
-		{
-
-			if (leaf.bb.Intersects(this.bb))
-			{
-				if (this.isLeaf)
-				{
-					if (left)
-					{
-						context.tree.PairInsert(leaf, this);
-					}
-					else
-					{
-						if (this.STAMP < leaf.STAMP)
-							context.tree.PairInsert(this, leaf);// this.PairInsert(leaf, );
-
-						context.func(leaf.obj, this.obj, 0, context.data);
-					}
-				}
-				else
-				{
-					this.A.MarkLeafQuery(leaf, left, context);
-					this.B.MarkLeafQuery(leaf, left, context);
-				}
-			}
-		}
-
-		public void MarkLeaf(MarkContext context)
-		{
-			cpBBTree tree = context.tree;
-
-			if (this.STAMP == tree.GetMasterTree().stamp)   //tree. GetMasterTree(tree).stamp)
-			{
-
-				Node staticRoot = context.staticRoot;
-				if (staticRoot != null)
-					staticRoot.MarkLeafQuery(this, false, context);
-
-				for (Node node = this; node.parent != null; node = node.parent)
-				{
-					if (node == node.parent.A)
-					{
-						node.parent.B.MarkLeafQuery(this, true, context); // tree, context);
-					}
-					else
-					{
-						node.parent.A.MarkLeafQuery(this, false, context);
-					}
-				}
-			}
-			else
-			{
-				Pair pair = this.PAIRS;
-				while (pair != null)
-				{
-					if (this == pair.b.leaf) // leafB)
-					{
-						pair.id = context.func(pair.a.leaf.obj, this.obj, pair.id, context.data);
-						pair = pair.b.next;
-					}
-					else
-					{
-						pair = pair.a.next;
-					}
-				}
-			}
-		}
-
-
-		public virtual void MarkSubtree(MarkContext context)
-		{
-			if (isLeaf)
-				MarkLeaf(context);
-			else
-			{
-				this.A.MarkSubtree(context);
-				this.B.MarkSubtree(context);
-			}
-		}
-
-
-
-		/// ////////////////////////////////////////////////////////////////////
-
-
-
-
-		[Obsolete]
-		public virtual void MarkLeafQuery(Leaf leaf, bool left, cpBBTree tree, Action<object, object> func)
+		public virtual void MarkLeafQuery(Leaf leaf, bool left, cpBBTree tree, Func<object, object, ulong, object, ulong> func)
 		{
 
 			if (cp.bbTreeIntersectsNode(leaf, this))
@@ -295,6 +209,100 @@ namespace ChipmunkSharp
 				this.B.MarkLeafQuery(leaf, left, tree, func);
 			}
 		}
+
+		public virtual void MarkSubtree(cpBBTree tree, Node staticRoot, Func<object, object, ulong, object, ulong> func)
+		{
+			this.a.MarkSubtree(tree, staticRoot, func);
+			this.b.MarkSubtree(tree, staticRoot, func);
+		}
+
+		//MARK: Subtree Functions
+		//public virtual void MarkLeafQuery(Node leaf, bool left, ref MarkContext context)
+		//{
+
+		//	if (leaf.bb.Intersects(this.bb))
+		//	{
+		//		if (this.isLeaf)
+		//		{
+		//			if (left)
+		//			{
+
+		//				context.tree.PairInsert(leaf, this);
+		//			}
+		//			else
+		//			{
+		//				if (this.STAMP <= leaf.STAMP)
+		//					context.tree.PairInsert(this, leaf);// this.PairInsert(leaf, );
+
+		//				context.func(leaf.obj, this.obj, 0, context.data);
+		//			}
+		//		}
+		//		else
+		//		{
+		//			this.A.MarkLeafQuery(leaf, left, ref context);
+		//			this.B.MarkLeafQuery(leaf, left, ref context);
+		//		}
+		//	}
+		//}
+
+		//public void MarkLeaf(ref MarkContext context)
+		//{
+		//	cpBBTree tree = context.tree;
+
+		//	if (this.STAMP == tree.GetMasterTree().stamp)   //tree. GetMasterTree(tree).stamp)
+		//	{
+
+		//		Node staticRoot = context.staticRoot;
+		//		if (staticRoot != null)
+		//			staticRoot.MarkLeafQuery(this, false, ref context);
+
+		//		for (Node node = this; node.parent != null; node = node.parent)
+		//		{
+		//			if (node == node.parent.A)
+		//			{
+		//				node.parent.B.MarkLeafQuery(this, true, ref context); // tree, context);
+		//			}
+		//			else
+		//			{
+		//				node.parent.A.MarkLeafQuery(this, false, ref context);
+		//			}
+		//		}
+		//	}
+		//	else
+		//	{
+		//		Pair pair = this.PAIRS;
+		//		while (pair != null)
+		//		{
+		//			if (this == pair.b.leaf) // leafB)
+		//			{
+		//				pair.id = context.func(pair.a.leaf.obj, this.obj, pair.id, context.data);
+		//				pair = pair.b.next;
+		//			}
+		//			else
+		//			{
+		//				pair = pair.a.next;
+		//			}
+		//		}
+		//	}
+		//}
+
+
+		//public virtual void MarkSubtree(ref MarkContext context)
+		//{
+		//	//if (isLeaf)
+		//	//	MarkLeaf(ref context);
+		//	//else
+		//	//{
+		//	this.A.MarkSubtree(ref context);
+		//	this.B.MarkSubtree(ref context);
+		//	//}
+		//}
+
+
+
+		/// ////////////////////////////////////////////////////////////////////
+
+
 
 		//MARK: Marking Functions
 		public double bbArea()
@@ -323,112 +331,160 @@ namespace ChipmunkSharp
 			: base()
 		{
 
-			isLeaf = true;
-
 			this.obj = obj; //THIS IS THE GENERIC REAL VALUE
 
-			//bb = tree.getBB(obj);
 			tree.GetBB(obj, this);
 
 			this.parent = null;
 
-			this.STAMP = 0;
+			this.STAMP = 1;
 			this.PAIRS = null;
 
 			cp.numLeaves++;
 		}
 
 
+		public void AddPairs(cpBBTree tree)
+		{
+			cpBBTree dynamicIndex = tree.dynamicIndex;
 
-		//MARK: Marking Functions
-		//public bool Update(cpBBTree tree)
-		//{
-
-		//	var root = tree.root;
-
-		//	var obj = this.obj;
-
-		//	if (!this.ContainsObj(obj))
-		//	{
-
-		//		tree.GetBB(this.obj, this);
-
-		//		root = cp.SubtreeRemove(root, this, tree);
-		//		tree.root = cp.subtreeInsert(root, this, tree);//tree.root = SubtreeInsert(root, this, tree);
-		//		this.PairsClear(tree);
-		//		this.stamp = tree.GetStamp();
-
-		//		return true;
-		//	}
-		//	return false;
-		//}
-
-		////////////////////////////////////////////////////////////////////////////////////
-
-		//public override void Recycle(cpBBTree tree)
-		//{
-		//}
+			if (dynamicIndex != null)
+			{
+				var dynamicRoot = dynamicIndex.root;
+				if (dynamicRoot != null)
+				{
+					dynamicRoot.MarkLeafQuery(this, true, dynamicIndex, null);
+				}
+			}
+			else
+			{
+				var staticRoot = tree.staticIndex.root;
+				this.MarkSubtree(tree, staticRoot, null);
+			}
+		}
 
 
 
-		public override void MarkLeafQuery(Leaf leaf, bool left, cpBBTree tree, Action<object, object> func)
+		public override void MarkSubtree(cpBBTree tree, Node staticRoot, Func<object, object, ulong, object, ulong> func)
+		{
+			if (this.stamp == tree.GetStamp())
+			{
+				if (staticRoot != null) staticRoot.MarkLeafQuery(this, false, tree, func);
+
+				for (Node node = this; node.parent != null; node = node.parent)
+				{
+					if (node == node.parent.A)
+					{
+						node.parent.B.MarkLeafQuery(this, true, tree, func);
+					}
+					else
+					{
+						node.parent.A.MarkLeafQuery(this, false, tree, func);
+					}
+				}
+			}
+			else
+			{
+				var pair = this.pairs;
+				while (pair != null)
+				{
+					if (this == pair.b.leaf)
+					{
+						if (func != null)
+							func(pair.a.leaf.obj, this.obj, pair.id, null);
+
+						pair = pair.b.next;
+					}
+					else
+					{
+						pair = pair.a.next;
+					}
+				}
+			}
+		}
+
+		public override void Recycle(cpBBTree tree)
+		{
+
+		}
+
+
+		public override void MarkLeafQuery(Leaf leaf, bool left, cpBBTree tree, Func<object, object, ulong, object, ulong> func)
 		{
 			if (cp.bbTreeIntersectsNode(leaf, this))
 			{
 				if (left)
 				{
 					tree.PairInsert(leaf, this);
-					//cp.pairInsert(leaf, this, tree);
 				}
 				else
 				{
 					if (this.stamp < leaf.stamp)
 						tree.PairInsert(this, leaf);
-					//cp.pairInsert(this, leaf, tree);
+
 					if (func != null)
-						func(leaf.obj, this.obj);
+						func(leaf.obj, this.obj, (ulong)leaf.stamp, null);
 				}
 			}
 		}
 
+		public bool ContainsObj(IObjectBox obj)
+		{
+			if (obj == null)
+				return false;
 
-		//public override void MarkSubtree(cpBBTree tree, Node staticRoot, Action<object, object> func)
-		//{
-		//	if (this.stamp == tree.GetStamp())
-		//	{
-		//		if (staticRoot != null) staticRoot.MarkLeafQuery(this, false, tree, func);
+			return (this.bb.l <= obj.bb.l && this.bb.r >= obj.bb.r && this.bb.b <= obj.bb.b && this.bb.t >= obj.bb.t);
+		}
 
-		//		for (Node node = this; node.parent != null; node = node.parent)
-		//		{
-		//			if (node == node.parent.A)
-		//			{
-		//				node.parent.B.MarkLeafQuery(this, true, tree, func);
-		//			}
-		//			else
-		//			{
-		//				node.parent.A.MarkLeafQuery(this, false, tree, func);
-		//			}
-		//		}
-		//	}
-		//	else
-		//	{
-		//		var pair = this.pairs;
-		//		while (pair != null)
-		//		{
-		//			if (this == pair.b.leaf)
-		//			{
-		//				if (func != null)
-		//					func(pair.a.leaf.obj, this.obj);
+		public bool Update(cpBBTree tree)
+		{
+			var root = tree.root;
 
-		//				pair = pair.b.next;
-		//			}
-		//			else
-		//			{
-		//				pair = pair.a.next;
-		//			}
-		//		}
-		//	}
-		//}
+			var obj = this.obj;
+
+			if (!this.ContainsObj(obj))
+			{
+
+				this.bb = tree.GetBB(this.obj);
+
+				root = tree.SubtreeRemove(root, this);
+				tree.root = tree.SubtreeInsert(root, this);//tree.root = SubtreeInsert(root, this, tree);
+				this.ClearPairs(tree);
+				this.stamp = tree.GetStamp();
+
+				return true;
+			}
+			return false;
+		}
+
+		public void ClearPairs(cpBBTree tree)
+		{
+
+			Pair pair = this.pairs;
+			Pair next;
+			this.pairs = null;
+
+
+
+			while (pair != null)
+			{
+				if (pair.a.leaf == this)
+				{
+
+					next = pair.a.next;
+					Thread.Unlink(pair.b.prev, pair.b.leaf, pair.b.next);
+				}
+				else
+				{
+					next = pair.b.next;
+					Thread.Unlink(pair.a.prev, pair.a.leaf, pair.a.next);
+				}
+				tree.PairRecycle(pair);
+				pair = next;
+			}
+
+		}
+
 
 		public bool ContainsObj(object objData)
 		{
@@ -454,12 +510,33 @@ namespace ChipmunkSharp
 			this.next = next;
 		}
 
-		public void Unlink()
+		public static void Unlink(Pair prev, Node leaf, Pair next)
 		{
-			ThreadUnlink(this);
+			if (next != null)
+			{
+				if (next.a.leaf == leaf)
+					next.a.prev = prev;
+				else next.b.prev = prev;
+			}
+
+			if (prev != null)
+			{
+				if (prev.a.leaf == leaf) prev.a.next = next;
+				else prev.b.next = next;
+			}
+			else
+			{
+				leaf.pairs = next;
+			}
 		}
 
-		public static void ThreadUnlink(Thread thread)
+
+		public void Unlink()
+		{
+			Unlink(this);
+		}
+
+		public static void Unlink(Thread thread)
 		{
 
 			Pair next = thread.next;
@@ -499,6 +576,12 @@ namespace ChipmunkSharp
 			a = new Thread(null, leafA, nextA);
 			b = new Thread(null, leafB, nextB);
 			id = 0;
+		}
+
+		public void Recycle(cpBBTree tree)
+		{
+			this.a.prev = tree.pooledPairs;
+			tree.pooledPairs = this;
 		}
 
 
@@ -568,12 +651,14 @@ namespace ChipmunkSharp
 			}
 		}
 
+
+
 		//MARK: Misc Functions
-		[Obsolete]
-		public void GetBB(object objElement, IObjectBox dest)
+
+		public void GetBB(IObjectBox obj, IObjectBox dest)
 		{
 			//TODO: GETBB
-			IObjectBox obj = objElement as IObjectBox;
+
 			var velocityFunc = this.velocityFunc;
 			if (velocityFunc != null)
 			{
@@ -625,7 +710,7 @@ namespace ChipmunkSharp
 			// TODO: would be lovely to move the pairs stuff into an external data structure.
 			var tree = GetMasterTree();
 
-			pair.a.next = tree.pooledPairs;
+			pair.a.prev = tree.pooledPairs;
 			tree.pooledPairs = pair;
 		}
 
@@ -720,17 +805,17 @@ namespace ChipmunkSharp
 			}
 			else if (subtree.isLeaf)
 			{
-				return new Node(leaf, subtree, this);
+				return MakeNode(leaf, subtree);
 			}
 			else
 			{
-				double cost_a = subtree.B.bb.Area() + subtree.A.bb.MergedArea(leaf.bb);// cpBBMergedArea(subtree->A->bb, leaf->bb);
-				double cost_b = subtree.A.bb.Area() + subtree.B.bb.MergedArea(leaf.bb);  //cpBBArea(subtree->A->bb) + cpBBMergedArea(subtree->B->bb, leaf->bb);
+				var cost_a = subtree.B.bbArea() + subtree.A.bb.MergedArea(leaf.bb);
+				var cost_b = subtree.A.bbArea() + subtree.B.bb.MergedArea(leaf.bb);
 
 				if (cost_a == cost_b)
 				{
 					cost_a = subtree.A.bb.Proximity(leaf.bb);
-					cost_b = subtree.B.bb.Proximity(leaf.bb);// cpBBProximity(subtree->B->bb, leaf->bb);
+					cost_b = subtree.B.bb.Proximity(leaf.bb);
 				}
 
 				if (cost_b < cost_a)
@@ -742,7 +827,13 @@ namespace ChipmunkSharp
 					subtree.SetA(SubtreeInsert(subtree.A, leaf));
 				}
 
-				subtree.bb = subtree.bb.Merge(leaf.bb);// cpBBMerge(subtree->bb, leaf->bb);
+				//		subtree.bb = bbMerge(subtree.bb, leaf.bb);
+				subtree.bb.l = Math.Min(subtree.bb.l, leaf.bb.l);
+				subtree.bb.b = Math.Min(subtree.bb.b, leaf.bb.b);
+				subtree.bb.r = Math.Max(subtree.bb.r, leaf.bb.r);
+				subtree.bb.t = Math.Max(subtree.bb.t, leaf.bb.t);
+
+
 				return subtree;
 			}
 
@@ -814,7 +905,8 @@ namespace ChipmunkSharp
 				{
 					var other = subtree.Other(leaf);
 					other.parent = subtree.parent;
-					NodeRecycle(subtree);
+					//NodeRecycle();
+					subtree.Recycle(this);
 					return other;
 				}
 				else
@@ -832,70 +924,33 @@ namespace ChipmunkSharp
 		//MARK: Marking Functions
 
 
-		public bool LeafUpdate(Node leaf)
-		{
-			Node root = this.root;
-			cpBB bb = leaf.obj.bb;// spatialIndex.bbfunc(leaf->obj);
 
-			if (!leaf.bb.ContainsBB(bb))
-			{
-				leaf.bb = GetBB(leaf.obj);
-
-				root = SubtreeRemove(root, leaf as Leaf);
-				this.root = SubtreeInsert(root, leaf as Leaf);
-
-				PairsClear(leaf);
-				leaf.STAMP = GetMasterTree().stamp;
-
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
 
 		static ulong VoidQueryFunc(object obj1, object obj2, ulong id, object data) { return id; }
 
-		public void LeafAddPairs(Node leaf)
-		{
-			cpBBTree dynamicIndex = this.dynamicIndex;
 
-			if (dynamicIndex != null)
-			{
-				Node dynamicRoot = dynamicIndex.GetRootIfTree();
 
-				if (dynamicRoot != null)
-				{
-					cpBBTree dynamicTree = dynamicIndex;
-					MarkContext context = new MarkContext(dynamicTree, null, null, null);
-					//dynamicRoot.MarkLeafQuery(this, true, dynamicIndex, null);
-					dynamicRoot.MarkLeafQuery(leaf, true, context);
-				}
-			}
-			else
-			{
-				var staticRoot = this.staticIndex.GetRootIfTree();
-				MarkContext context = new MarkContext(this, staticRoot, VoidQueryFunc, null);
-				leaf.MarkLeaf(context);
-			}
-		}
+
 		public Leaf Insert(ulong hashid, IObjectBox obj)
 		{
 			Leaf leaf = new Leaf(this, obj);
 
+
 			this.leaves.Add(hashid, leaf);
 
 			Node root = this.root;
+
 			this.root = SubtreeInsert(root, leaf);
 
 
 			//this.root = cp.subtreeInsert(root, leaf, this);
 
-			leaf.STAMP = GetMasterTree().stamp;
-			LeafAddPairs(leaf); //.AddPairs(this);
+			leaf.STAMP = GetStamp();
+			leaf.AddPairs(this); //.AddPairs(this);
 			IncrementStamp();
 			return leaf;
+
+
 		}
 
 		public void Remove(ulong key)
@@ -907,8 +962,10 @@ namespace ChipmunkSharp
 				leaves.Remove(key);
 
 				this.root = this.SubtreeRemove(this.root, leaf);// cp.SubtreeRemove(this.root, leaf, this);
-				PairsClear(leaf);
-				NodeRecycle(leaf);
+				leaf.ClearPairs(this);
+				leaf.Recycle(this);
+				//PairsClear(leaf);
+				//NodeRecycle(leaf);
 			}
 		}
 
@@ -951,9 +1008,9 @@ namespace ChipmunkSharp
 
 		}
 
-		public void LeafUpdateWrap(Node leaf)
+		public void LeafUpdateWrap(Leaf leaf)
 		{
-			LeafUpdate(leaf);
+			leaf.Update(this);
 		}
 
 		public Node MakeNode(Node a, Node b)
@@ -972,21 +1029,30 @@ namespace ChipmunkSharp
 			}
 		}
 
+		public void SetFilter(Func<object, object, bool> func, object data)
+		{
+			List<ulong> safeDelete = new List<ulong>();
+			foreach (var item in leaves)
+				if (!func(item.Value, data))
+					safeDelete.Add(item.Key);
+
+			foreach (var item in safeDelete)
+				Remove(item);
+		}
+
 		public void ReindexQuery(Func<object, object, ulong, object, ulong> func, object data)
 		{
 
 			if (this.root == null) return;
 
-			// LeafUpdate() may modify tree->root. Don't cache it.
 			foreach (var item in leaves)
-				this.LeafUpdateWrap(item.Value);//  LeafUpdate()
+				item.Value.Update(this);
 
 			var staticIndex = this.staticIndex;
 			Node staticRoot = staticIndex != null ? staticIndex.root : null;
 
-
 			MarkContext context = new MarkContext(this, staticRoot, func, data);
-			this.root.MarkSubtree(context);
+			this.root.MarkSubtree(this, staticRoot, func);// ref context);
 
 			if (staticIndex != null && staticRoot == null)
 				CollideStatic(staticIndex, func, data);
@@ -1021,8 +1087,8 @@ namespace ChipmunkSharp
 			if (leaves.TryGetValue(hashid, out leaf))
 			{
 
-				if (this.LeafUpdate(leaf))
-					LeafAddPairs(leaf);
+				if (leaf.Update(this))
+					leaf.AddPairs(this);
 
 				IncrementStamp();
 			}
@@ -1031,6 +1097,7 @@ namespace ChipmunkSharp
 		//MARK: Query
 		public void SegmentQuery(object obj, cpVect a, cpVect b, double t_exit, Func<object, object, object, double> func, object data)
 		{
+
 			//Node* root = root;
 			if (root != null)
 				SubtreeSegmentQuery(this.root, obj, a, b, t_exit, func, data);
@@ -1119,7 +1186,10 @@ namespace ChipmunkSharp
 			{
 				Node tmp = null;
 				for (var i = offset; i < count; i++)
+				{
+
 					tmp = SubtreeInsert(tmp, nodes[i]);
+				}
 				return tmp;
 			}
 

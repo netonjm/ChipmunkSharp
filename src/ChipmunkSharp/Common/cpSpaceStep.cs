@@ -180,10 +180,13 @@ namespace ChipmunkSharp
 			//{// Reject any of the simple cases
 			if (QueryReject(a, b)) return id;
 
-			contactsBuffer.Clear();
+			//contactsBuffer.Clear();
+
+			List<cpContact> contacts = new List<cpContact>();
+
 			// Narrow-phase collision detection.
 			//int numContacts = cpCollideShapes(a, b, contacts);
-			cpCollisionInfo info = cpCollision.cpCollide(a, b, id, ref this.contactsBuffer);
+			cpCollisionInfo info = cpCollision.cpCollide(a, b, id, ref contacts);
 
 			if (info.count == 0)
 				return info.id; // Shapes are not colliding.
@@ -289,7 +292,7 @@ namespace ChipmunkSharp
 		public void Step(double dt)
 		{
 			// don't step if the timestep is 0!
-			if (dt == 0) return;
+			if (dt == 0.0) return;
 
 			this.stamp++;
 
@@ -315,8 +318,9 @@ namespace ChipmunkSharp
 				}
 			}
 
-			this.contactsBuffer.Clear();
-			this.arbiters.Clear();
+			this.arbiters.Clear();// = 0;
+
+			//this.arbiters.num = 0;
 
 			Lock();
 			{
@@ -327,8 +331,10 @@ namespace ChipmunkSharp
 					bodies[i].position_func(dt);
 				}
 
+				//contactsBuffer.Clear();
+
 				// Find colliding pairs.
-				this.dynamicShapes.Each(shape => cpShape.UpdateFunc(shape as cpShape, null));
+				this.dynamicShapes.Each(shape => cpShape.UpdateFunc((cpShape)shape , null));
 
 				if (CollisionEnabled)
 					this.dynamicShapes.ReindexQuery(
@@ -343,6 +349,7 @@ namespace ChipmunkSharp
 
 			Lock();
 			{
+
 				List<ulong> safeDelete = new List<ulong>();
 				// Clear out old cached arbiters and call separate callbacks
 				foreach (var hash in this.cachedArbiters)
@@ -357,6 +364,7 @@ namespace ChipmunkSharp
 				// Prestep the arbiters and constraints.
 				var slop = this.collisionSlop;
 				var biasCoef = 1 - cp.cpfpow(this.collisionBias, dt);
+
 				for (i = 0; i < arbiters.Count; i++)
 				{
 					arbiters[i].PreStep(dt, slop, biasCoef);

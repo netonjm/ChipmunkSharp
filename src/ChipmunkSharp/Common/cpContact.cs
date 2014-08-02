@@ -73,6 +73,7 @@ namespace ChipmunkSharp
 
 		public void Draw(cpDebugDraw m_debugDraw)
 		{
+			m_debugDraw.DrawPoint(r1, 1, cpColor.Red);
 			m_debugDraw.DrawPoint(r2, 1, cpColor.Red);
 		}
 

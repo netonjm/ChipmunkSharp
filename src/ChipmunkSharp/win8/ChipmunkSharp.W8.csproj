@@ -109,6 +109,9 @@
     <Compile Include="..\Common\cpSpaceStep.cs">
       <Link>cpSpaceStep.cs</Link>
     </Compile>
+    <Compile Include="..\Common\cpTransform.cs">
+      <Link>cpTransform.cs</Link>
+    </Compile>
     <Compile Include="..\Common\cpVect.cs">
       <Link>cpVect.cs</Link>
     </Compile>

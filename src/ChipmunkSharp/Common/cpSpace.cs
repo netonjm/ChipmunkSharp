@@ -112,7 +112,7 @@ namespace ChipmunkSharp
 		public List<cpPostStepCallback> postStepCallbacks;
 
 
-		List<cpContact> contactsBuffer = new List<cpContact>(); //Not used
+		//List<cpContact> contactsBuffer = new List<cpContact>(); //Not used
 
 		/// The designated static body for this space.
 		/// You can modify this body, or replace it with your own static body.

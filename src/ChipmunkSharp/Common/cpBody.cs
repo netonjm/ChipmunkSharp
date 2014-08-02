@@ -584,7 +584,11 @@ namespace ChipmunkSharp
 
 		public void UpdatePosition(double dt)
 		{
-			cpVect p = this.p = cpVect.cpvadd(this.p, cpVect.cpvmult(cpVect.cpvadd(this.v, this.v_bias), dt));
+			cpVect p = this.p = cpVect.cpvadd(
+				this.p,
+				cpVect.cpvmult(cpVect.cpvadd(this.v, this.v_bias), dt)
+				);
+
 			double a = SetAngle(this, this.a + (this.w + this.w_bias) * dt);
 
 			SetTransform(p, a);
@@ -803,28 +807,63 @@ namespace ChipmunkSharp
 			// TODO should also activate joints!
 		}
 
+		//public void PushArbiter(cpArbiter arb)
+		//{
+
+		//	cp.assertSoft(cpArbiter.ThreadForBody(arb, this).next == null, "Internal Error: Dangling contact graph pointers detected. (A)");
+		//	cp.assertSoft(cpArbiter.ThreadForBody(arb, this).prev == null, "Internal Error: Dangling contact graph pointers detected. (B)");
+
+		//	cpArbiter next = this.arbiterList;
+
+		//	cp.assertSoft(next == null || cpArbiter.ThreadForBody(next, this).prev == null, "Internal Error: Dangling contact graph pointers detected. (C)");
+
+		//	cpArbiterThread thread = cpArbiter.ThreadForBody(arb, this);
+		//	thread.next = next;
+
+		//	if (next != null)
+		//	{
+		//		var threadNext = cpArbiter.ThreadForBody(next, this);
+		//		threadNext.prev = arb;
+		//	}
+
+		//	this.arbiterList = arb;
+		//}
+
 		public void PushArbiter(cpArbiter arb)
 		{
 
-			cp.assertSoft(cpArbiter.ThreadForBody(arb, this).next == null, "Internal Error: Dangling contact graph pointers detected. (A)");
-			cp.assertSoft(cpArbiter.ThreadForBody(arb, this).prev == null, "Internal Error: Dangling contact graph pointers detected. (B)");
+			cp.assertSoft((arb.body_a == this ? arb.thread_a.next : arb.thread_b.next) == null,
+			"Internal Error: Dangling contact graph pointers detected. (A)");
+			cp.assertSoft((arb.body_a == this ? arb.thread_a.prev : arb.thread_b.prev) == null,
+				"Internal Error: Dangling contact graph pointers detected. (B)");
 
-			cpArbiter next = this.arbiterList;
+			var next = this.arbiterList;
 
-			cp.assertSoft(next == null || cpArbiter.ThreadForBody(next, this).prev == null, "Internal Error: Dangling contact graph pointers detected. (C)");
+			cp.assertSoft(next == null || (next.body_a == this ? next.thread_a.prev : next.thread_b.prev) == null,
+				"Internal Error: Dangling contact graph pointers detected. (C)");
 
-			cpArbiterThread thread = cpArbiter.ThreadForBody(arb, this);
-			thread.next = next;
+			if (arb.body_a == this)
+			{
+				arb.thread_a.next = next;
+			}
+			else
+			{
+				arb.thread_b.next = next;
+			}
 
 			if (next != null)
 			{
-				var threadNext = cpArbiter.ThreadForBody(next, this);
-				threadNext.prev = arb;
+				if (next.body_a == this)
+				{
+					next.thread_a.prev = arb;
+				}
+				else
+				{
+					next.thread_b.prev = arb;
+				}
 			}
-
 			this.arbiterList = arb;
 		}
-
 
 
 
@@ -969,16 +1008,16 @@ namespace ChipmunkSharp
 		static void cpv_assert_sane(cpVect v, string message) { cpv_assert_nan(v, message); cpv_assert_infinite(v, message); }
 		public void SanityCheck()
 		{
-			cp.assertHard(m >= 0.0f, "Body's mass is negative.");
-			cp.assertHard(i >= 0.0f, "Body's moment is negative.");
+			//cp.assertHard(m >= 0.0f, "Body's mass is negative.");
+			//cp.assertHard(i >= 0.0f, "Body's moment is negative.");
 
-			cpv_assert_sane(p, "Body's position is invalid.");
-			cpv_assert_sane(v, "Body's velocity is invalid.");
-			cpv_assert_sane(f, "Body's force is invalid.");
+			//cpv_assert_sane(p, "Body's position is invalid.");
+			//cpv_assert_sane(v, "Body's velocity is invalid.");
+			//cpv_assert_sane(f, "Body's force is invalid.");
 
-			cp.assertHard(cp.cpfabs(a) != cp.Infinity, "Body's angle is invalid.");
-			cp.assertHard(cp.cpfabs(w) != cp.Infinity, "Body's angular velocity is invalid.");
-			cp.assertHard(cp.cpfabs(t) != cp.Infinity, "Body's torque is invalid.");
+			//cp.assertHard(cp.cpfabs(a) != cp.Infinity, "Body's angle is invalid.");
+			//cp.assertHard(cp.cpfabs(w) != cp.Infinity, "Body's angular velocity is invalid.");
+			//cp.assertHard(cp.cpfabs(t) != cp.Infinity, "Body's torque is invalid.");
 
 		}
 		private void AssertSaneBody()

@@ -129,10 +129,17 @@ namespace ChipmunkSharp
 
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
-			var a = this.a.LocalToWorld(this.anchorA);
-			var b = this.b.LocalToWorld(this.anchorB);
-			m_debugDraw.DrawCircle(a, 2, cpColor.Grey);
-			m_debugDraw.DrawCircle(b, 2, cpColor.Grey);
+			//var a = this.a.LocalToWorld(this.anchorA);
+			//var b = this.b.LocalToWorld(this.anchorB);
+			//m_debugDraw.DrawCircle(a, 2, cpColor.Grey);
+			//m_debugDraw.DrawCircle(b, 2, cpColor.Grey);
+
+			cpVect a = cpTransform.cpTransformPoint(this.a.transform, this.anchorA);
+			cpVect b = cpTransform.cpTransformPoint(this.b.transform, this.anchorB);
+
+			m_debugDraw.DrawSegment(a, b, cpColor.Grey);
+			m_debugDraw.DrawPoint(a, 5, cpColor.DarkGrey);
+			m_debugDraw.DrawPoint(b, 5, cpColor.DarkGrey);
 
 		}
 

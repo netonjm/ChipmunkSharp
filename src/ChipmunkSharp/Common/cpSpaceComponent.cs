@@ -65,19 +65,6 @@ namespace ChipmunkSharp
 					// If the static body is bodyB then all is good. If the static body is bodyA, that can easily be checked.
 					if (body == bodyA || bodyA.bodyType == cpBodyType.STATIC)
 					{
-						//int numContacts = arb.count;
-						//List<cpContact> contacts = arb.contacts;
-
-						// Restore contact values back to the space's contact buffer memory
-						//arb.contacts = cpContactBufferGetArray(space);
-						//memcpy(arb->contacts, contacts, numContacts*sizeof( cpContact));
-						//cpSpacePushContacts(space, numContacts);
-
-						//foreach (var item in arb.contacts)
-						//{
-						//	this.contactsBuffer.Add(item);
-						//}
-
 						cpShape a = arb.a, b = arb.b;
 						this.cachedArbiters.Add(cp.CP_HASH_PAIR(a.hashid, b.hashid), arb);
 
@@ -174,7 +161,7 @@ namespace ChipmunkSharp
 
 			// Awaken any sleeping bodies found and then push arbiters to the bodies' lists.
 
-			List<cpArbiter> arbiters = this.arbiters;
+			List<cpArbiter> arbiters = this.arbiters; // new List<cpArbiter>();
 			var count = arbiters.Count; //FIX: we cannot read the count values of the array because it changes inside
 
 			for (int i = 0; i < count; i++)
