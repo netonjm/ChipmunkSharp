@@ -425,7 +425,7 @@ namespace ChipmunkSharp
 			return set;
 		}
 
-		public void SetContactPointSet(cpContactPointSet set)
+		public void SetContactPointSet(ref cpContactPointSet set)
 		{
 			int count = set.Count;
 

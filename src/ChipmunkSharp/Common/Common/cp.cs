@@ -134,40 +134,12 @@ namespace ChipmunkSharp
 			return a * CP_HASH_COEF ^ b * CP_HASH_COEF;
 		}
 
-		//		#define CP_HASH_COEF (3344921057ul)
-		//#define CP_HASH_PAIR(A, B) ((cpHashValue)(A)*CP_HASH_COEF ^ (cpHashValue)(B)*CP_HASH_COEF)
-
-
 		public static double PHYSICS_INFINITY { get { return Infinity; } }
 
 		public static void resetShapeIdCounter()
 		{
 			shapeIDCounter = 0;
 		}
-
-		//public static string hashPair(string a, string b)
-		//{
-
-		//	try
-		//	{
-		//		return Convert.ToInt32(a) < Convert.ToInt32(b) ? a + " " + b : b + " " + a;
-		//	}
-		//	catch (Exception)
-		//	{
-		//		//long number1 = 0;
-		//		//var test = a.Split(' ');
-		//		//for (int i = 0; i < a.Length; i++)
-		//		//{
-
-		//		//}
-		//		//long number1 = 0;
-
-		//		return a + " " + b;
-
-		//		//return a.Split(' ') < b ? a + " " + b : b + " " + a;
-		//	}
-
-		//}
 
 		public static void CircleSegmentQuery(cpShape shape, cpVect center, double r1, cpVect a, cpVect b, double r2, ref cpSegmentQueryInfo info)
 		{
@@ -200,8 +172,6 @@ namespace ChipmunkSharp
 				}
 			}
 		}
-
-
 		public static cpVect relative_velocity(cpBody a, cpBody b, cpVect r1, cpVect r2)
 		{
 
@@ -227,23 +197,6 @@ namespace ChipmunkSharp
 			apply_impulse(a, cpVect.cpvneg(j), r1);
 			apply_impulse(b, j, r2);
 		}
-
-		//public static void apply_impulses(cpBody a, cpBody b, cpVect r1, cpVect r2, double jx, double jy)
-		//{
-		//	apply_impulse(a, -jx, -jy, r1);
-		//	apply_impulse(b, jx, jy, r2);
-		//}
-
-
-		//public static void apply_impulse(cpBody body, double jx, double jy, cpVect r)
-		//{
-		//	//	body.v = body.v.add(vmult(j, body.m_inv));
-		//	body.v.x += jx * body.m_inv;
-		//	body.v.y += jy * body.m_inv;
-		//	//	body.w += body.i_inv*vcross(r, j);
-		//	body.w += body.i_inv * (r.x * jy - r.y * jx);
-		//}
-
 
 		public static void apply_bias_impulse(cpBody body, cpVect j, cpVect r)
 		{
@@ -315,11 +268,6 @@ namespace ChipmunkSharp
 		{
 			return 1.0f - cpfpow(errorBias, dt);
 		}
-
-
-
-
-
 
 		//===========================================================
 
@@ -488,12 +436,17 @@ namespace ChipmunkSharp
 
 		public static void Trace(string message)
 		{
+#if DEBUG
 			Debug.WriteLine(message);
+#endif
 		}
 
 		public static void Error(string message)
 		{
+#if DEBUG
 			Debug.Assert(false, message);
+#endif
+
 		}
 
 		#endregion
@@ -616,11 +569,10 @@ namespace ChipmunkSharp
 
 		//MARK: Quick Hull
 
-		public static void LoopIndexes(ref cpVect[] verts, ref int start, ref int end)
+		public static void LoopIndexes(ref cpVect[] verts, int count, out int start, out int end)
 		{
 			start = 0;
 			end = 0;
-			int count = verts.Length;
 
 			cpVect min = verts[0];
 			cpVect max = min;
@@ -642,126 +594,127 @@ namespace ChipmunkSharp
 			}
 		}
 
-		private static int QHullPartition(cpVect[] verts, cpVect a, cpVect b, double tol)
+		private static int QHullPartition(ref cpVect[] verts, int verts_index, int count, cpVect a, cpVect b, double tol)
 		{
-			throw new NotImplementedException();
-			//int count = verts.Length;
 
-			//double max = 0;
-			//int pivot = 0;
+			if (count == 0) return 0;
 
-			//cpVect delta = cpVect.cpvsub(b, a);
-			//double valueTol = tol * cpVect.cpvlength(delta);
+			double max = 0;
+			int pivot = 0;
 
-			//int head = 0;
-			//for (int tail = count - 1; head <= tail; )
-			//{
-			//	double value = cpVect.cpvcross(cpVect.cpvsub(verts[head], a), delta);
-			//	if (value > valueTol)
-			//	{
-			//		if (value > max)
-			//		{
-			//			max = value;
-			//			pivot = head;
-			//		}
+			cpVect delta = cpVect.cpvsub(b, a);
+			double valueTol = tol * cpVect.cpvlength(delta);
 
-			//		head++;
-			//	}
-			//	else
-			//	{
-			//		SWAP(verts[head], verts[tail]);
-			//		tail--;
-			//	}
-			//}
+			int head = 0;
+			for (int tail = count - 1; head <= tail; )
+			{
+				double value = cpVect.cpvcross(cpVect.cpvsub(verts[head + verts_index], a), delta);
+				if (value > valueTol)
+				{
+					if (value > max)
+					{
+						max = value;
+						pivot = head;
+					}
 
-			//// move the new pivot to the front if it's not already there.
-			//if (pivot != 0) SWAP(verts[0], verts[pivot]);
-			//return head;
+					head++;
+				}
+				else
+				{
+					SWAP(ref verts[verts_index + head], ref verts[verts_index + tail]);
+					tail--;
+				}
+			}
+
+			// move the new pivot to the front if it's not already there.
+			if (pivot != 0) SWAP(ref verts[verts_index], ref verts[verts_index + pivot]);
+			return head;
 		}
 
-		//public static int QHullReduce(double tol, cpVect[] verts, int offs, int count, cpVect a, cpVect pivot, cpVect b,ref cpVect[] result)
-		//{
-		//	//throw new NotImplementedException();
-		//	if (count < 0)
-		//	{
-		//		return 0;
-		//	}
-		//	else if (count == 0)
-		//	{
-		//		result[0] = pivot;
-		//		return 1;
-		//	}
-		//	else
-		//	{
-		//		int left_count = QHullPartition(verts, a, pivot, tol);
-		//		int index = QHullReduce(tol, verts + 1, left_count - 1, a, verts[0], pivot, result);
+		public static int QHullReduce(float tol, cpVect[] verts, int verts_index, int count, cpVect a, cpVect pivot, cpVect b, ref cpVect[] result, int result_index)
+		{
 
-		//		result[index++] = pivot;
+			if (count < 0)
+			{
+				return 0;
+			}
+			else if (count == 0)
+			{
+				result[result_index] = pivot;
+				return 1;
+			}
+			else
+			{
+				int left_count = QHullPartition(ref verts, verts_index, count, a, pivot, tol);
+				int index = QHullReduce(tol, verts, verts_index + 1, left_count - 1, a, verts[verts_index], pivot, ref result, result_index);
 
-		//		int right_count = QHullPartition(verts + left_count, count - left_count, pivot, b, tol);
-		//		return index + QHullReduce(tol, verts + left_count + 1, right_count - 1, pivot, verts[left_count], b, result + index);
-		//	}
-		//}
+				result[(index++) + result_index] = pivot;
+
+
+
+				int right_count = QHullPartition(ref verts, verts_index + left_count, count - left_count, pivot, b, tol);
+
+
+				int new_index = verts_index + left_count;
+
+				if (new_index > verts.Length - 1)
+					new_index = verts.Length - 1;
+
+
+				return index + QHullReduce(tol, verts, verts_index + left_count + 1, right_count - 1, pivot, verts[new_index], b, ref result, result_index + index);
+			}
+		}
 
 
 		// QuickHull seemed like a neat algorithm, and efficient-ish for large input sets.
 		// My implementation performs an in place reduction using the result array as scratch space.
-		//public int ConvexHull(int count, cpVect[] verts, ref cpVect[] result, ref int first, double tol)
-		//{
+		public static int ConvexHull(int count, cpVect[] verts, ref cpVect[] result, int? first, int tol)
+		{
 
-		//	if (verts != result)
-		//	{
+			if (verts != result)
+			{
 
-		//		for (int i = 0; i < verts.Length; i++)
-		//		{
-		//			result[i] = new cpVect(verts[i]);
-		//		}
-
-
-		//		// Copy the line vertexes into the empty part of the result polyline to use as a scratch buffer.
-		//		//memcpy(result, verts, count * sizeof(cpVect));
-		//		//TODO: NOT IMPLEMENTED
-		//	}
-
-		//	// Degenerate case, all points are the same.
-		//	int start, end;
-
-		//	LoopIndexes(ref verts, ref start, ref end);
-		//	if (start == end)
-		//	{
-		//		if (first > 0)
-		//			first = 0;
-
-		//		return 1;
-		//	}
-
-		//	SWAP(ref result[0], ref result[start]);
-		//	SWAP(ref result[1], ref result[end == 0 ? start : end]);
-
-		//	cpVect a = result[0];
-		//	cpVect b = result[1];
-
-		//	if (first > 0)
-		//		first = start;
+				for (int i = 0; i < verts.Length; i++)
+				{
+					result[i] = new cpVect(verts[i]);
+				}
 
 
+				// Copy the line vertexes into the empty part of the result polyline to use as a scratch buffer.
+				//memcpy(result, verts, count * sizeof(cpVect));
+				//TODO: NOT IMPLEMENTED
+			}
 
-		//	cpVect[] vertices = new cpVect[verts.Length];
-		//	for (int i = 0; i < verts.Length; i++)
-		//		vertices[i] = new cpVect(verts[i]);
+			// Degenerate case, all points are the same.
+			int start, end;
 
+			LoopIndexes(ref verts, count, out start, out end);
+			if (start == end)
+			{
+				if (first.HasValue)
+					first = 0;
 
-		//	Array.Resize(ref result, result.Length + 2);
-		//	Array.Resize(ref vertices, vertices.Length + 1);
+				return 1;
+			}
 
-		//	return QHullReduce(tol, result, count - 2, a, b, a, vertices) + 1;
+			SWAP(ref result[0], ref result[start]);
+			SWAP(ref result[1], ref result[end == 0 ? start : end]);
 
-		//}
+			cpVect a = result[0];
+			cpVect b = result[1];
+
+			if (first.HasValue)
+				first = start;
 
 
 
+			//Array.Resize(ref result, result.Length + 1);
 
-		private void SWAP(ref cpVect first, ref cpVect second)
+			return QHullReduce(tol, result, 0 + 2, count - 2, a, b, a, ref result, 0 + 1) + 1;
+
+		}
+
+		public static void SWAP(ref cpVect first, ref cpVect second)
 		{
 			var tmp = first;
 			first = second;

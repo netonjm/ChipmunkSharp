@@ -272,7 +272,7 @@ namespace ChipmunkSharp
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
 
-			if (m_debugDraw.Flags == cpDrawFlags.Shapes || m_debugDraw.Flags == cpDrawFlags.All)
+			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.Shapes) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
 			{
 				cpColor color = cp.GetShapeColor(this);
 				int count = Count;
@@ -282,10 +282,8 @@ namespace ChipmunkSharp
 				m_debugDraw.DrawPolygon(verts, count, color);
 			}
 
-			if (m_debugDraw.Flags == cpDrawFlags.BB || m_debugDraw.Flags == cpDrawFlags.All)
+			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.BB) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
 				m_debugDraw.DrawBB(bb, cpColor.Green);
-
-
 		}
 
 		public static cpPolyShape BoxShape(cpBody body, double width, double height, double radius)

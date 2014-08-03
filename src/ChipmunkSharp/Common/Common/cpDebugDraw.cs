@@ -29,33 +29,33 @@ namespace ChipmunkSharp
 	public enum cpDrawFlags
 	{
 
-		None = 0,
+		None = 1 << 0,
 
 
 		/// <summary>
 		/// Draw shapes.
 		/// </summary>
-		Shapes = 1,
+		Shapes = 1 << 1,
 
 		/// <summary>
 		/// Draw joint connections.
 		/// </summary>
-		Joints = 2,
+		Joints = 1 << 2,
 
 		/// <summary>
 		/// Draw contact points.
 		/// </summary>
-		ContactPoints = 3,
+		ContactPoints = 1 << 3,
 
 		/// <summary>
 		/// Draw polygon BB.
 		/// </summary>
-		BB = 4,
+		BB = 1 << 4,
 
 		/// <summary>
 		/// Draw All connections.
 		/// </summary>
-		All = 10,
+		All = 1 << 10,
 
 	}
 

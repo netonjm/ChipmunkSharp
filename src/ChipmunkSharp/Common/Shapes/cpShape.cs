@@ -225,14 +225,14 @@ namespace ChipmunkSharp
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
 
-			if (m_debugDraw.Flags == cpDrawFlags.Shapes || m_debugDraw.Flags == cpDrawFlags.All)
+			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.Shapes) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
 			{
 				cpColor color = cp.GetShapeColor(this);
 				m_debugDraw.DrawSolidCircle(new cpVect(tc.x, tc.y), r, cpVect.Zero, color);
 				m_debugDraw.DrawSegment(tc, cpVect.Multiply(body.GetRotation(), this.r).Add(this.tc), color);
 			}
 
-			if (m_debugDraw.Flags == cpDrawFlags.BB || m_debugDraw.Flags == cpDrawFlags.All)
+			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.BB) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
 				m_debugDraw.DrawBB(bb, cpColor.Green);
 
 		}
@@ -430,14 +430,15 @@ namespace ChipmunkSharp
 		public override void Draw(cpDebugDraw m_debugDraw)
 		{
 
-			if (m_debugDraw.Flags == cpDrawFlags.Shapes || m_debugDraw.Flags == cpDrawFlags.All)
+
+			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.Shapes) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
 			{
 				cpColor color = cp.GetShapeColor(this);
 				var lineWidth = cp.cpfmax(1, this.r);  // take a look if we need to apply scale for radius
 				m_debugDraw.DrawSegment(ta, tb, lineWidth, color);
 			}
 
-			if (m_debugDraw.Flags == cpDrawFlags.BB || m_debugDraw.Flags == cpDrawFlags.All)
+			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.BB) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
 				m_debugDraw.DrawBB(bb, cpColor.Green);
 
 		}

@@ -766,18 +766,18 @@ namespace ChipmunkSharp
 			m_debugDraw.DrawString(0, 50, string.Format("Bodies : {0}/{1}", dynamicBodies.Count + staticBodies.Count, dynamicBodies.Capacity));
 			m_debugDraw.DrawString(0, 80, string.Format("Arbiters: {0}/{1}", arbiters.Count, arbiters.Capacity));
 
-			if (m_debugDraw.Flags == cpDrawFlags.All || m_debugDraw.Flags == cpDrawFlags.BB || m_debugDraw.Flags == cpDrawFlags.Shapes)
+			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.All) || m_debugDraw.Flags.HasFlag(cpDrawFlags.BB) || m_debugDraw.Flags.HasFlag(cpDrawFlags.Shapes))
 			{
 				EachShape(s => s.Draw(m_debugDraw));
 			}
 
-			if (m_debugDraw.Flags == cpDrawFlags.All || m_debugDraw.Flags == cpDrawFlags.Joints)
+			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.Joints) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
 			{
 				EachConstraint(c => c.Draw(m_debugDraw));
 			}
 
 			var contacts = 0;
-			if (m_debugDraw.Flags == cpDrawFlags.All || m_debugDraw.Flags == cpDrawFlags.ContactPoints)
+			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.All) || m_debugDraw.Flags.HasFlag(cpDrawFlags.ContactPoints))
 			{
 				for (var i = 0; i < arbiters.Count; i++)
 				{

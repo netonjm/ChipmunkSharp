@@ -80,7 +80,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Linq;
-using System.Collections.Specialized;
 
 namespace ChipmunkSharp
 {
