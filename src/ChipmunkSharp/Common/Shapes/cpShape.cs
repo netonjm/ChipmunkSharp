@@ -132,14 +132,14 @@ namespace ChipmunkSharp
 
 		}
 
-		public static cpShapeMassInfo cpPolyShapeMassInfo(double mass, cpVect[] verts, double radius)
+		public static cpShapeMassInfo cpPolyShapeMassInfo(double mass, int count, cpVect[] verts, double radius)
 		{
 
-			cpVect centroid = cp.CentroidForPoly(verts);
+			cpVect centroid = cp.CentroidForPoly(count,verts);
 
 			var info = new cpShapeMassInfo(
 				mass,
-				cp.MomentForPoly(1.0f, verts, cpVect.cpvneg(centroid), radius),
+				cp.MomentForPoly(1.0f,count, verts, cpVect.cpvneg(centroid), radius),
 				centroid,
 				cp.areaForCircle(0.0f, radius)
 			);
@@ -233,7 +233,7 @@ namespace ChipmunkSharp
 			}
 
 			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.BB) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
-				m_debugDraw.DrawBB(bb, cpColor.Green);
+				bb.Draw(m_debugDraw);
 
 		}
 
@@ -439,7 +439,7 @@ namespace ChipmunkSharp
 			}
 
 			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.BB) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
-				m_debugDraw.DrawBB(bb, cpColor.Green);
+				bb.Draw(m_debugDraw);
 
 		}
 
@@ -495,9 +495,13 @@ namespace ChipmunkSharp
 
 		#endregion
 
+		public static cpShapeFilter FILTER_ALL = new cpShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, cp.ALL_CATEGORIES);
+		public static cpShapeFilter FILTER_NONE = new cpShapeFilter(cp.NO_GROUP, ~cp.ALL_CATEGORIES, ~cp.ALL_CATEGORIES);
+
 
 		public cpShape(cpBody body, cpShapeMassInfo massInfo)
 		{
+
 
 
 
@@ -655,11 +659,11 @@ namespace ChipmunkSharp
 
 		public bool SegmentQuery(cpVect a, cpVect b, double radius, ref cpSegmentQueryInfo info)
 		{
-			if (info != null)
+			if (info == null)
 				info = new cpSegmentQueryInfo(null, b, cpVect.Zero, 1.0f);
 
 			cpPointQueryInfo nearest = null;
-			pointQuery(a, ref nearest);
+			PointQuery(a, ref nearest);
 
 			if (nearest.distance <= radius)
 			{
@@ -679,6 +683,7 @@ namespace ChipmunkSharp
 		protected virtual void pointQuery(cpVect p, ref cpPointQueryInfo info)
 		{
 			throw new NotImplementedException();
+
 		}
 		protected virtual void segmentQuery(cpVect a, cpVect b, double radius, ref cpSegmentQueryInfo info)
 		{

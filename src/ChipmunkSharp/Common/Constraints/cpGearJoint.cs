@@ -101,18 +101,18 @@ namespace ChipmunkSharp
 
 
 
-		public double GetPhase()
+		public override double GetPhase()
 		{
 			return this.phase;
 		}
 
-		public void SetPhase(double phase)
+		public override void SetPhase(double phase)
 		{
 			ActivateBodies();
 			this.phase = phase;
 		}
 
-		public double GetRatio()
+		public override double GetRatio()
 		{
 			return this.ratio;
 		}

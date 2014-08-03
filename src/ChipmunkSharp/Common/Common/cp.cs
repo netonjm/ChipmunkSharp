@@ -500,10 +500,10 @@ namespace ChipmunkSharp
 			return (m * sum1) / (6.0f * sum2);
 		}
 
-		public static double MomentForPoly(double m, cpVect[] verts, cpVect offset, double r)
-		{
-			return MomentForPoly(m, verts.Length, verts, offset, r);
-		}
+		//public static double MomentForPoly(double m, cpVect[] verts, cpVect offset, double r)
+		//{
+		//	return MomentForPoly(m, verts.Length, verts, offset, r);
+		//}
 
 		public static double AreaForPoly(int count, cpVect[] verts, double r)
 		{
@@ -522,10 +522,10 @@ namespace ChipmunkSharp
 			return r * (Math.PI * cpfabs(r) + perimeter) + area / 2.0f;
 		}
 
-		public static double AreaForPoly(cpVect[] verts, double r)
-		{
-			return AreaForPoly(verts.Length, verts, r);
-		}
+		//public static double AreaForPoly(cpVect[] verts, double r)
+		//{
+		//	return AreaForPoly(verts.Length, verts, r);
+		//}
 
 		public static cpVect CentroidForPoly(int count, cpVect[] verts)
 		{
@@ -544,10 +544,10 @@ namespace ChipmunkSharp
 			return cpVect.cpvmult(vsum, 1.0f / (3.0f * sum));
 		}
 
-		public static cpVect CentroidForPoly(cpVect[] verts)
-		{
-			return CentroidForPoly(verts.Length, verts);
-		}
+		//public static cpVect CentroidForPoly(cpVect[] verts)
+		//{
+		//	return CentroidForPoly(verts.Length, verts);
+		//}
 
 		public static double momentForBox2(double m, cpBB box)
 		{

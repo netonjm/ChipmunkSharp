@@ -159,7 +159,7 @@ namespace ChipmunkSharp
 			return output.alpha;
 		}
 
-		public cpShape SegmentQueryFirst(cpSpace space, cpVect start, cpVect end, double radius, cpShapeFilter filter, ref cpSegmentQueryInfo output)
+		public cpShape SegmentQueryFirst(cpVect start, cpVect end, double radius, cpShapeFilter filter, ref cpSegmentQueryInfo output)
 		{
 
 			cpSegmentQueryInfo info = new cpSegmentQueryInfo(null, end, cpVect.Zero, 1.0f);

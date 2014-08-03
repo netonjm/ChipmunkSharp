@@ -171,30 +171,30 @@ namespace ChipmunkSharp
 
 		}
 
-		public static cpShapeMassInfo MassInfo(double mass, cpVect[] verts, double radius)
+		public static cpShapeMassInfo MassInfo(double mass,int count, cpVect[] verts, double radius)
 		{
 			// TODO moment is approximate due to radius.
-			cpVect centroid = cp.CentroidForPoly(verts);
+			cpVect centroid = cp.CentroidForPoly(count,verts);
 			cpShapeMassInfo info = new cpShapeMassInfo(
-				mass, cp.MomentForPoly(1.0f, verts, cpVect.cpvneg(centroid), radius),
+				mass, cp.MomentForPoly(1.0f,count, verts, cpVect.cpvneg(centroid), radius),
 				centroid,
-				cp.AreaForPoly(verts, radius)
+				cp.AreaForPoly(count,verts, radius)
 				);
 
 			return info;
 		}
 
-		public cpPolyShape(cpBody body, cpVect[] verts, cpTransform transform,
+		public cpPolyShape(cpBody body, int count, cpVect[] verts, cpTransform transform,
 		double radius)
-			: this(body, GetVertices(transform, verts), radius)
+			: this(body, count, GetVertices(transform,count, verts), radius)
 		{
 
 		}
 
-		public cpPolyShape(cpBody body, cpVect[] verts, double radius)
-			: base(body, cpShapeMassInfo.cpPolyShapeMassInfo(0.0f, verts, radius))
+		public cpPolyShape(cpBody body, int count, cpVect[] verts, double radius)
+			: base(body, cpShapeMassInfo.cpPolyShapeMassInfo(0.0f,count, verts, radius))
 		{
-			this.SetVerts(verts);
+			this.SetVerts(count,verts);
 			this.shapeType = cpShapeType.Polygon;
 			this.r = radius;
 		}
@@ -211,10 +211,9 @@ namespace ChipmunkSharp
 			return this.r;
 		}
 
-		public void SetVerts(cpVect[] verts)
+		public void SetVerts(int count, cpVect[] verts)
 		{
-			Count = verts.Length;
-
+			Count = count;
 			if (Count <= CP_POLY_SHAPE_INLINE_ALLOC)
 				this.planes = new cpSplittingPlane[2 * CP_POLY_SHAPE_INLINE_ALLOC];
 			else
@@ -233,19 +232,19 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public void SetVerts(cpVect[] verts, cpTransform transform)
+		public void SetVerts(int count, cpVect[] verts, cpTransform transform)
 		{
 			for (int i = 0; i < verts.Length; i++)
 				verts[i] = cpTransform.cpTransformPoint(transform, verts[i]);
-			SetVertsRaw(verts);
+			SetVertsRaw(count,verts);
 		}
 
-		public void SetVertsRaw(cpVect[] verts)
+		public void SetVertsRaw(int count,cpVect[] verts)
 		{
-			SetVerts(verts);
+			SetVerts(count,verts);
 			double mass = this.massInfo.m;
 
-			this.massInfo = MassInfo(this.massInfo.m, verts, this.r);
+			this.massInfo = MassInfo( this.massInfo.m,count, verts, this.r);
 
 			if (mass > 0.0f)
 				body.AccumulateMassFromShapes();
@@ -256,11 +255,10 @@ namespace ChipmunkSharp
 		{
 			this.r = radius;
 		}
-		public static cpVect[] GetVertices(cpTransform transform, cpVect[] verts)
+		public static cpVect[] GetVertices(cpTransform transform,int count, cpVect[] verts)
 		{
-			cpVect[] hullVerts = new cpVect[verts.Length];
-			int count = verts.Length;
-
+			cpVect[] hullVerts = new cpVect[count];
+		
 			for (int i = 0; i < count; i++)
 			{
 				hullVerts[i] = cpTransform.cpTransformPoint(transform, verts[i]);
@@ -283,7 +281,7 @@ namespace ChipmunkSharp
 			}
 
 			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.BB) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
-				m_debugDraw.DrawBB(bb, cpColor.Green);
+				bb.Draw(m_debugDraw);
 		}
 
 		public static cpPolyShape BoxShape(cpBody body, double width, double height, double radius)
@@ -306,7 +304,7 @@ namespace ChipmunkSharp
 		new cpVect(box.l, box.b),
 	};
 
-			return new cpPolyShape(body, verts, radius);
+			return new cpPolyShape(body,4, verts, radius);
 		}
 
 

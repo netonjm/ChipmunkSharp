@@ -198,7 +198,7 @@ namespace ChipmunkSharp
 			}
 		}
 
-		
+
 
 		#region Static Methods
 
@@ -394,7 +394,7 @@ namespace ChipmunkSharp
 				cp.cpfsin(a)
 
 				);
-			
+
 		}
 
 		/** Converts a vector to radians.
@@ -950,6 +950,21 @@ namespace ChipmunkSharp
 		public cpVect getMidpoint(cpVect b)
 		{
 			return Midpoint(this, b);
+		}
+
+		public static double cpvtoangle(cpVect v)
+		{
+			return cp.cpfatan2(v.y, v.x);
+		}
+
+		public void Draw(cpDebugDraw m_debugDraw, double size = 1)
+		{
+			Draw(m_debugDraw, cpColor.Red, size);
+		}
+
+		public void Draw(cpDebugDraw m_debugDraw, cpColor color, double size = 1)
+		{
+			m_debugDraw.DrawPoint(this, size, color);
 		}
 	}
 
