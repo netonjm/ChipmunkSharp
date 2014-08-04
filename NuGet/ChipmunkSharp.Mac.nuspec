@@ -2,8 +2,8 @@
 <package >
   <metadata>
     <id>ChipmunkSharp.MacOS</id>
-    <version>1.0.0.0</version>
-    <title>ChipmunkSharp for Mac</title>
+    <version>7.0.0.0</version>
+    <title>ChipmunkSharp v7 for Mac</title>
     <authors>Kenneth Pouncey and Jose Medrano</authors>
     <owners>Develop Studios</owners>
     <licenseUrl>https://raw.githubusercontent.com/netonjm/ChipmunkSharp/master/LICENSE</licenseUrl>
