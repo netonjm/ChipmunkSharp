@@ -25,20 +25,20 @@ namespace ChipmunkSharp
 	public class cpRotaryLimitJoint : cpConstraint
 	{
 
-		internal double min, max;
+		internal float min, max;
 
-		internal double iSum;
+		internal float iSum;
 
-		internal double bias;
-		internal double jAcc;
+		internal float bias;
+		internal float jAcc;
 
-		public override void PreStep(double dt)
+		public override void PreStep(float dt)
 		{
 			cpBody a = this.a;
 			cpBody b = this.b;
 
-			double dist = b.a - a.a;
-			double pdist = 0.0f;
+			float dist = b.a - a.a;
+			float pdist = 0.0f;
 			if (dist > this.max)
 			{
 				pdist = this.max - dist;
@@ -52,25 +52,25 @@ namespace ChipmunkSharp
 			this.iSum = 1.0f / (a.i_inv + b.i_inv);
 
 			// calculate bias velocity
-			double maxBias = this.maxBias;
+			float maxBias = this.maxBias;
 			this.bias = cp.cpfclamp(-cp.bias_coef(this.errorBias, dt) * pdist / dt, -maxBias, maxBias);
 
 			// If the bias is 0, the joint is not at a limit. Reset the impulse.
 			if (this.bias == 0) this.jAcc = 0.0f;
 		}
 
-		public override void ApplyCachedImpulse(double dt_coef)
+		public override void ApplyCachedImpulse(float dt_coef)
 		{
 			cpBody a = this.a;
 			cpBody b = this.b;
 
-			double j = this.jAcc * dt_coef;
+			float j = this.jAcc * dt_coef;
 			a.w -= j * a.i_inv;
 			b.w += j * b.i_inv;
 		}
 
 
-		public override void ApplyImpulse(double dt)
+		public override void ApplyImpulse(float dt)
 		{
 
 			if (this.bias == 0) return; // early exit
@@ -79,13 +79,13 @@ namespace ChipmunkSharp
 			cpBody b = this.b;
 
 			// compute relative rotational velocity
-			double wr = b.w - a.w;
+			float wr = b.w - a.w;
 
-			double jMax = this.maxForce * dt;
+			float jMax = this.maxForce * dt;
 
 			// compute normal impulse	
-			double j = -(this.bias + wr) * this.iSum;
-			double jOld = this.jAcc;
+			float j = -(this.bias + wr) * this.iSum;
+			float jOld = this.jAcc;
 			if (this.bias < 0.0f)
 			{
 				this.jAcc = cp.cpfclamp(jOld + j, 0.0f, jMax);
@@ -102,7 +102,7 @@ namespace ChipmunkSharp
 		}
 
 
-		public cpRotaryLimitJoint(cpBody a, cpBody b, double min, double max)
+		public cpRotaryLimitJoint(cpBody a, cpBody b, float min, float max)
 			: base(a, b)
 		{
 
@@ -114,28 +114,28 @@ namespace ChipmunkSharp
 		}
 
 
-		public override double GetImpulse()
+		public override float GetImpulse()
 		{
 			return cp.cpfabs(jAcc);
 		}
 
 
-		public override double GetMin()
+		public override float GetMin()
 		{
 			return base.GetMin();
 		}
 
-		public override void SetMin(double min)
+		public override void SetMin(float min)
 		{
 			base.SetMin(min);
 		}
 
-		public override double GetMax()
+		public override float GetMax()
 		{
 			return base.GetMax();
 		}
 
-		public override void SetMax(double max)
+		public override void SetMax(float max)
 		{
 			base.SetMax(max);
 		}

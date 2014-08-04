@@ -289,14 +289,14 @@ namespace ChipmunkSharp
 		}
 
 
-		public void Step(double dt)
+		public void Step(float dt)
 		{
 			// don't step if the timestep is 0!
 			if (dt == 0.0) return;
 
 			this.stamp++;
 
-			double prev_dt = this.curr_dt;
+			float prev_dt = this.curr_dt;
 			this.curr_dt = dt;
 
 			int i, j;

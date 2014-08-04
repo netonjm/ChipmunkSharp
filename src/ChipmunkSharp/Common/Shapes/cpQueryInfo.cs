@@ -35,14 +35,14 @@ namespace ChipmunkSharp
 		/// The shape that was hit, NULL if no collision occured.
 		public cpShape shape;
 		/// The normalized distance along the query segment in the range [0, 1].
-		public double alpha;
+		public float alpha;
 		/// The normal of the surface hit.
 		public cpVect normal;
 
 		/// The point of impact.
 		public cpVect point;
 
-		public cpSegmentQueryInfo(cpShape shape, cpVect point, cpVect normal, double alpha)
+		public cpSegmentQueryInfo(cpShape shape, cpVect point, cpVect normal, float alpha)
 		{
 			/// The shape that was hit, NULL if no collision occured.
 			this.shape = shape;
@@ -78,7 +78,7 @@ namespace ChipmunkSharp
 			return cpVect.Lerp(start, end, this.alpha);
 		}
 
-		public double HitDist(cpVect start, cpVect end)
+		public float HitDist(cpVect start, cpVect end)
 		{
 			return cpVect.Distance(start, end) * this.alpha;
 		}
@@ -91,7 +91,7 @@ namespace ChipmunkSharp
 	{
 		public cpShape shape;
 		public cpVect n;
-		public double d;
+		public float d;
 
 		public cpPointQueryExtendedInfo(cpShape tShape)
 		{

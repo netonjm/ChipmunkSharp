@@ -25,11 +25,11 @@ namespace ChipmunkSharp
 	public class cpSimpleMotor : cpConstraint
 	{
 
-	internal	double rate;
-	internal	double iSum;
-	internal	double jAcc;
+	internal	float rate;
+	internal	float iSum;
+	internal	float jAcc;
 
-		public override void PreStep(double dt)
+		public override void PreStep(float dt)
 		{
 
 			cpBody a = this.a;
@@ -39,31 +39,31 @@ namespace ChipmunkSharp
 			this.iSum = 1.0f / (a.i_inv + b.i_inv);
 		}
 
-		public override void ApplyCachedImpulse(double dt_coef)
+		public override void ApplyCachedImpulse(float dt_coef)
 		{
 			cpBody a = this.a;
 			cpBody b = this.b;
 
-			double j = this.jAcc * dt_coef;
+			float j = this.jAcc * dt_coef;
 			a.w -= j * a.i_inv;
 			b.w += j * b.i_inv;
 		}
 
 
-		public override void ApplyImpulse(double dt)
+		public override void ApplyImpulse(float dt)
 		{
 
 			cpBody a = this.a;
 			cpBody b = this.b;
 
 			// compute relative rotational velocity
-			double wr = b.w - a.w + this.rate;
+			float wr = b.w - a.w + this.rate;
 
-			double jMax = this.maxForce * dt;
+			float jMax = this.maxForce * dt;
 
 			// compute normal impulse	
-			double j = -wr * this.iSum;
-			double jOld = this.jAcc;
+			float j = -wr * this.iSum;
+			float jOld = this.jAcc;
 			this.jAcc = cp.cpfclamp(jOld + j, -jMax, jMax);
 			j = this.jAcc - jOld;
 
@@ -73,7 +73,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public override double GetImpulse()
+		public override float GetImpulse()
 		{
 			return cp.cpfabs(jAcc);
 		}
@@ -81,7 +81,7 @@ namespace ChipmunkSharp
 
 
 
-		public cpSimpleMotor(cpBody a, cpBody b, double rate)
+		public cpSimpleMotor(cpBody a, cpBody b, float rate)
 			: base(a, b)
 		{
 
@@ -93,14 +93,14 @@ namespace ChipmunkSharp
 
 
 
-		public override void SetRate(double rate)
+		public override void SetRate(float rate)
 		{
 			ActivateBodies();
 			this.rate = rate;
 		}
 
 
-		public override double GetRate()
+		public override float GetRate()
 		{
 			return rate;
 		}

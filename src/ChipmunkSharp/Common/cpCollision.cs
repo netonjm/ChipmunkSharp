@@ -33,12 +33,12 @@ namespace ChipmunkSharp
 	{
 		public static ulong PolySupportPointIndex(int count, cpSplittingPlane[] planes, cpVect n)
 		{
-			double max = -cp.Infinity;
+			float max = -cp.Infinity;
 			int index = 0;
 			for (int i = 0; i < count; i++)
 			{
 				cpVect v = planes[i].v0;
-				double d = cpVect.cpvdot(v, n);
+				float d = cpVect.cpvdot(v, n);
 				if (d > max)
 				{
 					max = d;
@@ -112,13 +112,13 @@ namespace ChipmunkSharp
 		//MARK: Support Points and Edges:
 		public static int PolySupportPointIndex(List<cpSplittingPlane> planes, cpVect n)
 		{
-			double max = -cp.Infinity;
+			float max = -cp.Infinity;
 			int index = 0;
 
 			for (int i = 0; i < planes.Count; i++)
 			{
 				cpVect v = planes[i].v0;
-				double d = cpVect.cpvdot(v, n); // cpvdot(v, n);
+				float d = cpVect.cpvdot(v, n); // cpvdot(v, n);
 				if (d > max)
 				{
 					max = d;
@@ -195,10 +195,10 @@ namespace ChipmunkSharp
 		public struct Edge
 		{
 			public EdgePoint a, b;
-			public double r;
+			public float r;
 			public cpVect n;
 
-			public Edge(EdgePoint a, EdgePoint b, double r, cpVect n)
+			public Edge(EdgePoint a, EdgePoint b, float r, cpVect n)
 			{
 				this.a = a;
 				this.b = b;
@@ -206,7 +206,7 @@ namespace ChipmunkSharp
 				this.n = n;
 			}
 
-			public static Edge EdgeNew(cpVect va, cpVect vb, ulong ha, ulong hb, double r)
+			public static Edge EdgeNew(cpVect va, cpVect vb, ulong ha, ulong hb, float r)
 			{
 				return new Edge(
 					new EdgePoint(va, ha),
@@ -282,15 +282,15 @@ namespace ChipmunkSharp
 
 		};
 
-		public static double ClosestT(cpVect a, cpVect b)
+		public static float ClosestT(cpVect a, cpVect b)
 		{
 			cpVect delta = cpVect.cpvsub(b, a);
 			return -cp.cpfclamp(cpVect.cpvdot(delta, cpVect.cpvadd(a, b)) / cpVect.cpvlengthsq(delta), -1.0f, 1.0f);
 		}
 
-		public static cpVect LerpT(cpVect a, cpVect b, double t)
+		public static cpVect LerpT(cpVect a, cpVect b, float t)
 		{
-			double ht = 0.5f * t;
+			float ht = 0.5f * t;
 			return cpVect.cpvadd(cpVect.cpvmult(a, 0.5f - ht), cpVect.cpvmult(b, 0.5f + ht));
 		}
 
@@ -302,12 +302,12 @@ namespace ChipmunkSharp
 			// Minimum separating axis of the two shapes.
 			public cpVect n;
 			// Signed distance between the points.
-			public double d;
+			public float d;
 			// Concatenation of the id's of the minkoski points.
 			public ulong id;
 
 
-			public ClosestPoints(cpVect a, cpVect b, cpVect n, double d, ulong id)
+			public ClosestPoints(cpVect a, cpVect b, cpVect n, float d, ulong id)
 			{
 				this.a = a;
 				this.b = b;
@@ -320,7 +320,7 @@ namespace ChipmunkSharp
 			public static ClosestPoints ClosestPointsNew(MinkowskiPoint v0, MinkowskiPoint v1)
 			{
 				// Find the closest p(t) on the minkowski difference to (0, 0)
-				double t = cpCollision.ClosestT(v0.ab, v1.ab);
+				float t = cpCollision.ClosestT(v0.ab, v1.ab);
 				cpVect p = cpCollision.LerpT(v0.ab, v1.ab, t);
 
 				// Interpolate the original support points using the same 't' value as above.
@@ -334,7 +334,7 @@ namespace ChipmunkSharp
 				// This gives us a nice, accurate MSA when the surfaces are close together.
 				cpVect delta = cpVect.cpvsub(v1.ab, v0.ab);
 				cpVect n = cpVect.cpvnormalize(cpVect.cpvrperp(delta));
-				double d = cpVect.cpvdot(n, p);
+				float d = cpVect.cpvdot(n, p);
 
 				if (d <= 0.0f || (-1.0f < t && t < 1.0f))
 				{
@@ -345,8 +345,8 @@ namespace ChipmunkSharp
 				else
 				{
 					// Vertex/vertex collisions need special treatment since the MSA won't be shared with an axis of the minkowski difference.
-					double d2 = cpVect.cpvlength(p);
-					cpVect n2 = cpVect.cpvmult(p, 1.0f / (d2 + double.MinValue));
+					float d2 = cpVect.cpvlength(p);
+					cpVect n2 = cpVect.cpvmult(p, 1.0f / (d2 + float.MinValue));
 
 					ClosestPoints points = new ClosestPoints(pa, pb, n2, d2, (ulong)id);
 					return points;
@@ -357,7 +357,7 @@ namespace ChipmunkSharp
 
 
 		//MARK: EPA Functions
-		public static double ClosestDist(cpVect v0, cpVect v1)
+		public static float ClosestDist(cpVect v0, cpVect v1)
 		{
 			return cpVect.cpvlengthsq(LerpT(v0, v1, ClosestT(v0, v1)));
 		}
@@ -372,14 +372,14 @@ namespace ChipmunkSharp
 		public static ClosestPoints EPARecurse(ref SupportContext ctx, int count, MinkowskiPoint[] hull, int iteration)
 		{
 			int mini = 0;
-			double minDist = cp.Infinity;
+			float minDist = cp.Infinity;
 
 			//int count = hull.Length;
 
 			// TODO: precalculate this when building the hull and save a step.
 			for (int j = 0, i = count - 1; j < count; i = j, j++)
 			{
-				double d = ClosestDist(hull[i].ab, hull[j].ab);
+				float d = ClosestDist(hull[i].ab, hull[j].ab);
 				if (d < minDist)
 				{
 					minDist = d;
@@ -468,7 +468,7 @@ namespace ChipmunkSharp
 			}
 			else
 			{
-				double t = ClosestT(v0.ab, v1.ab);
+				float t = ClosestT(v0.ab, v1.ab);
 				cpVect n = (-1.0f < t && t < 1.0f ? cpVect.cpvperp(delta) : cpVect.cpvneg(LerpT(v0.ab, v1.ab, t)));
 				MinkowskiPoint p = MinkowskiPoint.Support(ref ctx, n);
 
@@ -571,7 +571,7 @@ namespace ChipmunkSharp
 
 		public static void ContactPoints(Edge e1, Edge e2, ClosestPoints points, ref cpCollisionInfo info)
 		{
-			double mindist = e1.r + e2.r;
+			float mindist = e1.r + e2.r;
 			if (points.d <= mindist)
 			{
 
@@ -580,20 +580,20 @@ namespace ChipmunkSharp
 				cpVect n = new cpVect(points.n);
 
 				// Distances along the axis parallel to n
-				double d_e1_a = cpVect.cpvcross(e1.a.p, n);
-				double d_e1_b = cpVect.cpvcross(e1.b.p, n);
-				double d_e2_a = cpVect.cpvcross(e2.a.p, n);
-				double d_e2_b = cpVect.cpvcross(e2.b.p, n);
+				float d_e1_a = cpVect.cpvcross(e1.a.p, n);
+				float d_e1_b = cpVect.cpvcross(e1.b.p, n);
+				float d_e2_a = cpVect.cpvcross(e2.a.p, n);
+				float d_e2_b = cpVect.cpvcross(e2.b.p, n);
 
-				double e1_denom = 1.0f / (d_e1_b - d_e1_a);
-				double e2_denom = 1.0f / (d_e2_b - d_e2_a);
+				float e1_denom = 1.0f / (d_e1_b - d_e1_a);
+				float e2_denom = 1.0f / (d_e2_b - d_e2_a);
 
 				// Project the endpoints of the two edges onto the opposing edge, clamping them as necessary.
 				// Compare the projected points to the collision normal to see if the shapes overlap there.
 				{
 					cpVect p1 = cpVect.cpvadd(cpVect.cpvmult(n, e1.r), cpVect.cpvlerp(e1.a.p, e1.b.p, cp.cpfclamp01((d_e2_b - d_e1_a) * e1_denom)));
 					cpVect p2 = cpVect.cpvadd(cpVect.cpvmult(n, -e2.r), cpVect.cpvlerp(e2.a.p, e2.b.p, cp.cpfclamp01((d_e1_a - d_e2_a) * e2_denom)));
-					double dist = cpVect.cpvdot(cpVect.cpvsub(p2, p1), n);
+					float dist = cpVect.cpvdot(cpVect.cpvsub(p2, p1), n);
 					if (dist <= 0.0f)
 					{
 						ulong hash_1a2b = cp.CP_HASH_PAIR(e1.a.hash, e2.b.hash);
@@ -603,7 +603,7 @@ namespace ChipmunkSharp
 				{
 					cpVect p1 = cpVect.cpvadd(cpVect.cpvmult(n, e1.r), cpVect.cpvlerp(e1.a.p, e1.b.p, cp.cpfclamp01((d_e2_a - d_e1_a) * e1_denom)));
 					cpVect p2 = cpVect.cpvadd(cpVect.cpvmult(n, -e2.r), cpVect.cpvlerp(e2.a.p, e2.b.p, cp.cpfclamp01((d_e1_b - d_e2_a) * e2_denom)));
-					double dist = cpVect.cpvdot(cpVect.cpvsub(p2, p1), n);
+					float dist = cpVect.cpvdot(cpVect.cpvsub(p2, p1), n);
 					if (dist <= 0.0f)
 					{
 						ulong hash_1b2a = cp.CP_HASH_PAIR(e1.b.hash, e2.a.hash);
@@ -623,14 +623,14 @@ namespace ChipmunkSharp
 			cpCircleShape c1 = (cpCircleShape)cir1;
 			cpCircleShape c2 = (cpCircleShape)cir2;
 
-			double mindist = c1.r + c2.r;
+			float mindist = c1.r + c2.r;
 			cpVect delta = cpVect.cpvsub(c2.tc, c1.tc);
-			double distsq = cpVect.cpvlengthsq(delta);
+			float distsq = cpVect.cpvlengthsq(delta);
 
 			if (distsq < mindist * mindist)
 			{
-				double dist = cp.cpfsqrt(distsq);
-				cpVect n = info.n = (dist > 0 ? cpVect.cpvmult(delta, 1.0f / dist) : cpVect.cpv(1.0f, 0.0f));
+				float dist = cp.cpfsqrt(distsq);
+				cpVect n = info.n = (dist > 0.0f ? cpVect.cpvmult(delta, 1.0f / dist) : cpVect.cpv(1.0f, 0.0f));
 				InfoPushContact(ref info, cpVect.cpvadd(c1.tc, cpVect.cpvmult(n, c1.r)), cpVect.cpvadd(c2.tc, cpVect.cpvmult(n, -c2.r)), 0);
 			}
 		}
@@ -646,16 +646,16 @@ namespace ChipmunkSharp
 
 			// Find the closest point on the segment to the circle.
 			cpVect seg_delta = cpVect.cpvsub(seg_b, seg_a);
-			double closest_t = cp.cpfclamp01(cpVect.cpvdot(seg_delta, cpVect.cpvsub(center, seg_a)) / cpVect.cpvlengthsq(seg_delta));
+			float closest_t = cp.cpfclamp01(cpVect.cpvdot(seg_delta, cpVect.cpvsub(center, seg_a)) / cpVect.cpvlengthsq(seg_delta));
 			cpVect closest = cpVect.cpvadd(seg_a, cpVect.cpvmult(seg_delta, closest_t));
 
 			// Compare the radii of the two shapes to see if they are colliding.
-			double mindist = circle.r + segment.r;
+			float mindist = circle.r + segment.r;
 			cpVect delta = cpVect.cpvsub(closest, center);
-			double distsq = cpVect.cpvlengthsq(delta);
+			float distsq = cpVect.cpvlengthsq(delta);
 			if (distsq < mindist * mindist)
 			{
-				double dist = cp.cpfsqrt(distsq);
+				float dist = cp.cpfsqrt(distsq);
 				// Handle coincident shapes as gracefully as possible.
 				cpVect n = info.n = (dist > 0 ? cpVect.cpvmult(delta, 1.0f / dist) : segment.tn);
 

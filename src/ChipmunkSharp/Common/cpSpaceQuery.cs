@@ -44,7 +44,7 @@ namespace ChipmunkSharp
 			return id;
 		}
 
-		public void PointQuery(cpVect point, double maxDistance, cpShapeFilter filter, Action<cpShape, cpVect, double, cpVect, object> func, object data)
+		public void PointQuery(cpVect point, float maxDistance, cpShapeFilter filter, Action<cpShape, cpVect, float, cpVect, object> func, object data)
 		{
 			PointQueryContext context = new PointQueryContext(point, maxDistance, filter, func);
 			cpBB bb = cpBB.cpBBNewForCircle(point, cp.cpfmax(maxDistance, 0.0f));
@@ -75,7 +75,7 @@ namespace ChipmunkSharp
 			return id;
 		}
 
-		public cpShape PointQueryNearest(cpVect point, double maxDistance, cpShapeFilter filter, ref cpPointQueryInfo output)
+		public cpShape PointQueryNearest(cpVect point, float maxDistance, cpShapeFilter filter, ref cpPointQueryInfo output)
 		{
 			cpPointQueryInfo info = new cpPointQueryInfo(null, cpVect.Zero, maxDistance, cpVect.Zero);
 			if (output == null)
@@ -107,7 +107,7 @@ namespace ChipmunkSharp
 
 		//MARK: Segment Query Functions
 
-		public double SegmentQueryFunc(SegmentQueryContext context, cpShape shape, object data)
+		public float SegmentQueryFunc(SegmentQueryContext context, cpShape shape, object data)
 		{
 			cpSegmentQueryInfo info = null;
 
@@ -122,7 +122,7 @@ namespace ChipmunkSharp
 			return 1.0f;
 		}
 
-		public void SegmentQuery(cpVect start, cpVect end, double radius, cpShapeFilter filter, Action<cpShape, cpVect, cpVect, double, object> func, object data)
+		public void SegmentQuery(cpVect start, cpVect end, float radius, cpShapeFilter filter, Action<cpShape, cpVect, cpVect, float, object> func, object data)
 		{
 			SegmentQueryContext context = new SegmentQueryContext(
 		start, end,
@@ -143,7 +143,7 @@ namespace ChipmunkSharp
 			} Unlock(true);
 		}
 
-		public double SegmentQueryFirstFunc(SegmentQueryContext context, cpShape shape, cpSegmentQueryInfo output)
+		public float SegmentQueryFirstFunc(SegmentQueryContext context, cpShape shape, cpSegmentQueryInfo output)
 		{
 			cpSegmentQueryInfo info = null;
 
@@ -159,7 +159,7 @@ namespace ChipmunkSharp
 			return output.alpha;
 		}
 
-		public cpShape SegmentQueryFirst(cpVect start, cpVect end, double radius, cpShapeFilter filter, ref cpSegmentQueryInfo output)
+		public cpShape SegmentQueryFirst(cpVect start, cpVect end, float radius, cpShapeFilter filter, ref cpSegmentQueryInfo output)
 		{
 
 			cpSegmentQueryInfo info = new cpSegmentQueryInfo(null, end, cpVect.Zero, 1.0f);
@@ -294,12 +294,12 @@ namespace ChipmunkSharp
 	public struct SegmentQueryContext
 	{
 		public cpVect start, end;
-		public double radius;
+		public float radius;
 		public cpShapeFilter filter;
-		public Action<cpShape, cpVect, cpVect, double, object> func;
+		public Action<cpShape, cpVect, cpVect, float, object> func;
 
 
-		public SegmentQueryContext(cpVect start1, cpVect end1, double radius1, cpShapeFilter filter1, Action<cpShape, cpVect, cpVect, double, object> func1)
+		public SegmentQueryContext(cpVect start1, cpVect end1, float radius1, cpShapeFilter filter1, Action<cpShape, cpVect, cpVect, float, object> func1)
 		{
 			// TODO: Complete member initialization
 			this.start = start1;
@@ -315,11 +315,11 @@ namespace ChipmunkSharp
 	{
 
 		public cpVect point;
-		public double maxDistance;
+		public float maxDistance;
 		public cpShapeFilter filter;
-		public Action<cpShape, cpVect, double, cpVect, object> func;
+		public Action<cpShape, cpVect, float, cpVect, object> func;
 
-		public PointQueryContext(cpVect point1, double maxDistance1, cpShapeFilter filter1, Action<cpShape, cpVect, double, cpVect, object> func1)
+		public PointQueryContext(cpVect point1, float maxDistance1, cpShapeFilter filter1, Action<cpShape, cpVect, float, cpVect, object> func1)
 		{
 			// TODO: Complete member initialization
 			this.point = point1;

@@ -30,7 +30,7 @@ namespace ChipmunkSharp
 		public cpVect pointA, pointB;
 		/// Penetration distance of the two shapes. Overlapping means it will be negative.
 		/// This value is calculated as cpvdot(cpvsub(point2, point1), normal) and is ignored by cpArbiterSetContactPointSet().
-		public double distance;
+		public float distance;
 	}
 
 	public class cpContactPointSet
@@ -204,10 +204,10 @@ namespace ChipmunkSharp
 
 		/// Calculated value to use for the elasticity coefficient.
 		/// Override in a pre-solve collision handler for custom behavior.
-		public double e;
+		public float e;
 		/// Calculated value to use for the friction coefficient.
 		/// Override in a pre-solve collision handler for custom behavior.
-		public double u;
+		public float u;
 		/// Calculated value to use for applying surface velocities.
 		/// Override in a pre-solve collision handler for custom behavior.
 		public cpVect surface_vr { get; set; }
@@ -389,7 +389,7 @@ namespace ChipmunkSharp
 		}
 
 		/// Get the depth of the @c ith contact point.
-		public double GetDepth(int i)
+		public float GetDepth(int i)
 		{
 			// return this.contacts[i].dist;
 			cp.assertHard(0 <= i && i < GetCount(), "Index error: The specified contact index is invalid for this arbiter");
@@ -465,11 +465,11 @@ namespace ChipmunkSharp
 
 		/// Calculate the amount of energy lost in a collision including static, but not dynamic friction.
 		/// This function should only be called from a post-solve, post-step or cpBodyEachArbiter callback.
-		public double TotalKE()
+		public float TotalKE()
 		{
 
-			double eCoef = (1 - this.e) / (1 + this.e);
-			double sum = 0.0f;
+			float eCoef = (1f - this.e) / (1f + this.e);
+			float sum = 0.0f;
 
 			//cpContact contacts = contacts;
 
@@ -477,8 +477,8 @@ namespace ChipmunkSharp
 			{
 
 				cpContact con = contacts[i];
-				double jnAcc = con.jnAcc;
-				double jtAcc = con.jtAcc;
+				float jnAcc = con.jnAcc;
+				float jtAcc = con.jtAcc;
 
 				sum += eCoef * jnAcc * jnAcc / con.nMass + jtAcc * jtAcc / con.tMass;
 			}
@@ -497,22 +497,22 @@ namespace ChipmunkSharp
 			return false;
 		}
 
-		public double GetRestitution()
+		public float GetRestitution()
 		{
 			return this.e;
 		}
 
-		public void SetRestitution(double restitution)
+		public void SetRestitution(float restitution)
 		{
 			this.e = restitution;
 		}
 
-		public double GetFriction()
+		public float GetFriction()
 		{
 			return this.u;
 		}
 
-		public void SetFriction(double friction)
+		public void SetFriction(float friction)
 		{
 			this.u = friction;
 		}
@@ -691,7 +691,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public void PreStep(double dt, double slop, double bias)
+		public void PreStep(float dt, float slop, float bias)
 		{
 			cpBody a = this.body_a;
 			cpBody b = this.body_b;
@@ -708,7 +708,7 @@ namespace ChipmunkSharp
 
 				// Calculate the target bias velocity.
 				// Calculate the target bias velocity.
-				double dist = cpVect.cpvdot(cpVect.cpvadd(cpVect.cpvsub(con.r2, con.r1), body_delta), n);
+				float dist = cpVect.cpvdot(cpVect.cpvadd(cpVect.cpvsub(con.r2, con.r1), body_delta), n);
 				con.bias = -bias * cp.cpfmin(0.0f, dist + slop) / dt;
 				con.jBias = 0.0f;
 
@@ -741,7 +741,7 @@ namespace ChipmunkSharp
 		}
 
 
-		public void ApplyCachedImpulse(double dt_coef)
+		public void ApplyCachedImpulse(float dt_coef)
 		{
 			if (this.IsFirstContact()) return;
 
@@ -763,18 +763,18 @@ namespace ChipmunkSharp
 		}
 
 
-		public void ApplyImpulse(double dt)
+		public void ApplyImpulse(float dt)
 		{
 			cpBody a = this.body_a;
 			cpBody b = this.body_b;
 			cpVect n = this.n;
 			cpVect surface_vr = this.surface_vr;
-			double friction = this.u;
+			float friction = this.u;
 
 			for (int i = 0; i < this.Count; i++)
 			{
 				cpContact con = this.contacts[i];
-				double nMass = con.nMass;
+				float nMass = con.nMass;
 				cpVect r1 = con.r1;
 				cpVect r2 = con.r2;
 
@@ -782,21 +782,21 @@ namespace ChipmunkSharp
 				cpVect vb2 = cpVect.cpvadd(b.v_bias, cpVect.cpvmult(cpVect.cpvperp(r2), b.w_bias));
 				cpVect vr = cpVect.cpvadd(cp.relative_velocity(a, b, r1, r2), surface_vr);
 
-				double vbn = cpVect.cpvdot(cpVect.cpvsub(vb2, vb1), n);
-				double vrn = cpVect.cpvdot(vr, n);
-				double vrt = cpVect.cpvdot(vr, cpVect.cpvperp(n));
+				float vbn = cpVect.cpvdot(cpVect.cpvsub(vb2, vb1), n);
+				float vrn = cpVect.cpvdot(vr, n);
+				float vrt = cpVect.cpvdot(vr, cpVect.cpvperp(n));
 
-				double jbn = (con.bias - vbn) * nMass;
-				double jbnOld = con.jBias;
+				float jbn = (con.bias - vbn) * nMass;
+				float jbnOld = con.jBias;
 				con.jBias = cp.cpfmax(jbnOld + jbn, 0.0f);
 
-				double jn = -(con.bounce + vrn) * nMass;
-				double jnOld = con.jnAcc;
+				float jn = -(con.bounce + vrn) * nMass;
+				float jnOld = con.jnAcc;
 				con.jnAcc = cp.cpfmax(jnOld + jn, 0.0f);
 
-				double jtMax = friction * con.jnAcc;
-				double jt = -vrt * con.tMass;
-				double jtOld = con.jtAcc;
+				float jtMax = friction * con.jnAcc;
+				float jt = -vrt * con.tMass;
+				float jtOld = con.jtAcc;
 				con.jtAcc = cp.cpfclamp(jtOld + jt, -jtMax, jtMax);
 
 				cp.apply_bias_impulses(a, b, r1, r2, cpVect.cpvmult(n, con.jBias - jbnOld));

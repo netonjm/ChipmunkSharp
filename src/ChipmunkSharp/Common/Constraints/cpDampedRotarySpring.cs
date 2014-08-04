@@ -27,28 +27,28 @@ namespace ChipmunkSharp
 		#region PROPS
 
 
-		internal double restAngle { get; set; }
-		internal double stiffness { get; set; }
-		internal double damping { get; set; }
+		internal float restAngle { get; set; }
+		internal float stiffness { get; set; }
+		internal float damping { get; set; }
 
 
-		internal double target_wrn { get; set; }
-		internal double w_coef { get; set; }
+		internal float target_wrn { get; set; }
+		internal float w_coef { get; set; }
 
 
-		internal double iSum { get; set; }
-		internal double jAcc { get; set; }
+		internal float iSum { get; set; }
+		internal float jAcc { get; set; }
 
-		internal Func<cpDampedRotarySpring, double, double> springTorqueFunc { get; set; }
+		internal Func<cpDampedRotarySpring, float, float> springTorqueFunc { get; set; }
 
 		#endregion
 
-		public double defaultSpringTorque(cpDampedRotarySpring spring, double relativeAngle)
+		public float defaultSpringTorque(cpDampedRotarySpring spring, float relativeAngle)
 		{
 			return (relativeAngle - spring.restAngle) * spring.stiffness;
 		}
 
-		public cpDampedRotarySpring(cpBody a, cpBody b, double restAngle, double stiffness, double damping)
+		public cpDampedRotarySpring(cpBody a, cpBody b, float restAngle, float stiffness, float damping)
 			: base(a, b)
 		{
 
@@ -64,12 +64,12 @@ namespace ChipmunkSharp
 		}
 
 
-		public Func<cpDampedRotarySpring, double, double> GetSpringTorqueFunc()
+		public Func<cpDampedRotarySpring, float, float> GetSpringTorqueFunc()
 		{
 			return this.springTorqueFunc;
 		}
 
-		public void SetSpringTorqueFunc(Func<cpDampedRotarySpring, double, double> springTorqueFunc)
+		public void SetSpringTorqueFunc(Func<cpDampedRotarySpring, float, float> springTorqueFunc)
 		{
 			this.springTorqueFunc = springTorqueFunc;
 		}
@@ -79,35 +79,35 @@ namespace ChipmunkSharp
 
 		#region PROPS OVERWRTE
 
-		public override double GetRestAngle()
+		public override float GetRestAngle()
 		{
 			return this.restAngle;
 		}
 
-		public override void SetRestAngle(double restAngle)
+		public override void SetRestAngle(float restAngle)
 		{
 			ActivateBodies();
 			this.restAngle = restAngle;
 		}
 
-		public override void SetStiffness(double stiffness)
+		public override void SetStiffness(float stiffness)
 		{
 			ActivateBodies();
 			this.stiffness = stiffness;
 		}
-		public override double GetStiffness()
+		public override float GetStiffness()
 		{
 
 			return this.stiffness;
 		}
 
-		public override void SetDamping(double damping)
+		public override void SetDamping(float damping)
 		{
 			ActivateBodies();
 			base.SetDamping(damping);
 		}
 
-		public override double GetDamping()
+		public override float GetDamping()
 		{
 			return this.damping;
 		}
@@ -115,18 +115,18 @@ namespace ChipmunkSharp
 
 		#endregion
 
-		public override void ApplyCachedImpulse(double dt_coef)
+		public override void ApplyCachedImpulse(float dt_coef)
 		{
 
 		}
 
-		public override void PreStep(double dt)
+		public override void PreStep(float dt)
 		{
 
 			cpBody a = this.a;
 			cpBody b = this.b;
 
-			double moment = a.i_inv + b.i_inv;
+			float moment = a.i_inv + b.i_inv;
 			cp.assertSoft(moment != 0.0f, "Unsolvable spring.");
 			this.iSum = 1.0f / moment;
 
@@ -134,14 +134,14 @@ namespace ChipmunkSharp
 			this.target_wrn = 0.0f;
 
 			// apply spring torque
-			double j_spring = this.springTorqueFunc(this, a.a - b.a) * dt;
+			float j_spring = this.springTorqueFunc(this, a.a - b.a) * dt;
 			this.jAcc = j_spring;
 
 			a.w -= j_spring * a.i_inv;
 			b.w += j_spring * b.i_inv;
 		}
 
-		public override void ApplyImpulse(double dt)
+		public override void ApplyImpulse(float dt)
 		{
 			// compute relative velocity
 			var wrn = a.w - b.w;//normal_relative_velocity(a, b, r1, r2, n) - this.target_vrn;
@@ -159,7 +159,7 @@ namespace ChipmunkSharp
 			b.w -= j_damp * b.i_inv;
 		}
 
-		public override double GetImpulse()
+		public override float GetImpulse()
 		{
 			return this.jAcc;
 		}
@@ -177,7 +177,7 @@ namespace ChipmunkSharp
 		}
 
 
-		//public static cpConstraint cpDampedRotarySpringNew(cpBody cpBody1, cpBody cpBody2, double p, double stiffness, double damping)
+		//public static cpConstraint cpDampedRotarySpringNew(cpBody cpBody1, cpBody cpBody2, float p, float stiffness, float damping)
 		//{
 		//    throw new NotImplementedException();
 		//}

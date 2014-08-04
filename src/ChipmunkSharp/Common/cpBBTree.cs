@@ -304,7 +304,7 @@ namespace ChipmunkSharp
 
 
 		//MARK: Marking Functions
-		public double bbArea()
+		public float bbArea()
 		{
 			return (this.bb.r - this.bb.l) * (this.bb.t - this.bb.b);
 		}
@@ -637,9 +637,9 @@ namespace ChipmunkSharp
 			var velocityFunc = this.velocityFunc;// tree->velocityFunc;
 			if (velocityFunc != null)
 			{
-				double coef = 0.1f;
-				double x = (bb.r - bb.l) * coef;
-				double y = (bb.t - bb.b) * coef;
+				float coef = 0.1f;
+				float x = (bb.r - bb.l) * coef;
+				float y = (bb.t - bb.b) * coef;
 
 				cpVect v = cpVect.cpvmult(velocityFunc(obj), 0.1f);
 				return new cpBB(bb.l + cp.cpfmin(-x, v.x), bb.b + cp.cpfmin(-y, v.y), bb.r + cp.cpfmax(x, v.x), bb.t + cp.cpfmax(y, v.y));
@@ -661,9 +661,9 @@ namespace ChipmunkSharp
 			var velocityFunc = this.velocityFunc;
 			if (velocityFunc != null)
 			{
-				double coef = 0.1f;
-				double x = (obj.bb.r - obj.bb.l) * coef;
-				double y = (obj.bb.t - obj.bb.b) * coef;
+				float coef = 0.1f;
+				float x = (obj.bb.r - obj.bb.l) * coef;
+				float y = (obj.bb.t - obj.bb.b) * coef;
 
 				var v = cpVect.cpvmult(velocityFunc(obj), 0.1f);
 
@@ -855,7 +855,7 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public double SubtreeSegmentQuery(Node subtree, object obj, cpVect a, cpVect b, double t_exit, Func<object, object, object, double> func, object data)
+		public float SubtreeSegmentQuery(Node subtree, object obj, cpVect a, cpVect b, float t_exit, Func<object, object, object, float> func, object data)
 		{
 			if (subtree.isLeaf)
 			{
@@ -863,8 +863,8 @@ namespace ChipmunkSharp
 			}
 			else
 			{
-				double t_a = subtree.A.bb.SegmentQuery(a, b);
-				double t_b = subtree.B.bb.SegmentQuery(a, b);
+				float t_a = subtree.A.bb.SegmentQuery(a, b);
+				float t_b = subtree.B.bb.SegmentQuery(a, b);
 
 				if (t_a < t_b)
 				{
@@ -1094,7 +1094,7 @@ namespace ChipmunkSharp
 		}
 
 		//MARK: Query
-		public void SegmentQuery(object obj, cpVect a, cpVect b, double t_exit, Func<object, object, object, double> func, object data)
+		public void SegmentQuery(object obj, cpVect a, cpVect b, float t_exit, Func<object, object, object, float> func, object data)
 		{
 
 			//Node* root = root;
@@ -1135,7 +1135,7 @@ namespace ChipmunkSharp
 			var splitWidth = (bb.r - bb.l > bb.t - bb.b);
 
 			// Sort the bounds and use the median as the splitting point
-			double[] bounds = new double[count * 2];
+			float[] bounds = new float[count * 2];
 			if (splitWidth)
 			{
 				for (var i = offset; i < count; i++)
@@ -1155,7 +1155,7 @@ namespace ChipmunkSharp
 
 			//TODO: ¿?
 
-			double split = (bounds[count - 1] + bounds[count]) * 0.5f; // use the median as the split
+			float split = (bounds[count - 1] + bounds[count]) * 0.5f; // use the median as the split
 
 			// Generate the child BBs
 			//var a = bb, b = bb;
@@ -1259,24 +1259,24 @@ namespace ChipmunkSharp
 		}
 
 
-		public double NodeSegmentQuery(Node node, cpVect a, cpVect b)
+		public float NodeSegmentQuery(Node node, cpVect a, cpVect b)
 		{
-			double idx = 1 / (b.x - a.x);
-			double tx1 = (node.bb.l == a.x ? -cp.Infinity : (node.bb.l - a.x) * idx);
-			double tx2 = (node.bb.r == a.x ? cp.Infinity : (node.bb.r - a.x) * idx);
-			double txmin = cp.cpfmin(tx1, tx2);
-			double txmax = cp.cpfmax(tx1, tx2);
+			float idx = 1 / (b.x - a.x);
+			float tx1 = (node.bb.l == a.x ? -cp.Infinity : (node.bb.l - a.x) * idx);
+			float tx2 = (node.bb.r == a.x ? cp.Infinity : (node.bb.r - a.x) * idx);
+			float txmin = cp.cpfmin(tx1, tx2);
+			float txmax = cp.cpfmax(tx1, tx2);
 
-			double idy = 1 / (b.y - a.y);
-			double ty1 = (node.bb.b == a.y ? -cp.Infinity : (node.bb.b - a.y) * idy);
-			double ty2 = (node.bb.t == a.y ? cp.Infinity : (node.bb.t - a.y) * idy);
-			double tymin = cp.cpfmin(ty1, ty2);
-			double tymax = cp.cpfmax(ty1, ty2);
+			float idy = 1 / (b.y - a.y);
+			float ty1 = (node.bb.b == a.y ? -cp.Infinity : (node.bb.b - a.y) * idy);
+			float ty2 = (node.bb.t == a.y ? cp.Infinity : (node.bb.t - a.y) * idy);
+			float tymin = cp.cpfmin(ty1, ty2);
+			float tymax = cp.cpfmax(ty1, ty2);
 
 			if (tymin <= txmax && txmin <= tymax)
 			{
-				double min_ = cp.cpfmax(txmin, tymin);
-				double max_ = cp.cpfmin(txmax, tymax);
+				float min_ = cp.cpfmax(txmin, tymin);
+				float max_ = cp.cpfmin(txmax, tymax);
 
 				if (0.0 <= max_ && min_ <= 1.0f) return cp.cpfmax(min_, 0.0f);
 			}

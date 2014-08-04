@@ -98,12 +98,12 @@ namespace ChipmunkSharp
 
 	public struct cpShapeMassInfo
 	{
-		public double m;
-		public double i;
+		public float m;
+		public float i;
 		public cpVect cog;
-		public double area;
+		public float area;
 
-		public cpShapeMassInfo(double m, double i, cpVect cog, double area)
+		public cpShapeMassInfo(float m, float i, cpVect cog, float area)
 		{
 			this.m = m;
 			this.i = i;
@@ -111,7 +111,7 @@ namespace ChipmunkSharp
 			this.area = area;
 		}
 
-		public static cpShapeMassInfo cpSegmentShapeMassInfo(double mass, cpVect a, cpVect b, double r)
+		public static cpShapeMassInfo cpSegmentShapeMassInfo(float mass, cpVect a, cpVect b, float r)
 		{
 			var info = new cpShapeMassInfo(
 	mass, cp.MomentForBox(1.0f, cpVect.cpvdist(a, b) + 2.0f * r, 2.0f * r), // TODO is an approximation.
@@ -121,7 +121,7 @@ namespace ChipmunkSharp
 			return info;
 		}
 
-		public static cpShapeMassInfo cpCircleShapeMassInfo(double mass, double radius, cpVect center)
+		public static cpShapeMassInfo cpCircleShapeMassInfo(float mass, float radius, cpVect center)
 		{
 			var info = new cpShapeMassInfo(
 					mass, cp.MomentForCircle(1.0f, 0.0f, radius, cpVect.Zero),
@@ -132,7 +132,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public static cpShapeMassInfo cpPolyShapeMassInfo(double mass, int count, cpVect[] verts, double radius)
+		public static cpShapeMassInfo cpPolyShapeMassInfo(float mass, int count, cpVect[] verts, float radius)
 		{
 
 			cpVect centroid = cp.CentroidForPoly(count,verts);
@@ -150,9 +150,9 @@ namespace ChipmunkSharp
 	public class cpCircleShape : cpShape
 	{
 		internal cpVect c, tc;
-		internal double r;
+		internal float r;
 
-		public cpCircleShape(cpBody body, double radius, cpVect offset)
+		public cpCircleShape(cpBody body, float radius, cpVect offset)
 			: base(body, cpShapeMassInfo.cpCircleShapeMassInfo(0.0f, radius, offset))
 		{
 			this.c = offset;
@@ -161,7 +161,7 @@ namespace ChipmunkSharp
 			this.shapeType = cpShapeType.Circle;
 		}
 
-		protected override void segmentQuery(cpVect a, cpVect b, double radius, ref cpSegmentQueryInfo info)
+		protected override void segmentQuery(cpVect a, cpVect b, float radius, ref cpSegmentQueryInfo info)
 		{
 			cp.CircleSegmentQuery(this, this.tc, this.r, a, b, radius, ref info);
 		}
@@ -170,8 +170,8 @@ namespace ChipmunkSharp
 		{
 			//	base.pointQuery(p, ref info);
 			cpVect delta = cpVect.cpvsub(p, this.tc);
-			double d = cpVect.cpvlength(delta);
-			double r = this.r;
+			float d = cpVect.cpvlength(delta);
+			float r = this.r;
 
 			info.shape = this;
 			info.point = cpVect.cpvadd(this.tc, cpVect.cpvmult(delta, r / d)); // TODO: div/0
@@ -188,16 +188,16 @@ namespace ChipmunkSharp
 			return new cpBB(c, this.r);
 		}
 
-		public double GetRadius()
+		public float GetRadius()
 		{
 			return this.r;
 		}
 
-		public void SetRadius(double radius)
+		public void SetRadius(float radius)
 		{
 			this.r = radius;
 
-			double mass = this.massInfo.m;
+			float mass = this.massInfo.m;
 			this.massInfo = cpShapeMassInfo.cpCircleShapeMassInfo(mass, this.r, this.c);
 			if (mass > 0.0f)
 				this.body.AccumulateMassFromShapes();
@@ -213,7 +213,7 @@ namespace ChipmunkSharp
 		{
 			this.c = offset;
 
-			double mass = this.massInfo.m;
+			float mass = this.massInfo.m;
 			this.massInfo = cpShapeMassInfo.cpCircleShapeMassInfo(mass, this.r, this.c);
 			if (mass > 0.0f)
 				this.body.AccumulateMassFromShapes();
@@ -244,7 +244,7 @@ namespace ChipmunkSharp
 
 		internal cpVect a, b, n;
 		internal cpVect ta, tb, tn;
-		internal double r;
+		internal float r;
 
 		public cpVect a_tangent, b_tangent;
 
@@ -254,7 +254,7 @@ namespace ChipmunkSharp
 			this.tb = cpTransform.cpTransformPoint(transform, this.b);
 			this.tn = cpTransform.cpTransformVect(transform, this.n);
 
-			double l, r, b, t;
+			float l, r, b, t;
 
 			if (this.ta.x < this.tb.x)
 			{
@@ -278,7 +278,7 @@ namespace ChipmunkSharp
 				t = this.ta.y;
 			}
 
-			double rad = this.r;
+			float rad = this.r;
 			return new cpBB(l - rad, b - rad, r + rad, t + rad);
 		}
 
@@ -287,8 +287,8 @@ namespace ChipmunkSharp
 			cpVect closest = cp.closestPointOnSegment(p, this.ta, this.tb);
 
 			cpVect delta = cpVect.cpvsub(p, closest);
-			double d = cpVect.cpvlength(delta);
-			double r = this.r;
+			float d = cpVect.cpvlength(delta);
+			float r = this.r;
 			cpVect g = cpVect.cpvmult(delta, 1.0f / d);
 
 			info.shape = (cpShape)this;
@@ -299,11 +299,11 @@ namespace ChipmunkSharp
 			info.gradient = (d > cp.MAGIC_EPSILON ? g : this.n);
 		}
 
-		protected override void segmentQuery(cpVect a, cpVect b, double r2, ref cpSegmentQueryInfo info)
+		protected override void segmentQuery(cpVect a, cpVect b, float r2, ref cpSegmentQueryInfo info)
 		{
 			cpVect n = this.tn;
-			double d = cpVect.cpvdot(cpVect.cpvsub(this.ta, a), n);
-			double r = this.r + r2;
+			float d = cpVect.cpvdot(cpVect.cpvsub(this.ta, a), n);
+			float r = this.r + r2;
 
 			cpVect flipped_n = (d > 0.0f ? cpVect.cpvneg(n) : n);
 			cpVect seg_offset = cpVect.cpvsub(cpVect.cpvmult(flipped_n, r), a);
@@ -315,13 +315,13 @@ namespace ChipmunkSharp
 
 			if (cpVect.cpvcross(delta, seg_a) * cpVect.cpvcross(delta, seg_b) <= 0.0f)
 			{
-				double d_offset = d + (d > 0.0f ? -r : r);
-				double ad = -d_offset;
-				double bd = cpVect.cpvdot(delta, n) - d_offset;
+				float d_offset = d + (d > 0.0f ? -r : r);
+				float ad = -d_offset;
+				float bd = cpVect.cpvdot(delta, n) - d_offset;
 
 				if (ad * bd < 0.0f)
 				{
-					double t = ad / (ad - bd);
+					float t = ad / (ad - bd);
 
 					info.shape = (cpShape)this;
 					info.point = cpVect.cpvsub(cpVect.cpvlerp(a, b, t), cpVect.cpvmult(flipped_n, r2));
@@ -348,7 +348,7 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public cpSegmentShape(cpBody body, cpVect a, cpVect b, double r)
+		public cpSegmentShape(cpBody body, cpVect a, cpVect b, float r)
 			: base(body, cpShapeMassInfo.cpSegmentShapeMassInfo(0.0f, a, b, r))
 		{
 
@@ -383,17 +383,17 @@ namespace ChipmunkSharp
 			return this.n;
 		}
 
-		public double GetRadius()
+		public float GetRadius()
 		{
 			return this.r;
 		}
 
-		public void SetRadius(double radius)
+		public void SetRadius(float radius)
 		{
 
 			this.r = radius;
 
-			double mass = this.massInfo.m;
+			float mass = this.massInfo.m;
 			this.massInfo = cpShapeMassInfo.cpSegmentShapeMassInfo(this.massInfo.m, this.a, this.b, this.r);
 			if (mass > 0.0f)
 				this.body.AccumulateMassFromShapes();
@@ -412,7 +412,7 @@ namespace ChipmunkSharp
 			this.b = b;
 			this.n = cpVect.cpvperp(cpVect.cpvnormalize(cpVect.cpvsub(b, a)));
 
-			double mass = this.massInfo.m;
+			float mass = this.massInfo.m;
 			this.massInfo = cpShapeMassInfo.cpSegmentShapeMassInfo(massInfo.m, this.a, this.b, this.r);
 			if (mass > 0.0f)
 				this.body.AccumulateMassFromShapes();
@@ -469,9 +469,9 @@ namespace ChipmunkSharp
 		public bool sensor;
 
 		/// Coefficient of restitution. (elasticity)
-		public double e;
+		public float e;
 		/// Coefficient of friction.
-		public double u;
+		public float u;
 		/// Surface velocity used when solving for friction.
 		public cpVect surfaceV;
 
@@ -555,12 +555,12 @@ namespace ChipmunkSharp
 			this.body = body;
 		}
 
-		public double GetMass()
+		public float GetMass()
 		{
 			return this.massInfo.m;
 		}
 
-		public void SetMass(double mass)
+		public void SetMass(float mass)
 		{
 			this.body.Activate();
 
@@ -568,12 +568,12 @@ namespace ChipmunkSharp
 			this.body.AccumulateMassFromShapes();
 		}
 
-		public double GetMoment()
+		public float GetMoment()
 		{
 			return this.massInfo.m / this.massInfo.area;
 		}
 
-		public double GetArea() { return this.massInfo.area; }
+		public float GetArea() { return this.massInfo.area; }
 		public cpVect GetCenterOfGravity() { return this.massInfo.cog; }
 
 		public cpBB GetBB()
@@ -592,12 +592,12 @@ namespace ChipmunkSharp
 			this.sensor = sensor;
 		}
 
-		public double GetElasticity()
+		public float GetElasticity()
 		{
 			return this.e;
 		}
 
-		public void SetElasticity(double elasticity)
+		public void SetElasticity(float elasticity)
 		{
 			cp.assertHard(elasticity >= 0.0f, "Elasticity must be positive and non-zero.");
 			this.body.Activate();
@@ -647,7 +647,7 @@ namespace ChipmunkSharp
 			return (this.bb = CacheData(transform));
 		}
 
-		public double PointQuery(cpVect p, ref cpPointQueryInfo info)
+		public float PointQuery(cpVect p, ref cpPointQueryInfo info)
 		{
 			if (info == null)
 				info = new cpPointQueryInfo(null, cpVect.Zero, cp.Infinity, cpVect.Zero);
@@ -657,7 +657,7 @@ namespace ChipmunkSharp
 			return info.distance;
 		}
 
-		public bool SegmentQuery(cpVect a, cpVect b, double radius, ref cpSegmentQueryInfo info)
+		public bool SegmentQuery(cpVect a, cpVect b, float radius, ref cpSegmentQueryInfo info)
 		{
 			if (info == null)
 				info = new cpSegmentQueryInfo(null, b, cpVect.Zero, 1.0f);
@@ -685,7 +685,7 @@ namespace ChipmunkSharp
 			throw new NotImplementedException();
 
 		}
-		protected virtual void segmentQuery(cpVect a, cpVect b, double radius, ref cpSegmentQueryInfo info)
+		protected virtual void segmentQuery(cpVect a, cpVect b, float radius, ref cpSegmentQueryInfo info)
 		{
 			throw new NotImplementedException();
 		}
@@ -720,16 +720,16 @@ namespace ChipmunkSharp
 			return set;
 		}
 
-		public void SetDensity(double density)
+		public void SetDensity(float density)
 		{
 			SetMass(density * this.massInfo.area);
 		}
 
-		public double GetFriction()
+		public float GetFriction()
 		{
 			return this.u;
 		}
-		public void SetFriction(double friction)
+		public void SetFriction(float friction)
 		{
 			cp.assertHard(friction >= 0.0f, "Friction must be postive and non-zero.");
 			this.body.Activate();

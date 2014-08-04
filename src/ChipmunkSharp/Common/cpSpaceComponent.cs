@@ -126,7 +126,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public void ProcessComponents(double dt)
+		public void ProcessComponents(float dt)
 		{
 
 			var sleep = (this.sleepTimeThreshold != cp.Infinity);
@@ -235,7 +235,7 @@ namespace ChipmunkSharp
 			}
 		}
 
-		public static bool ComponentActive(cpBody root, double threshold)
+		public static bool ComponentActive(cpBody root, float threshold)
 		{
 			//CP_BODY_FOREACH_COMPONENT
 			for (var body = root; body != null; body = body.nodeNext)

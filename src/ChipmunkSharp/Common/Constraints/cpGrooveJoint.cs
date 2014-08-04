@@ -33,7 +33,7 @@ namespace ChipmunkSharp
 		cpVect anchorB;
 
 		cpVect grv_tn;
-		double clamp;
+		float clamp;
 		cpVect r1, r2;
 		cpMat2x2 k;
 
@@ -44,7 +44,7 @@ namespace ChipmunkSharp
 		#endregion
 
 
-		public override void PreStep(double dt)
+		public override void PreStep(float dt)
 		{
 
 			cpBody a = this.a;
@@ -56,13 +56,13 @@ namespace ChipmunkSharp
 
 			// calculate axis
 			cpVect n = cpTransform.cpTransformVect(a.transform, this.grv_n);
-			double d = cpVect.cpvdot(ta, n);
+			float d = cpVect.cpvdot(ta, n);
 
 			this.grv_tn = n;
 			this.r2 = cpTransform.cpTransformVect(b.transform, cpVect.cpvsub(this.anchorB, b.cog));
 
 			// calculate tangential distance along the axis of r2
-			double td = cpVect.cpvcross(cpVect.cpvadd(b.p, this.r2), n);
+			float td = cpVect.cpvcross(cpVect.cpvadd(b.p, this.r2), n);
 			// calculate clamping factor and r2
 			if (td <= cpVect.cpvcross(ta, n))
 			{
@@ -88,7 +88,7 @@ namespace ChipmunkSharp
 			this.bias = cpVect.cpvclamp(cpVect.cpvmult(delta, -cp.bias_coef(this.errorBias, dt) / dt), this.maxBias);
 		}
 
-		public override void ApplyCachedImpulse(double dt_coef)
+		public override void ApplyCachedImpulse(float dt_coef)
 		{
 			cpBody a = this.a;
 			cpBody b = this.b;
@@ -96,14 +96,14 @@ namespace ChipmunkSharp
 			cp.apply_impulses(a, b, this.r1, this.r2, cpVect.cpvmult(this.jAcc, dt_coef));
 		}
 
-		public cpVect grooveConstrain(cpVect j, double dt)
+		public cpVect grooveConstrain(cpVect j, float dt)
 		{
 			cpVect n = this.grv_tn;
 			cpVect jClamp = (this.clamp * cpVect.cpvcross(j, n) > 0.0f) ? j : cpVect.cpvproject(j, n);
 			return cpVect.cpvclamp(jClamp, this.maxForce * dt);
 		}
 
-		public override void ApplyImpulse(double dt)
+		public override void ApplyImpulse(float dt)
 		{
 
 			cpBody a = this.a;
@@ -124,7 +124,7 @@ namespace ChipmunkSharp
 			cp.apply_impulses(a, b, this.r1, this.r2, j);
 		}
 
-		public override double GetImpulse()
+		public override float GetImpulse()
 		{
 			//return this.jAcc.Length;
 			return cpVect.cpvlength(this.jAcc);
