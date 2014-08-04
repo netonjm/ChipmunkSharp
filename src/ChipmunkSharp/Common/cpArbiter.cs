@@ -371,7 +371,7 @@ namespace ChipmunkSharp
 		}
 
 		/// Get the normal of the @c ith contact point.
-		public cpVect GetNormal(int i)
+		public cpVect GetNormal()
 		{
 			return cpVect.cpvmult(n, this.swapped ? -1.0f : 1.0f);
 		}

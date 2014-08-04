@@ -529,7 +529,7 @@ namespace ChipmunkSharp
 
 		}
 
-		public void filterArbiters(cpBody body, cpShape filter)
+		public void FilterArbiters(cpBody body, cpShape filter)
 		{
 
 			List<ulong> safeDelete = new List<ulong>();
@@ -586,7 +586,7 @@ namespace ChipmunkSharp
 			}
 
 			body.RemoveShape(shape);
-			this.filterArbiters(body, shape);
+			this.FilterArbiters(body, shape);
 
 			(isStatic ? this.staticShapes : this.dynamicShapes).Remove(shape.hashid);
 

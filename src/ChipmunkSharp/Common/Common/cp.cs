@@ -58,7 +58,7 @@ namespace ChipmunkSharp
 
 	public struct cpMat2x2
 	{
-		// Row major [[a, b][c d]]
+
 		public double a, b, c, d;
 
 		public cpMat2x2(double a, double b, double c, double d)
@@ -78,6 +78,21 @@ namespace ChipmunkSharp
 
 	public class cp
 	{
+
+		public const double M_E = 2.71828182845904523536;
+		public const double M_LOG2E = 1.44269504088896340736;
+		public const double M_LOG10E = 0.434294481903251827651;
+		public const double M_LN2 = 0.693147180559945309417;
+		public const double M_LN10 = 2.30258509299404568402;
+		public const double M_PI = 3.14159265358979323846;
+		public const double M_PI_2 = 1.57079632679489661923;
+		public const double M_PI_4 = 0.785398163397448309616;
+		public const double M_1_PI = 0.318309886183790671538;
+		public const double M_2_PI = 0.636619772367581343076;
+		public const double M_2_SQRTPI = 1.12837916709551257390;
+		public const double M_SQRT2 = 1.41421356237309504880;
+		public const double M_SQRT1_2 = 0.707106781186547524401;
+
 		public static ulong COLLISION_TYPE_STICKY = 1;
 		public static ulong WILDCARD_COLLISION_TYPE
 		{
@@ -453,15 +468,15 @@ namespace ChipmunkSharp
 
 		#region MOMENTS
 
-		public static double momentForCircle(double m, double r1, double r2, cpVect offset)
+		public static double MomentForCircle(double m, double r1, double r2, cpVect offset)
 		{
 
-			return m * (0.5f * (r1 * r1 + r2 * r2) + offset.LengthSQ);
+			return m * (0.5f * (r1 * r1 + r2 * r2) + cpVect.cpvlengthsq(offset));
 		}
 
-		public static double areaForCircle(double r1, double r2)
+		public static double AreaForCircle(double r1, double r2)
 		{
-			return (double)Math.PI * (double)Math.Abs(r1 * r1 - r2 * r2);
+			return Math.PI * cp.cpfabs(r1 * r1 - r2 * r2);
 		}
 
 		public static double MomentForSegment(double m, cpVect a, cpVect b, double r)
@@ -473,9 +488,9 @@ namespace ChipmunkSharp
 			return m * ((length * length + 4.0f * r * r) / 12.0f + cpVect.cpvlengthsq(offset));
 		}
 
-		public static double areaForSegment(cpVect a, cpVect b, double r)
+		public static double AreaForSegment(cpVect a, cpVect b, double r)
 		{
-			return r * (Math.PI * r + 2 * a.Distance(b));
+			return r * (Math.PI * r + 2 * cpVect.cpvdist(a, b));
 		}
 
 		public static double MomentForPoly(double m, int count, cpVect[] verts, cpVect offset, double r)
@@ -549,17 +564,17 @@ namespace ChipmunkSharp
 		//	return CentroidForPoly(verts.Length, verts);
 		//}
 
-		public static double momentForBox2(double m, cpBB box)
+		public static double MomentForBox2(double m, cpBB box)
 		{
 			var width = box.r - box.l;
 			var height = box.t - box.b;
-			var offset = new cpVect(box.l + box.r, box.b + box.t).Multiply(0.5f);
+			var offset = cpVect.cpvmult(new cpVect(box.l + box.r, box.b + box.t), 0.5f);
 
 			// TODO NaN when offset is 0 and m is INFINITY	
-			return momentForBox(m, width, height) + m * offset.LengthSQ;
+			return MomentForBox(m, width, height) + m * cpVect.cpvlengthsq(offset);
 		}
 
-		public static double momentForBox(double m, double width, double height)
+		public static double MomentForBox(double m, double width, double height)
 		{
 			return m * (width * width + height * height) / 12f;
 		}

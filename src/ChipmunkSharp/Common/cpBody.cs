@@ -69,10 +69,10 @@ namespace ChipmunkSharp
 		#region PROPS
 
 		/// Function that is called to integrate the body's velocity. (Defaults to cpBodyUpdateVelocity)
-		public Action<cpVect, double, double> velocity_func;
+		internal Action<cpVect, double, double> velocity_func;
 
 		/// Function that is called to integrate the body's position. (Defaults to cpBodyUpdatePosition)
-		public Action<double> position_func;
+		internal Action<double> position_func;
 
 		/// Mass of the body.
 		/// Must agree with cpBody.m_inv! Use cpBodySetMass() when changing the mass for this reason.
@@ -94,7 +94,7 @@ namespace ChipmunkSharp
 		/// Position of the rigid body's center of gravity.
 		internal cpVect p;
 		/// Velocity of the rigid body's center of gravity.
-		internal cpVect v;
+		public cpVect v;
 		/// Force acting on the rigid body's center of gravity.
 		internal cpVect f;
 

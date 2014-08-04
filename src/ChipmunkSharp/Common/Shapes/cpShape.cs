@@ -114,9 +114,9 @@ namespace ChipmunkSharp
 		public static cpShapeMassInfo cpSegmentShapeMassInfo(double mass, cpVect a, cpVect b, double r)
 		{
 			var info = new cpShapeMassInfo(
-	mass, cp.momentForBox(1.0f, cpVect.cpvdist(a, b) + 2.0f * r, 2.0f * r), // TODO is an approximation.
+	mass, cp.MomentForBox(1.0f, cpVect.cpvdist(a, b) + 2.0f * r, 2.0f * r), // TODO is an approximation.
 	cpVect.cpvlerp(a, b, 0.5f),
-	cp.areaForSegment(a, b, r)
+	cp.AreaForSegment(a, b, r)
 );
 			return info;
 		}
@@ -124,9 +124,9 @@ namespace ChipmunkSharp
 		public static cpShapeMassInfo cpCircleShapeMassInfo(double mass, double radius, cpVect center)
 		{
 			var info = new cpShapeMassInfo(
-					mass, cp.momentForCircle(1.0f, 0.0f, radius, cpVect.Zero),
+					mass, cp.MomentForCircle(1.0f, 0.0f, radius, cpVect.Zero),
 		center,
-		cp.areaForCircle(0.0f, radius)
+		cp.AreaForCircle(0.0f, radius)
 				);
 			return info;
 
@@ -141,7 +141,7 @@ namespace ChipmunkSharp
 				mass,
 				cp.MomentForPoly(1.0f,count, verts, cpVect.cpvneg(centroid), radius),
 				centroid,
-				cp.areaForCircle(0.0f, radius)
+				cp.AreaForCircle(0.0f, radius)
 			);
 			return info;
 		}
