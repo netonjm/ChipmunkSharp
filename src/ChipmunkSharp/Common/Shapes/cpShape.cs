@@ -707,7 +707,9 @@ namespace ChipmunkSharp
 			cpCollisionInfo info = cpCollision.cpCollide(a, b, 0, ref contacts);
 
 			cpContactPointSet set = new cpContactPointSet();
-			//set.count = info.count;
+			set.count = info.count;
+
+			set.points = new PointsDistance[set.count];
 
 			// cpCollideShapes() may have swapped the contact order. Flip the normal.
 			bool swapped = (a != info.a);
@@ -715,10 +717,10 @@ namespace ChipmunkSharp
 
 			for (int i = 0; i < info.count; i++)
 			{
-				// cpCollideShapesInfo() returns contacts with absolute positions.
 				cpVect p1 = contacts[i].r1;
 				cpVect p2 = contacts[i].r2;
 
+				set.points[i] = new PointsDistance();
 				set.points[i].pointA = (swapped ? p2 : p1);
 				set.points[i].pointB = (swapped ? p1 : p2);
 				set.points[i].distance = cpVect.cpvdot(cpVect.cpvsub(p2, p1), set.normal);

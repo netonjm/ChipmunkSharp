@@ -225,7 +225,7 @@ namespace ChipmunkSharp
 			List<cpContact> contacts = new List<cpContact>();
 			cpContactPointSet set = cpShape.Collide(a, b, ref contacts);
 
-			if (set.Count > 0)
+			if (set.count > 0)
 			{
 				if (context.func != null) context.func(b, set, context.data);
 				context.anyCollision = !(a.sensor || b.sensor);

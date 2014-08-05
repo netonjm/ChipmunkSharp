@@ -36,12 +36,12 @@ namespace ChipmunkSharp
 	public class cpContactPointSet
 	{
 
-		public int Count { get { return points.Count; } }
+		public int count;
 
 		/// The normal of the collision.
 		public cpVect normal;
 
-		public List<PointsDistance> points = new List<PointsDistance>();
+		public PointsDistance[] points;
 	}
 
 	/// @private
@@ -403,31 +403,31 @@ namespace ChipmunkSharp
 		public cpContactPointSet GetContactPointSet()
 		{
 			cpContactPointSet set = new cpContactPointSet();
-			var count = GetCount();
+			set.count = GetCount();
+			set.points = new PointsDistance[set.count];
 
 			bool swapped = this.swapped;
 
 			set.normal = (swapped ? cpVect.cpvneg(this.n) : this.n);
 
-			PointsDistance tmp;
-			for (int i = 0; i < count; i++)
+			for (int i = 0; i < set.count; i++)
 			{
 				// Contact points are relative to body CoGs;
 				cpVect p1 = cpVect.cpvadd(this.body_a.p, this.contacts[i].r1);
 				cpVect p2 = cpVect.cpvadd(this.body_b.p, this.contacts[i].r2);
 
-				tmp = new PointsDistance();
-				tmp.pointA = (swapped ? p2 : p1);
-				tmp.pointB = (swapped ? p1 : p2);
-				tmp.distance = cpVect.cpvdot(cpVect.cpvsub(p2, p1), n);
-				set.points.Add(tmp);
+				set.points[i] = new PointsDistance();
+				set.points[i].pointA = (swapped ? p2 : p1);
+				set.points[i].pointB = (swapped ? p1 : p2);
+				set.points[i].distance = cpVect.cpvdot(cpVect.cpvsub(p2, p1), this.n);
+
 			}
 			return set;
 		}
 
 		public void SetContactPointSet(ref cpContactPointSet set)
 		{
-			int count = set.Count;
+			int count = set.count;
 
 			cp.AssertHard(count == Count, "The number of contact points cannot be changed.");
 
