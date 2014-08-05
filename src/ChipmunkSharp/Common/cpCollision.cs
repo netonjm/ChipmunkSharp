@@ -103,7 +103,7 @@ namespace ChipmunkSharp
 
 		public static void InfoPushContact(ref cpCollisionInfo info, cpVect p1, cpVect p2, ulong hash)
 		{
-			cp.assertSoft(info.count <= cpArbiter.CP_MAX_CONTACTS_PER_ARBITER, "Internal error: Tried to push too many contacts.");
+			cp.AssertSoft(info.count <= cpArbiter.CP_MAX_CONTACTS_PER_ARBITER, "Internal error: Tried to push too many contacts.");
 			info.arr.Add(new cpContact(p1, p2, hash));
 			//info.arr[info.count] = ;
 			info.count++;// = count++;
@@ -389,7 +389,7 @@ namespace ChipmunkSharp
 
 			MinkowskiPoint v0 = hull[mini];
 			MinkowskiPoint v1 = hull[(mini + 1) % count];
-			cp.assertSoft(!cpVect.cpveql(v0.ab, v1.ab), string.Format("Internal Error: EPA vertexes are the same ({0} and {1})", mini, (mini + 1) % count));
+			cp.AssertSoft(!cpVect.cpveql(v0.ab, v1.ab), string.Format("Internal Error: EPA vertexes are the same ({0} and {1})", mini, (mini + 1) % count));
 
 			MinkowskiPoint p = MinkowskiPoint.Support(ref ctx,
 				cpVect.cpvperp(cpVect.cpvsub(v1.ab, v0.ab)));
@@ -433,7 +433,7 @@ namespace ChipmunkSharp
 			}
 			else
 			{
-				cp.assertWarn(iteration < WARN_EPA_ITERATIONS, string.Format("High EPA iterations: {0}", iteration));
+				cp.AssertWarn(iteration < WARN_EPA_ITERATIONS, string.Format("High EPA iterations: {0}", iteration));
 				return ClosestPoints.ClosestPointsNew(v0, v1);
 			}
 		}
@@ -456,7 +456,7 @@ namespace ChipmunkSharp
 
 			if (iteration > MAX_GJK_ITERATIONS)
 			{
-				cp.assertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK iterations: {0}", iteration));
+				cp.AssertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK iterations: {0}", iteration));
 				return ClosestPoints.ClosestPointsNew(v0, v1);
 			}
 
@@ -485,7 +485,7 @@ namespace ChipmunkSharp
 	)
 				{
 					// The triangle v0, p, v1 contains the origin. Use EPA to find the MSA.
-					cp.assertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK->EPA iterations: {0}", iteration));
+					cp.AssertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK->EPA iterations: {0}", iteration));
 					return EPA(ref ctx, ref  v0, ref  p, ref  v1);
 				}
 				else
@@ -493,7 +493,7 @@ namespace ChipmunkSharp
 					if (cpVect.cpvdot(p.ab, n) <= cp.cpfmax(cpVect.cpvdot(v0.ab, n), cpVect.cpvdot(v1.ab, n)))
 					{
 						// The edge v0, v1 that we already have is the closest to (0, 0) since p was not closer.
-						cp.assertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK iterations: {0}", iteration));
+						cp.AssertWarn(iteration < WARN_GJK_ITERATIONS, string.Format("High GJK iterations: {0}", iteration));
 						return ClosestPoints.ClosestPointsNew(v0, v1);
 					}
 					else
@@ -783,7 +783,7 @@ namespace ChipmunkSharp
 
 		public static void CollisionError(cpShape circle, cpShape poly, ref cpCollisionInfo info)
 		{
-			cp.assertHard(false, "Internal Error: Shape types are not sorted.");
+			cp.AssertHard(false, "Internal Error: Shape types are not sorted.");
 		}
 
 		public delegate void ShapeToShapeDelegate(cpShape shape1, cpShape shape2, ref cpCollisionInfo info);

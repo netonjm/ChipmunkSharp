@@ -304,7 +304,7 @@ namespace ChipmunkSharp
 
 		public void SetIterations(int iterations)
 		{
-			cp.assertHard(iterations > 0, "Iterations must be positive and non-zero.");
+			cp.AssertHard(iterations > 0, "Iterations must be positive and non-zero.");
 			this.iterations = iterations;
 		}
 
@@ -325,7 +325,7 @@ namespace ChipmunkSharp
 
 		public void SetDamping(float damping)
 		{
-			cp.assertHard(damping >= 0.0, "Damping must be positive.");
+			cp.AssertHard(damping >= 0.0, "Damping must be positive.");
 			this.damping = damping;
 		}
 
@@ -403,7 +403,7 @@ namespace ChipmunkSharp
 		{
 			if (this.staticBody != null)
 			{
-				cp.assertHard(this.staticBody.shapeList == null, "Internal Error: Changing the designated static body while the old one still had shapes attached.");
+				cp.AssertHard(this.staticBody.shapeList == null, "Internal Error: Changing the designated static body while the old one still had shapes attached.");
 				this.staticBody.space = null;
 			}
 
@@ -467,9 +467,9 @@ namespace ChipmunkSharp
 
 			var body = shape.body;
 
-			cp.assertHard(shape.space != this, "You have already added this shape to this space. You must not add it a second time.");
-			cp.assertHard(shape.space == null, "You have already added this shape to another space. You cannot add it to a second.");
-			cp.assertSpaceUnlocked(this);
+			cp.AssertHard(shape.space != this, "You have already added this shape to this space. You must not add it a second time.");
+			cp.AssertHard(shape.space == null, "You have already added this shape to another space. You cannot add it to a second.");
+			cp.AssertSpaceUnlocked(this);
 
 			bool isStatic = body.bodyType == cpBodyType.STATIC;
 			if (!isStatic)
@@ -491,9 +491,9 @@ namespace ChipmunkSharp
 		/// Add a rigid body to the simulation.
 		public cpBody AddBody(cpBody body)
 		{
-			cp.assertHard(body.space != this, "You have already added this body to this space. You must not add it a second time.");
-			cp.assertHard(body.space == null, "You have already added this body to another space. You cannot add it to a second.");
-			cp.assertSpaceUnlocked(this);
+			cp.AssertHard(body.space != this, "You have already added this body to this space. You must not add it a second time.");
+			cp.AssertHard(body.space == null, "You have already added this body to another space. You cannot add it to a second.");
+			cp.AssertSpaceUnlocked(this);
 
 			ArrayForBodyType(body.bodyType).Add(body);
 
@@ -506,14 +506,14 @@ namespace ChipmunkSharp
 		public cpConstraint AddConstraint(cpConstraint constraint)
 		{
 
-			cp.assertHard(constraint.space != this, "You have already added this constraint to this space. You must not add it a second time.");
-			cp.assertHard(constraint.space == null, "You have already added this constraint to another space. You cannot add it to a second.");
+			cp.AssertHard(constraint.space != this, "You have already added this constraint to this space. You must not add it a second time.");
+			cp.AssertHard(constraint.space == null, "You have already added this constraint to another space. You cannot add it to a second.");
 
-			cp.assertSpaceUnlocked(this);
+			cp.AssertSpaceUnlocked(this);
 
 			cpBody a = constraint.a, b = constraint.b;
 
-			cp.assertHard(a != null && b != null, "Constraint is attached to a NULL body.");
+			cp.AssertHard(a != null && b != null, "Constraint is attached to a NULL body.");
 
 			a.Activate();
 			b.Activate();
@@ -571,8 +571,8 @@ namespace ChipmunkSharp
 		{
 			var body = shape.body;
 
-			cp.assertHard(ContainsShape(shape), "Cannot remove a shape that was not added to the space. (Removed twice maybe?)");
-			cp.assertSpaceUnlocked(this);
+			cp.AssertHard(ContainsShape(shape), "Cannot remove a shape that was not added to the space. (Removed twice maybe?)");
+			cp.AssertSpaceUnlocked(this);
 
 			bool isStatic = body.bodyType == cpBodyType.STATIC;
 
@@ -597,11 +597,11 @@ namespace ChipmunkSharp
 		/// Remove a rigid body from the simulation.
 		public void RemoveBody(cpBody body)
 		{
-			cp.assertHard(body != GetStaticBody(), "Cannot remove the designated static body for the space.");
-			cp.assertHard(ContainsBody(body), "Cannot remove a body that was not added to the space. (Removed twice maybe?)");
+			cp.AssertHard(body != GetStaticBody(), "Cannot remove the designated static body for the space.");
+			cp.AssertHard(ContainsBody(body), "Cannot remove a body that was not added to the space. (Removed twice maybe?)");
 			//	cpAssertHard(body->shapeList == NULL, "Cannot remove a body from the space before removing the bodies attached to it.");
 			//	cpAssertHard(body->constraintList == NULL, "Cannot remove a body from the space before removing the constraints attached to it.");
-			cp.assertSpaceUnlocked(this);
+			cp.AssertSpaceUnlocked(this);
 
 			body.Activate();
 
@@ -615,9 +615,9 @@ namespace ChipmunkSharp
 		public void RemoveConstraint(cpConstraint constraint)
 		{
 
-			cp.assertSoft(this.ContainsConstraint(constraint),
+			cp.AssertSoft(this.ContainsConstraint(constraint),
 		   "Cannot remove a constraint that was not added to the space. (Removed twice maybe?)");
-			cp.assertSpaceUnlocked(this);
+			cp.AssertSpaceUnlocked(this);
 
 			constraint.a.Activate();
 			constraint.b.Activate();
@@ -716,7 +716,7 @@ namespace ChipmunkSharp
 		/// Update the collision detection info for the static shapes in the space.
 		public void ReindexStatic()
 		{
-			cp.assertSoft(!this.IsLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
+			cp.AssertSoft(!this.IsLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
 
 			this.staticShapes.Each(s => cpShape.UpdateFunc((s as cpShape), null));
 			this.staticShapes.Reindex();
@@ -726,7 +726,7 @@ namespace ChipmunkSharp
 		/// Update the collision detection data for a specific shape in the space.
 		public void ReindexShape(cpShape shape)
 		{
-			cp.assertHard(!IsLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
+			cp.AssertHard(!IsLocked, "You cannot manually reindex objects while the space is locked. Wait until the current query or step is complete.");
 
 			//var body = shape.body;
 			shape.CacheBB();

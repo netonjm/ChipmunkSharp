@@ -127,7 +127,7 @@ namespace ChipmunkSharp
 			cpBody b = this.b;
 
 			float moment = a.i_inv + b.i_inv;
-			cp.assertSoft(moment != 0.0f, "Unsolvable spring.");
+			cp.AssertSoft(moment != 0.0f, "Unsolvable spring.");
 			this.iSum = 1.0f / moment;
 
 			this.w_coef = 1.0f - cp.cpfexp(-this.damping * dt * moment);

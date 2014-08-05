@@ -30,7 +30,7 @@ namespace ChipmunkSharp
 
 
 		/// The first body connected to this constraint.
-		internal cpBody a, b;
+		public cpBody a, b;
 
 		internal cpConstraint next_a, next_b;
 
@@ -118,7 +118,7 @@ namespace ChipmunkSharp
 
 		public void SetMaxForce(float maxForce)
 		{
-			cp.assertHard(maxForce >= 0.0f, "maxForce must be positive.");
+			cp.AssertHard(maxForce >= 0.0f, "maxForce must be positive.");
 			ActivateBodies();// cpConstraintActivateBodies(constraint);
 			this.maxForce = maxForce;
 		}
@@ -130,7 +130,7 @@ namespace ChipmunkSharp
 
 		public void SetErrorBias(float errorBias)
 		{
-			cp.assertHard(errorBias >= 0.0f, "errorBias must be positive.");
+			cp.AssertHard(errorBias >= 0.0f, "errorBias must be positive.");
 			ActivateBodies();
 			this.errorBias = errorBias;
 		}
@@ -142,7 +142,7 @@ namespace ChipmunkSharp
 
 		public void SetMaxBias(float maxBias)
 		{
-			cp.assertHard(maxBias >= 0.0f, "errorBias must be positive.");
+			cp.AssertHard(maxBias >= 0.0f, "errorBias must be positive.");
 			ActivateBodies();
 			this.maxBias = maxBias;
 		}

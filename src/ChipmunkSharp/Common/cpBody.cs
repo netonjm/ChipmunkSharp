@@ -255,7 +255,7 @@ namespace ChipmunkSharp
 			if (space != null)
 			{
 
-				cp.assertSpaceUnlocked(space);
+				cp.AssertSpaceUnlocked(space);
 
 
 				if (oldType == cpBodyType.STATIC)
@@ -352,8 +352,8 @@ namespace ChipmunkSharp
 		/// Set the mass of a body.
 		public void SetMass(float mass)
 		{
-			cp.assertHard(this.bodyType == cpBodyType.DYNAMIC, "You cannot set the mass of kinematic or static bodies.");
-			cp.assertHard(0.0f <= mass && mass < cp.Infinity, "Mass must be positive and finite.");
+			cp.AssertHard(this.bodyType == cpBodyType.DYNAMIC, "You cannot set the mass of kinematic or static bodies.");
+			cp.AssertHard(0.0f <= mass && mass < cp.Infinity, "Mass must be positive and finite.");
 
 			Activate();
 			m = mass;
@@ -370,7 +370,7 @@ namespace ChipmunkSharp
 		/// Set the moment of a body.
 		public void SetMoment(float moment)
 		{
-			cp.assertHard(moment >= 0.0f, "Moment of Inertia must be positive and non-zero.");
+			cp.AssertHard(moment >= 0.0f, "Moment of Inertia must be positive and non-zero.");
 
 			Activate();
 			this.i = moment;
@@ -570,7 +570,7 @@ namespace ChipmunkSharp
 			// Skip kinematic bodies.
 			if (bodyType == cpBodyType.KINEMATIC) return;
 
-			cp.assertSoft(this.m > 0.0f && this.i > 0.0f, string.Format("Body's mass and moment must be positive to simulate. (Mass: {0} Moment: {1})", this.m, this.i));
+			cp.AssertSoft(this.m > 0.0f && this.i > 0.0f, string.Format("Body's mass and moment must be positive to simulate. (Mass: {0} Moment: {1})", this.m, this.i));
 
 			this.v = cpVect.cpvadd(cpVect.cpvmult(this.v, damping), cpVect.cpvmult(cpVect.cpvadd(gravity, cpVect.cpvmult(this.f, this.m_inv)), dt));
 			this.w = this.w * damping + this.t * this.i_inv * dt;
@@ -755,7 +755,7 @@ namespace ChipmunkSharp
 				if (root != null && root.IsSleeping())
 				{
 					// TODO should cpBodyIsSleeping(root) be an assertion?
-					cp.assertSoft(root.bodyType == cpBodyType.DYNAMIC, "Internal Error: Non-dynamic body component root detected.");
+					cp.AssertSoft(root.bodyType == cpBodyType.DYNAMIC, "Internal Error: Non-dynamic body component root detected.");
 
 					cpSpace space = root.space;
 					cpBody body = root;
@@ -794,7 +794,7 @@ namespace ChipmunkSharp
 		// Wake up any sleeping or idle bodies touching a static body.
 		public void ActivateStatic(cpShape filter)
 		{
-			cp.assertHard(bodyType == cpBodyType.STATIC, "Body.activateStatic() called on a non-static body.");
+			cp.AssertHard(bodyType == cpBodyType.STATIC, "Body.activateStatic() called on a non-static body.");
 
 			eachArbiter((arb, o) =>
 			{
@@ -832,14 +832,14 @@ namespace ChipmunkSharp
 		public void PushArbiter(cpArbiter arb)
 		{
 
-			cp.assertSoft((arb.body_a == this ? arb.thread_a.next : arb.thread_b.next) == null,
+			cp.AssertSoft((arb.body_a == this ? arb.thread_a.next : arb.thread_b.next) == null,
 			"Internal Error: Dangling contact graph pointers detected. (A)");
-			cp.assertSoft((arb.body_a == this ? arb.thread_a.prev : arb.thread_b.prev) == null,
+			cp.AssertSoft((arb.body_a == this ? arb.thread_a.prev : arb.thread_b.prev) == null,
 				"Internal Error: Dangling contact graph pointers detected. (B)");
 
 			var next = this.arbiterList;
 
-			cp.assertSoft(next == null || (next.body_a == this ? next.thread_a.prev : next.thread_b.prev) == null,
+			cp.AssertSoft(next == null || (next.body_a == this ? next.thread_a.prev : next.thread_b.prev) == null,
 				"Internal Error: Dangling contact graph pointers detected. (C)");
 
 			if (arb.body_a == this)
@@ -891,7 +891,7 @@ namespace ChipmunkSharp
 
 		public void SetAngleInternal(float angle)
 		{
-			cp.assertHard(!float.IsNaN(angle), "Internal Error: Attempting to set body's angle to NaN");
+			cp.AssertHard(!float.IsNaN(angle), "Internal Error: Attempting to set body's angle to NaN");
 			this.a = angle;//fmod(a, (cpfloat)M_PI*2.0f);
 
 			//this.rot = vforangle(angle);
@@ -934,16 +934,16 @@ namespace ChipmunkSharp
 		// Force a body to fall asleep immediately along with other bodies in a group.
 		public void SleepWithGroup(cpBody group)
 		{
-			cp.assertHard(bodyType == cpBodyType.DYNAMIC, "Non-dynamic bodies cannot be put to sleep.");
+			cp.AssertHard(bodyType == cpBodyType.DYNAMIC, "Non-dynamic bodies cannot be put to sleep.");
 
 			var space = this.space;
-			cp.assertHard(!space.IsLocked, "Bodies cannot be put to sleep during a query or a call to cpSpaceStep(). Put these calls into a post-step callback.");
-			cp.assertHard(space.GetSleepTimeThreshold() < cp.Infinity, "Sleeping is not enabled on the space. You cannot sleep a body without setting a sleep time threshold on the space.");
-			cp.assertHard(group == null || group.IsSleeping(), "Cannot use a non-sleeping body as a group identifier.");
+			cp.AssertHard(!space.IsLocked, "Bodies cannot be put to sleep during a query or a call to cpSpaceStep(). Put these calls into a post-step callback.");
+			cp.AssertHard(space.GetSleepTimeThreshold() < cp.Infinity, "Sleeping is not enabled on the space. You cannot sleep a body without setting a sleep time threshold on the space.");
+			cp.AssertHard(group == null || group.IsSleeping(), "Cannot use a non-sleeping body as a group identifier.");
 
 			if (this.IsSleeping())
 			{
-				cp.assertSoft(cp.ComponentRoot(this) == cp.ComponentRoot(group), "The body is already sleeping and it's group cannot be reassigned.");
+				cp.AssertSoft(cp.ComponentRoot(this) == cp.ComponentRoot(group), "The body is already sleeping and it's group cannot be reassigned.");
 				return;
 			}
 
@@ -1003,8 +1003,8 @@ namespace ChipmunkSharp
 			return body;
 		}
 
-		static void cpv_assert_nan(cpVect v, string message) { cp.assertHard(v.x == v.x && v.y == v.y, message); }
-		static void cpv_assert_infinite(cpVect v, string message) { cp.assertHard(cp.cpfabs(v.x) != cp.Infinity && cp.cpfabs(v.y) != cp.Infinity, message); }
+		static void cpv_assert_nan(cpVect v, string message) { cp.AssertHard(v.x == v.x && v.y == v.y, message); }
+		static void cpv_assert_infinite(cpVect v, string message) { cp.AssertHard(cp.cpfabs(v.x) != cp.Infinity && cp.cpfabs(v.y) != cp.Infinity, message); }
 		static void cpv_assert_sane(cpVect v, string message) { cpv_assert_nan(v, message); cpv_assert_infinite(v, message); }
 		public void SanityCheck()
 		{

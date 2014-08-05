@@ -60,7 +60,7 @@ namespace ChipmunkSharp
 			this.n = cpVect.cpvmult(delta, 1.0f / (dist > 0 ? dist : cp.Infinity));
 
 			float k = cp.k_scalar(a, b, this.r1, this.r2, this.n);
-			cp.assertSoft(k != 0.0, "Unsolvable this.");
+			cp.AssertSoft(k != 0.0, "Unsolvable this.");
 			this.nMass = 1.0f / k;
 
 			this.target_vrn = 0.0f;

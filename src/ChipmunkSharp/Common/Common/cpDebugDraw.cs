@@ -110,10 +110,10 @@ namespace ChipmunkSharp
 
 
 		/// Draw a closed polygon provided in CCW order.
-		public abstract void DrawPolygon(List<cpVect> vertices, int vertexCount, cpColor color);
+		public abstract void DrawPolygon(cpVect[] vertices, int vertexCount, cpColor color);
 
 		/// Draw a solid closed polygon provided in CCW order.
-		public abstract void DrawSolidPolygon(List<cpVect> vertices, int vertexCount, cpColor color);
+		public abstract void DrawSolidPolygon(cpVect[] vertices, int vertexCount, cpColor color);
 
 		/// Draw a circle.
 		public abstract void DrawCircle(cpVect center, float radius, cpColor color);

@@ -31,7 +31,7 @@ namespace ChipmunkSharp
 		public void ActivateBody(cpBody body)
 		{
 
-			cp.assertHard(body.bodyType == cpBodyType.DYNAMIC, "Internal error: Attempting to deactivate a non-dynamic body.");
+			cp.AssertHard(body.bodyType == cpBodyType.DYNAMIC, "Internal error: Attempting to deactivate a non-dynamic body.");
 
 			if (this.IsLocked)
 			{
@@ -42,7 +42,7 @@ namespace ChipmunkSharp
 			else
 			{
 
-				cp.assertSoft(body.nodeRoot == null &&
+				cp.AssertSoft(body.nodeRoot == null &&
 					body.nodeNext == null, "Internal error: Activating body non-NULL node pointers.");
 
 
@@ -92,7 +92,7 @@ namespace ChipmunkSharp
 		public void DeactivateBody(cpBody body)
 		{
 
-			cp.assertHard(body.bodyType == cpBodyType.DYNAMIC, "Internal error: Attempting to deactivate a non-dynamic body.");
+			cp.AssertHard(body.bodyType == cpBodyType.DYNAMIC, "Internal error: Attempting to deactivate a non-dynamic body.");
 
 			this.dynamicBodies.Remove(body);
 
@@ -137,8 +137,8 @@ namespace ChipmunkSharp
 			{
 				var body = bodies[i];
 
-				cp.assertSoft(body.nodeNext == null, "Internal Error: Dangling next pointer detected in contact graph.");
-				cp.assertSoft(body.nodeRoot == null, "Internal Error: Dangling root pointer detected in contact graph.");
+				cp.AssertSoft(body.nodeNext == null, "Internal Error: Dangling next pointer detected in contact graph.");
+				cp.AssertSoft(body.nodeRoot == null, "Internal Error: Dangling root pointer detected in contact graph.");
 			}
 
 			// Calculate the kinetic energy of all the bodies
@@ -277,7 +277,7 @@ namespace ChipmunkSharp
 				}
 				else
 				{
-					cp.assertSoft(other_root == root, "Internal Error: Inconsistency dectected in the contact graph.");
+					cp.AssertSoft(other_root == root, "Internal Error: Inconsistency dectected in the contact graph.");
 				}
 			}
 

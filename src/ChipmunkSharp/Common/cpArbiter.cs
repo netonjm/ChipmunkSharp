@@ -378,13 +378,13 @@ namespace ChipmunkSharp
 
 		public cpVect GetPointA(int i)
 		{
-			cp.assertHard(0 <= i && i < GetCount(), "Index error: The specified contact index is invalid for this arbiter");
+			cp.AssertHard(0 <= i && i < GetCount(), "Index error: The specified contact index is invalid for this arbiter");
 			return cpVect.cpvadd(this.body_a.p, this.contacts[i].r1);
 		}
 
 		public cpVect GetPointB(int i)
 		{
-			cp.assertHard(0 <= i && i < GetCount(), "Index error: The specified contact index is invalid for this arbiter");
+			cp.AssertHard(0 <= i && i < GetCount(), "Index error: The specified contact index is invalid for this arbiter");
 			return cpVect.cpvadd(this.body_b.p, this.contacts[i].r2);
 		}
 
@@ -392,7 +392,7 @@ namespace ChipmunkSharp
 		public float GetDepth(int i)
 		{
 			// return this.contacts[i].dist;
-			cp.assertHard(0 <= i && i < GetCount(), "Index error: The specified contact index is invalid for this arbiter");
+			cp.AssertHard(0 <= i && i < GetCount(), "Index error: The specified contact index is invalid for this arbiter");
 
 			cpContact con = contacts[i];
 			return cpVect.cpvdot(cpVect.cpvadd(cpVect.cpvsub(con.r2, con.r1), cpVect.cpvsub(this.body_b.p, this.body_a.p)), this.n);
@@ -429,7 +429,7 @@ namespace ChipmunkSharp
 		{
 			int count = set.Count;
 
-			cp.assertHard(count == Count, "The number of contact points cannot be changed.");
+			cp.AssertHard(count == Count, "The number of contact points cannot be changed.");
 
 			this.n = (this.swapped ? cpVect.cpvneg(set.normal) : set.normal);
 

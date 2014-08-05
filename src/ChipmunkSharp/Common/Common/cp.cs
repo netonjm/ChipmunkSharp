@@ -237,7 +237,7 @@ namespace ChipmunkSharp
 		{
 			var value = k_scalar_body(a, r1, n) + k_scalar_body(b, r2, n);
 
-			cp.assertSoft(value != 0, "Unsolvable collision or constraint.");
+			cp.AssertSoft(value != 0, "Unsolvable collision or constraint.");
 
 			return value;
 		}
@@ -270,7 +270,7 @@ namespace ChipmunkSharp
 
 			// invert
 			float det = k11 * k22 - k12 * k21;
-			cp.assertSoft(det != 0.0f, "Unsolvable constraint.");
+			cp.AssertSoft(det != 0.0f, "Unsolvable constraint.");
 
 			float det_inv = 1.0f / det;
 			return new cpMat2x2(
@@ -399,51 +399,51 @@ namespace ChipmunkSharp
 
 		#region ASSERTS
 
-		public static void assert(string p2)
+		public static void Assert(string p2)
 		{
 			Error(string.Format("Assert:{0}", p2));
 		}
 
-		public static void assert(bool p1, string p2)
+		public static void Assert(bool p1, string p2)
 		{
 			if (!p1)
 				Error(string.Format("Assert:{0} Value:{1}", p2, p1));
 		}
 
-		public static void assertHard(bool p1, string p2)
+		public static void AssertHard(bool p1, string p2)
 		{
 			if (!p1)
 				Error(string.Format("AssertHard:{0} Value:{1}", p2, p1));
 		}
 
-		public static void assertHard(string p)
+		public static void AssertHard(string p)
 		{
 			Error(string.Format("AssertHard:{0} Value:{1}", p, ""));
 		}
 
-		public static void assertSoft(bool p1, string p2)
+		public static void AssertSoft(bool p1, string p2)
 		{
 			if (!p1)
 				Trace(string.Format("cpAssertSoft:{0} Value:{1}", p2, p1));
 		}
 
-		public static void assertSpaceUnlocked(cpSpace space)
+		public static void AssertSpaceUnlocked(cpSpace space)
 		{
-			assertSoft(!space.IsLocked, "This addition/removal cannot be done safely during a call to cpSpaceStep() or during a query. Put these calls into a post-step callback.");
+			AssertSoft(!space.IsLocked, "This addition/removal cannot be done safely during a call to cpSpaceStep() or during a query. Put these calls into a post-step callback.");
 		}
 
-		public static void assertWarn(bool p1, string p2)
+		public static void AssertWarn(bool p1, string p2)
 		{
 			if (!p1)
 				Trace(string.Format("AssertWarn:{0} Value:{1}", p2, p1));
 		}
 
-		public static void assertWarn(string p)
+		public static void AssertWarn(string p)
 		{
 			Trace(string.Format("AssertWarn:{0}", p));
 		}
 
-		public static void assertWarn(bool p)
+		public static void AssertWarn(bool p)
 		{
 			if (!p)
 				Trace(string.Format("AssertWarn: ERROR DETECTED"));
@@ -794,7 +794,7 @@ namespace ChipmunkSharp
 		public static void ComponentActivate(cpBody root)
 		{
 			if (root == null || !root.IsSleeping()) return;
-			cp.assertHard(!root.IsRogue(), "Internal Error: componentActivate() called on a rogue body.");
+			cp.AssertHard(!root.IsRogue(), "Internal Error: componentActivate() called on a rogue body.");
 
 			var space = root.space;
 			cpBody body = root;

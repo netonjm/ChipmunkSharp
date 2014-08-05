@@ -180,7 +180,7 @@ namespace ChipmunkSharp
 		public void ReplaceChild(Node child, Node value, cpBBTree tree)
 		{
 
-			cp.assertSoft(child == this.A || child == this.B, "Node is not a child of parent.");
+			cp.AssertSoft(child == this.A || child == this.B, "Node is not a child of parent.");
 
 			if (this.A == child)
 			{

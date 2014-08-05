@@ -65,7 +65,7 @@ namespace ChipmunkSharp
 		{
 
 			//cpPostStepCallback func
-			cp.assertSoft(this.IsLocked,
+			cp.AssertSoft(this.IsLocked,
 		 "Adding a post-step callback when the space is not locked is unnecessary. " +
 		 "Post-step callbacks will not called until the end of the next call to cpSpaceStep() or the next query.");
 
@@ -96,7 +96,7 @@ namespace ChipmunkSharp
 		{
 
 			this.locked--;
-			cp.assertHard(this.locked >= 0, "Internal Error: Space lock underflow.");
+			cp.AssertHard(this.locked >= 0, "Internal Error: Space lock underflow.");
 
 			if (this.locked == 0)
 			{

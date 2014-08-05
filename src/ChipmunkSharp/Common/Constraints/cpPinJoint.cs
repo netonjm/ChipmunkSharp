@@ -159,7 +159,7 @@ namespace ChipmunkSharp
 			cpVect p2 = (b != null ? cpTransform.cpTransformPoint(b.transform, anchorB) : anchorB);
 			this.dist = cpVect.cpvlength(cpVect.cpvsub(p2, p1));
 
-			cp.assertSoft(this.dist > 0, "You created a 0 length pin joint. A pivot joint will be much more stable.");
+			cp.AssertSoft(this.dist > 0, "You created a 0 length pin joint. A pivot joint will be much more stable.");
 			//if (this.dist <= 0)
 			//	throw new NotImplementedException("You created a 0 length pin joint. A pivot joint will be much more stable.");
 

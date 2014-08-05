@@ -135,11 +135,11 @@ namespace ChipmunkSharp
 		public static cpShapeMassInfo cpPolyShapeMassInfo(float mass, int count, cpVect[] verts, float radius)
 		{
 
-			cpVect centroid = cp.CentroidForPoly(count,verts);
+			cpVect centroid = cp.CentroidForPoly(count, verts);
 
 			var info = new cpShapeMassInfo(
 				mass,
-				cp.MomentForPoly(1.0f,count, verts, cpVect.cpvneg(centroid), radius),
+				cp.MomentForPoly(1.0f, count, verts, cpVect.cpvneg(centroid), radius),
 				centroid,
 				cp.AreaForCircle(0.0f, radius)
 			);
@@ -149,8 +149,11 @@ namespace ChipmunkSharp
 
 	public class cpCircleShape : cpShape
 	{
-		internal cpVect c, tc;
-		internal float r;
+
+		public cpVect c, tc;
+
+		public float r;
+
 
 		public cpCircleShape(cpBody body, float radius, cpVect offset)
 			: base(body, cpShapeMassInfo.cpCircleShapeMassInfo(0.0f, radius, offset))
@@ -188,6 +191,10 @@ namespace ChipmunkSharp
 			return new cpBB(c, this.r);
 		}
 
+		/// <summary>
+		/// Gets the circle radius. Parameter name: .r
+		/// </summary>
+		/// <returns></returns>
 		public float GetRadius()
 		{
 			return this.r;
@@ -204,6 +211,10 @@ namespace ChipmunkSharp
 		}
 
 
+		/// <summary>
+		/// Gets the circle offset. Parameter name: .c
+		/// </summary>
+		/// <returns></returns>
 		public cpVect GetOffset()
 		{
 			return this.c;
@@ -242,9 +253,9 @@ namespace ChipmunkSharp
 	public class cpSegmentShape : cpShape
 	{
 
-		internal cpVect a, b, n;
-		internal cpVect ta, tb, tn;
-		internal float r;
+		public cpVect a, b, n;
+		public cpVect ta, tb, tn;
+		public float r;
 
 		public cpVect a_tangent, b_tangent;
 
@@ -551,7 +562,7 @@ namespace ChipmunkSharp
 
 		public void SetBody(cpBody body)
 		{
-			cp.assertHard(!Active(), "You cannot change the body on an active shape. You must remove the shape from the space before changing the body.");
+			cp.AssertHard(!Active(), "You cannot change the body on an active shape. You must remove the shape from the space before changing the body.");
 			this.body = body;
 		}
 
@@ -599,7 +610,7 @@ namespace ChipmunkSharp
 
 		public void SetElasticity(float elasticity)
 		{
-			cp.assertHard(elasticity >= 0.0f, "Elasticity must be positive and non-zero.");
+			cp.AssertHard(elasticity >= 0.0f, "Elasticity must be positive and non-zero.");
 			this.body.Activate();
 			// throw new NotImplementedException();
 			this.e = elasticity;
@@ -731,7 +742,7 @@ namespace ChipmunkSharp
 		}
 		public void SetFriction(float friction)
 		{
-			cp.assertHard(friction >= 0.0f, "Friction must be postive and non-zero.");
+			cp.AssertHard(friction >= 0.0f, "Friction must be postive and non-zero.");
 			this.body.Activate();
 			this.u = friction;
 		}
