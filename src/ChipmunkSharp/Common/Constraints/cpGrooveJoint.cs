@@ -30,7 +30,7 @@ namespace ChipmunkSharp
 
 		public cpVect grv_n, grv_a, grv_b;
 
-		cpVect anchorB;
+		public cpVect anchorB;
 
 		cpVect grv_tn;
 		float clamp;
@@ -187,15 +187,15 @@ namespace ChipmunkSharp
 			this.anchorB = anchorB;
 		}
 
-		public override void Draw(cpDebugDraw m_debugDraw)
-		{
-			var a = this.a.LocalToWorld(this.grv_a);
-			var b = this.a.LocalToWorld(this.grv_b);
-			var c = this.b.LocalToWorld(this.anchorB);
+		//public override void Draw(cpDebugDraw m_debugDraw)
+		//{
+		//	var a = this.a.LocalToWorld(this.grv_a);
+		//	var b = this.a.LocalToWorld(this.grv_b);
+		//	var c = this.b.LocalToWorld(this.anchorB);
 
-			m_debugDraw.DrawSegment(a, b, cpColor.Grey);
-			m_debugDraw.DrawCircle(c, 3f, cpColor.Grey);
-		}
+		//	m_debugDraw.DrawSegment(a, b, cpColor.Grey);
+		//	m_debugDraw.DrawCircle(c, 3f, cpColor.Grey);
+		//}
 
 
 	}

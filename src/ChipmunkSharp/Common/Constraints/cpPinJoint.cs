@@ -94,21 +94,17 @@ namespace ChipmunkSharp
 			return cp.cpfabs(this.jnAcc);
 		}
 
-		public override void Draw(cpDebugDraw m_debugDraw)
-		{
+		//public override void Draw(cpDebugDraw m_debugDraw)
+		//{
 
-			cpVect a = cpTransform.cpTransformPoint(this.a.transform, this.anchorA);
-			cpVect b = cpTransform.cpTransformPoint(this.b.transform, this.anchorB);
+		//	cpVect a = cpTransform.cpTransformPoint(this.a.transform, this.anchorA);
+		//	cpVect b = cpTransform.cpTransformPoint(this.b.transform, this.anchorB);
 
-			m_debugDraw.DrawSegment(a, b, cpColor.Grey);
-			m_debugDraw.DrawPoint(a, 5, cpColor.DarkGrey);
-			m_debugDraw.DrawPoint(b, 5, cpColor.DarkGrey);
-
-
-			//var a = this.a.LocalToWorld(this.anchorA);
-			//var b = this.b.LocalToWorld(this.anchorB);
-			//m_debugDraw.DrawSegment(a, b, cpColor.Grey);
-		}
+		//	m_debugDraw.DrawSegment(a, b, cpColor.Grey);
+		//	m_debugDraw.DrawPoint(a, 5, cpColor.DarkGrey);
+		//	m_debugDraw.DrawPoint(b, 5, cpColor.DarkGrey);
+		
+		//}
 
 
 

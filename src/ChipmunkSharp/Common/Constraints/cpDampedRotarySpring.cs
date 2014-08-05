@@ -164,17 +164,17 @@ namespace ChipmunkSharp
 			return this.jAcc;
 		}
 
-		public override void Draw(cpDebugDraw m_debugDraw)
-		{
-			//base.Draw(m_debugDraw);
-			//var a = this.a.LocalToWorld(this.anchr1);
-			//var b = this.b.LocalToWorld(this.anchr2);
+		//public override void Draw(cpDebugDraw m_debugDraw)
+		//{
+		//	//base.Draw(m_debugDraw);
+		//	//var a = this.a.LocalToWorld(this.anchr1);
+		//	//var b = this.b.LocalToWorld(this.anchr2);
 
-			////ctx.strokeStyle = "grey";
-			//drawSpring(ctx, scale, point2canvas, a, b);
+		//	////ctx.strokeStyle = "grey";
+		//	//drawSpring(ctx, scale, point2canvas, a, b);
 
 
-		}
+		//}
 
 
 		//public static cpConstraint cpDampedRotarySpringNew(cpBody cpBody1, cpBody cpBody2, float p, float stiffness, float damping)

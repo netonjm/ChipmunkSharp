@@ -34,7 +34,7 @@ namespace ChipmunkSharp
 	public partial class cpSpace
 	{
 
-		private cpDebugDraw m_debugDraw;
+		//private cpDebugDraw m_debugDraw;
 
 		#region PARAMS
 		// public float damping;
@@ -748,55 +748,55 @@ namespace ChipmunkSharp
 		}
 
 
-		#region DEBUG DRAW
+		//#region DEBUG DRAW
 
-		public void SetDebugDraw(cpDebugDraw debug)
-		{
-			m_debugDraw = debug;
-		}
+		//public void SetDebugDraw(cpDebugDraw debug)
+		//{
+		//	m_debugDraw = debug;
+		//}
 
-		public void DrawDebugData()
-		{
-			if (m_debugDraw == null)
-			{
-				return;
-			}
+		//public void DrawDebugData()
+		//{
+		//	if (m_debugDraw == null)
+		//	{
+		//		return;
+		//	}
 
-			m_debugDraw.DrawString(0, 15, string.Format("Step: {0}", stamp));
-			m_debugDraw.DrawString(0, 50, string.Format("Bodies : {0}/{1}", dynamicBodies.Count + staticBodies.Count, dynamicBodies.Capacity));
-			m_debugDraw.DrawString(0, 80, string.Format("Arbiters: {0}/{1}", arbiters.Count, arbiters.Capacity));
+		//	m_debugDraw.DrawString(0, 15, string.Format("Step: {0}", stamp));
+		//	m_debugDraw.DrawString(0, 50, string.Format("Bodies : {0}/{1}", dynamicBodies.Count + staticBodies.Count, dynamicBodies.Capacity));
+		//	m_debugDraw.DrawString(0, 80, string.Format("Arbiters: {0}/{1}", arbiters.Count, arbiters.Capacity));
 
-			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.All) || m_debugDraw.Flags.HasFlag(cpDrawFlags.BB) || m_debugDraw.Flags.HasFlag(cpDrawFlags.Shapes))
-			{
-				EachShape(s => s.Draw(m_debugDraw));
-			}
+		//	if (m_debugDraw.Flags.HasFlag(cpDrawFlags.All) || m_debugDraw.Flags.HasFlag(cpDrawFlags.BB) || m_debugDraw.Flags.HasFlag(cpDrawFlags.Shapes))
+		//	{
+		//		EachShape(s => s.Draw(m_debugDraw));
+		//	}
 
-			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.Joints) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
-			{
-				EachConstraint(c => c.Draw(m_debugDraw));
-			}
+		//	if (m_debugDraw.Flags.HasFlag(cpDrawFlags.Joints) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
+		//	{
+		//		EachConstraint(c => c.Draw(m_debugDraw));
+		//	}
 
-			var contacts = 0;
-			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.All) || m_debugDraw.Flags.HasFlag(cpDrawFlags.ContactPoints))
-			{
-				for (var i = 0; i < arbiters.Count; i++)
-				{
-					for (int j = 0; j < arbiters[i].contacts.Count; j++)
-					{
-						arbiters[i].contacts[j].Draw(m_debugDraw);
-					}
-					contacts += arbiters[i].contacts.Count;
-				}
+		//	var contacts = 0;
+		//	if (m_debugDraw.Flags.HasFlag(cpDrawFlags.All) || m_debugDraw.Flags.HasFlag(cpDrawFlags.ContactPoints))
+		//	{
+		//		for (var i = 0; i < arbiters.Count; i++)
+		//		{
+		//			for (int j = 0; j < arbiters[i].contacts.Count; j++)
+		//			{
+		//				arbiters[i].contacts[j].Draw(m_debugDraw);
+		//			}
+		//			contacts += arbiters[i].contacts.Count;
+		//		}
 
-			}
+		//	}
 
-			m_debugDraw.DrawString(0, 110, "Contact points: " + contacts);
-			m_debugDraw.DrawString(0, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}", cp.numLeaves, cp.numNodes, cp.numPairs));
-		}
+		//	m_debugDraw.DrawString(0, 110, "Contact points: " + contacts);
+		//	m_debugDraw.DrawString(0, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}", cp.numLeaves, cp.numNodes, cp.numPairs));
+		//}
 
 
 
-		#endregion
+		//#endregion
 
 
 	}

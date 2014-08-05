@@ -251,15 +251,15 @@ namespace ChipmunkSharp
 			return cpBBNew(c.x - hw_max, c.y - hh_max, c.x + hw_max, c.y + hh_max);
 		}
 
-		public void Draw(cpDebugDraw m_debugDraw)
-		{
-			Draw(m_debugDraw, cpColor.Green);
-		}
+		//public void Draw(cpDebugDraw m_debugDraw)
+		//{
+		//	Draw(m_debugDraw, cpColor.Green);
+		//}
 
-		public void Draw(cpDebugDraw m_debugDraw,cpColor color)
-		{
-			m_debugDraw.DrawBB(this, color);
-		}
+		//public void Draw(cpDebugDraw m_debugDraw,cpColor color)
+		//{
+		//	m_debugDraw.DrawBB(this, color);
+		//}
 
 	} ;
 

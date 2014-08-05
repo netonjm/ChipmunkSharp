@@ -957,15 +957,15 @@ namespace ChipmunkSharp
 			return cp.cpfatan2(v.y, v.x);
 		}
 
-		public void Draw(cpDebugDraw m_debugDraw, float size = 1)
-		{
-			Draw(m_debugDraw, cpColor.Red, size);
-		}
+		//public void Draw(cpDebugDraw m_debugDraw, float size = 1)
+		//{
+		//	Draw(m_debugDraw, cpColor.Red, size);
+		//}
 
-		public void Draw(cpDebugDraw m_debugDraw, cpColor color, float size = 1)
-		{
-			m_debugDraw.DrawPoint(this, size, color);
-		}
+		//public void Draw(cpDebugDraw m_debugDraw, cpColor color, float size = 1)
+		//{
+		//	m_debugDraw.DrawPoint(this, size, color);
+		//}
 	}
 
 

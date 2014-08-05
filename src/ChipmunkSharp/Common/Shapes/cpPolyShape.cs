@@ -267,19 +267,19 @@ namespace ChipmunkSharp
 		}
 
 
-		public override void Draw(cpDebugDraw m_debugDraw)
-		{
+		//public override void Draw(cpDebugDraw m_debugDraw)
+		//{
 
-			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.Shapes) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
-			{
-				cpColor color = cp.GetShapeColor(this);
-				int count = Count;
-				m_debugDraw.DrawPolygon(GetVertices(), count, color);
-			}
+		//	if (m_debugDraw.Flags.HasFlag(cpDrawFlags.Shapes) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
+		//	{
+		//		cpColor color = cp.GetShapeColor(this);
+		//		int count = Count;
+		//		m_debugDraw.DrawPolygon(GetVertices(), count, color);
+		//	}
 
-			if (m_debugDraw.Flags.HasFlag(cpDrawFlags.BB) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
-				bb.Draw(m_debugDraw);
-		}
+		//	if (m_debugDraw.Flags.HasFlag(cpDrawFlags.BB) || m_debugDraw.Flags.HasFlag(cpDrawFlags.All))
+		//		bb.Draw(m_debugDraw);
+		//}
 
 		public static cpPolyShape BoxShape(cpBody body, float width, float height, float radius)
 		{

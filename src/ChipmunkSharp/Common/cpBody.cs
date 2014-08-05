@@ -88,7 +88,7 @@ namespace ChipmunkSharp
 
 		/// Cached unit length vector representing the angle of the body.
 		/// Used for fast rotations using cpvrotate().
-		internal cpVect cog;
+		public cpVect cog;
 
 
 		/// Position of the rigid body's center of gravity.
@@ -107,7 +107,7 @@ namespace ChipmunkSharp
 		internal float t;
 
 
-		internal cpTransform transform;
+		public cpTransform transform;
 
 		/// User definable data pointer.
 		/// Generally this points to your the game object class so you can access it

@@ -184,13 +184,13 @@ namespace ChipmunkSharp
 			return this.jAcc;
 		}
 
-		public override void Draw(cpDebugDraw m_debugDraw)
-		{
-			var a = this.a.LocalToWorld(this.anchorA);
-			var b = this.b.LocalToWorld(this.anchorB);
+		//public override void Draw(cpDebugDraw m_debugDraw)
+		//{
+		//	var a = this.a.LocalToWorld(this.anchorA);
+		//	var b = this.b.LocalToWorld(this.anchorB);
 
-			m_debugDraw.DrawSpring(a, b, cpColor.Grey);
-		}
+		//	m_debugDraw.DrawSpring(a, b, cpColor.Grey);
+		//}
 
 
 

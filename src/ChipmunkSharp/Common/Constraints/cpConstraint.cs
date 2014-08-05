@@ -239,10 +239,10 @@ namespace ChipmunkSharp
 		}
 
 
-		public virtual void Draw(cpDebugDraw m_debugDraw)
-		{
+		//public virtual void Draw(cpDebugDraw m_debugDraw)
+		//{
 
-		}
+		//}
 
 
 		#region OverRideMethods

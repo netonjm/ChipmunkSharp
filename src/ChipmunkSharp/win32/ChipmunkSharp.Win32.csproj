@@ -46,9 +46,6 @@
     <Compile Include="..\Common\Common\cpColor.cs">
       <Link>Common\cpColor.cs</Link>
     </Compile>
-    <Compile Include="..\Common\Common\cpDebugDraw.cs">
-      <Link>Debug\cpDebugDraw.cs</Link>
-    </Compile>
     <Compile Include="..\Common\Constraints\cpConstraint.cs">
       <Link>Constraints\cpConstraint.cs</Link>
     </Compile>
@@ -132,7 +129,9 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Debug\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

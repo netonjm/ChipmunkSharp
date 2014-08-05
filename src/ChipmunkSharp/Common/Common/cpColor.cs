@@ -37,6 +37,10 @@ namespace ChipmunkSharp
 		public static cpColor Red { get { return new cpColor(255, 0, 0); } }
 		public static cpColor Green { get { return new cpColor(0, 255, 0); } }
 		public static cpColor Blue { get { return new cpColor(0, 0, 255); } }
+		public static cpColor Black { get { return new cpColor(0, 0, 0); } }
+
+		public static cpColor White { get { return new cpColor(255, 255, 255); } }
+
 		public static cpColor Grey { get { return new cpColor(84, 84, 84); } }
 		public static cpColor DarkGrey { get { return new cpColor(50, 50, 50); } }
 	}
