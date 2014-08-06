@@ -51,15 +51,15 @@ namespace ChipmunkSharp
 			cpBody b = this.b;
 
 			// calculate endpoints in worldspace
-			cpVect ta = cpTransform.cpTransformPoint(a.transform, this.grv_a);
-			cpVect tb = cpTransform.cpTransformPoint(a.transform, this.grv_b);
+			cpVect ta = cpTransform.Point(a.transform, this.grv_a);
+			cpVect tb = cpTransform.Point(a.transform, this.grv_b);
 
 			// calculate axis
-			cpVect n = cpTransform.cpTransformVect(a.transform, this.grv_n);
+			cpVect n = cpTransform.Vect(a.transform, this.grv_n);
 			float d = cpVect.cpvdot(ta, n);
 
 			this.grv_tn = n;
-			this.r2 = cpTransform.cpTransformVect(b.transform, cpVect.cpvsub(this.anchorB, b.cog));
+			this.r2 = cpTransform.Vect(b.transform, cpVect.cpvsub(this.anchorB, b.cog));
 
 			// calculate tangential distance along the axis of r2
 			float td = cpVect.cpvcross(cpVect.cpvadd(b.p, this.r2), n);

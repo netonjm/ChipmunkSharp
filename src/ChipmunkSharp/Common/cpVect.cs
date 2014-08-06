@@ -97,483 +97,7 @@ namespace ChipmunkSharp
 			return string.Format("cpVect : ({0:N3} {1:N3})", x, y);
 		}
 
-		public float DistanceSQ(cpVect v2)
-		{
-			return Sub(v2).LengthSQ;
-		}
 
-		public static float DistanceSQ(cpVect v1, cpVect v2)
-		{
-			return v1.Sub(v2).LengthSQ;
-		}
-
-		//public static float Distance(cpVect v1, cpVect v2)
-		//{
-		//    return (v1 - v2).Length;
-		//}
-
-		public float Distance(cpVect v2)
-		{
-			return Distance(this, v2);
-		}
-
-		public static float Distance(cpVect v1, cpVect v2)
-		{
-			return cp.cpfsqrt(v1.Sub(v2).LengthSQ);
-		}
-
-		public static cpVect Multiply(cpVect v1, float v)
-		{
-			return new cpVect(
-				v1.x * v,
-				v1.y * v
-				);
-		}
-
-		public cpVect Clamp(float len)
-		{
-			return cpvclamp(this, len);
-		}
-
-		public cpVect Add(cpVect v1)
-		{
-			return Add(this, v1);
-		}
-
-		public static cpVect Add(cpVect v1, cpVect v2)
-		{
-			return new cpVect(
-				v1.x + v2.x,
-				v1.y + v2.y
-				);
-		}
-
-		public cpVect Sub(cpVect v2)
-		{
-			return new cpVect(
-				 x - v2.x,
-				 y - v2.y
-				);
-		}
-
-		public static cpVect Sub(cpVect v1, cpVect v2)
-		{
-			return new cpVect(
-				v1.x - v2.x,
-				v1.y - v2.y
-				);
-		}
-
-		public float LengthSQ
-		{
-			get { return x * x + y * y; }
-		}
-
-		public float LengthSquare
-		{
-			get { return LengthSQ; }
-		}
-
-		/// <summary>
-		///     Computes the length of this point as if it were a vector with XY components relative to the
-		///     origin. This is computed each time this property is accessed, so cache the value that is
-		///     returned.
-		/// </summary>
-		public float Length
-		{
-			get { return cp.cpfsqrt(x * x + y * y); }
-		}
-
-		/// <summary>
-		///     Inverts the direction or location of the Y component.
-		/// </summary>
-		public cpVect InvertY
-		{
-			get
-			{
-				return new cpVect(
-					 x,
-					 -y
-					);
-			}
-		}
-
-
-
-		#region Static Methods
-
-		public static cpVect Lerp(cpVect a, cpVect b, float alpha)
-		{
-			return (a * (1f - alpha) + b * alpha);
-		}
-
-		public cpVect Lerp(cpVect a, float alpha)
-		{
-			return Lerp(this, a, alpha);
-		}
-
-
-		/** @returns if points have fuzzy equality which means equal with some degree of variance.
-			@since v0.99.1
-		*/
-
-		public static bool FuzzyEqual(cpVect a, cpVect b, float variance)
-		{
-			if (a.x - variance <= b.x && b.x <= a.x + variance)
-				if (a.y - variance <= b.y && b.y <= a.y + variance)
-					return true;
-
-			return false;
-		}
-
-
-		/** Multiplies a nd b components, a.x*b.x, a.y*b.y
-			@returns a component-wise multiplication
-			@since v0.99.1
-		*/
-
-		public static cpVect MultiplyComponents(cpVect a, cpVect b)
-		{
-			return new cpVect(
-				a.x * b.x,
-				a.y * b.y
-				);
-		}
-
-		/** @returns the signed angle in radians between two vector directions
-			@since v0.99.1
-		*/
-
-		public static float AngleSigned(cpVect a, cpVect b)
-		{
-			cpVect a2 = Normalize(a);
-			cpVect b2 = Normalize(b);
-			var angle = cp.cpfatan2(a2.x * b2.y - a2.y * b2.x, DotProduct(a2, b2));
-
-			if (cp.cpfabs(angle) < float.Epsilon)
-			{
-				return 0.0f;
-			}
-
-			return angle;
-		}
-
-		/** Rotates a point counter clockwise by the angle around a pivot
-			@param v is the point to rotate
-			@param pivot is the pivot, naturally
-			@param angle is the angle of rotation cw in radians
-			@returns the rotated point
-			@since v0.99.1
-		*/
-
-		public static cpVect RotateByAngle(cpVect v, cpVect pivot, float angle)
-		{
-			cpVect r = v - pivot;
-			float cosa = cp.cpfcos(angle), sina = cp.cpfsin(angle);
-			float t = r.x;
-
-			r.x = t * cosa - r.y * sina + pivot.x;
-			r.y = t * sina + r.y * cosa + pivot.y;
-
-			return r;
-		}
-
-		/** A general line-line intersection test
-		 @param p1 
-			is the startpoint for the first line P1 = (p1 - p2)
-		 @param p2 
-			is the endpoint for the first line P1 = (p1 - p2)
-		 @param p3 
-			is the startpoint for the second line P2 = (p3 - p4)
-		 @param p4 
-			is the endpoint for the second line P2 = (p3 - p4)
-		 @param s 
-			is the range for a hitpoint in P1 (pa = p1 + s*(p2 - p1))
-		 @param t
-			is the range for a hitpoint in P3 (pa = p2 + t*(p4 - p3))
-		 @return bool 
-			indicating successful intersection of a line
-			note that to truly test intersection for segments we have to make 
-			sure that s & t lie within [0..1] and for rays, make sure s & t > 0
-			the hit point is		p3 + t * (p4 - p3);
-			the hit point also is	p1 + s * (p2 - p1);
-		 @since v0.99.1
-		 */
-
-		public static bool LineIntersect(cpVect A, cpVect B, cpVect C, cpVect D, float S, float T)
-		{
-			// FAIL: Line undefined
-			if ((A.x == B.x && A.y == B.y) || (C.x == D.x && C.y == D.y))
-			{
-				return false;
-			}
-
-			float BAx = B.x - A.x;
-			float BAy = B.y - A.y;
-			float DCx = D.x - C.x;
-			float DCy = D.y - C.y;
-			float ACx = A.x - C.x;
-			float ACy = A.y - C.y;
-
-			float denom = DCy * BAx - DCx * BAy;
-
-			S = DCx * ACy - DCy * ACx;
-			T = BAx * ACy - BAy * ACx;
-
-			if (denom == 0)
-			{
-				if (S == 0 || T == 0)
-				{
-					// Lines incident
-					return true;
-				}
-				// Lines parallel and not incident
-				return false;
-			}
-
-			S = S / denom;
-			T = T / denom;
-
-			// Point of intersection
-			// CGPoint P;
-			// P.x = A.x + *S * (B.x - A.x);
-			// P.y = A.y + *S * (B.y - A.y);
-
-			return true;
-		}
-
-		/*
-		ccpSegmentIntersect returns YES if Segment A-B intersects with segment C-D
-		@since v1.0.0
-		*/
-
-		public static bool SegmentIntersect(cpVect A, cpVect B, cpVect C, cpVect D)
-		{
-			float S = 0, T = 0;
-
-			if (LineIntersect(A, B, C, D, S, T)
-				&& (S >= 0.0f && S <= 1.0f && T >= 0.0f && T <= 1.0f))
-			{
-				return true;
-			}
-
-			return false;
-		}
-
-		/*
-		ccpIntersectPoint returns the intersection point of line A-B, C-D
-		@since v1.0.0
-		*/
-
-		public static cpVect IntersectPoint(cpVect A, cpVect B, cpVect C, cpVect D)
-		{
-			float S = 0, T = 0;
-
-			if (LineIntersect(A, B, C, D, S, T))
-			{
-				// Point of intersection
-				return new cpVect(
-					 A.x + S * (B.x - A.x),
-					 A.y + S * (B.y - A.y)
-
-					);
-			}
-
-			return Zero;
-		}
-
-		/** Converts radians to a normalized vector.
-			@return cpVect
-			@since v0.7.2
-		*/
-
-		public static cpVect ForAngle(float a)
-		{
-			return new cpVect(
-				cp.cpfcos(a),
-				cp.cpfsin(a)
-
-				);
-
-		}
-
-		/** Converts a vector to radians.
-			@return CGfloat
-			@since v0.7.2
-		*/
-
-		public static float ToAngle(cpVect v)
-		{
-			return cp.cpfatan2(v.y, v.x);
-		}
-
-
-		/** Clamp a point between from and to.
-			@since v0.99.1
-		*/
-
-		public static cpVect Clamp(cpVect p, cpVect from, cpVect to)
-		{
-			return new cpVect(
-				cp.cpclamp(p.x, from.x, to.x),
-			   cp.cpclamp(p.y, from.y, to.y)
-				);
-			//            return CreatePoint(Clamp(p.x, from.x, to.x), Clamp(p.y, from.y, to.y));
-		}
-
-		/** Quickly convert CCSize to a cpVect
-			@since v0.99.1
-		*/
-
-		//[Obsolete("Use explicit cast (cpVect)size.")]
-		//public static cpVect FromSize(CCSize s)
-		//{
-		//    return new cpVect(
-		//         s.Width,
-		//         s.Height
-		//        );
-		//}
-
-		/**
-		 * Allow Cast CCSize to cpVect
-		 */
-
-		//public static explicit operator cpVect(CCSize size)
-		//{
-		//    return new cpVect(size.Width, size.Height);
-		//}
-
-		public cpVect Perp()
-		{
-			return Perp(this);
-		}
-
-		public static cpVect Perp(cpVect p)
-		{
-			return new cpVect(-p.y, p.x);
-		}
-
-		public static float Dot(cpVect p1, cpVect p2)
-		{
-			return p1.x * p2.x + p1.y * p2.y;
-		}
-
-		public float Dot(cpVect p1)
-		{
-			return Dot(this, p1);
-		}
-
-		public static cpVect Normalize(cpVect p)
-		{
-			float x = p.x;
-			float y = p.y;
-			float l = 1f / cp.cpfsqrt(x * x + y * y);
-			return new cpVect(x * l, y * l);
-		}
-
-		public cpVect Normalize()
-		{
-			return Normalize(this);
-		}
-
-		public static cpVect Midpoint(cpVect p1, cpVect p2)
-		{
-			return new cpVect(
-				(p1.x + p2.x) / 2f,
-				 (p1.y + p2.y) / 2f
-				);
-		}
-
-		public static float DotProduct(cpVect v1, cpVect v2)
-		{
-			return v1.x * v2.x + v1.y * v2.y;
-		}
-
-		/** Calculates cross product of two points.
-			@return CGfloat
-			@since v0.7.2
-		*/
-
-		public static float CrossProduct(cpVect v1, cpVect v2)
-		{
-			return v1.x * v2.y - v1.y * v2.x;
-		}
-
-		public float CrossProduct(cpVect v1)
-		{
-			return CrossProduct(this, v1);
-		}
-
-		/** Calculates perpendicular of v, rotated 90 degrees counter-clockwise -- cross(v, perp(v)) >= 0
-			@return cpVect
-			@since v0.7.2
-		*/
-
-		public static cpVect PerpendicularCounterClockwise(cpVect v)
-		{
-			return new cpVect(-v.y, v.x);
-		}
-
-		/** Calculates perpendicular of v, rotated 90 degrees clockwise -- cross(v, rperp(v)) <= 0
-			@return cpVect
-			@since v0.7.2
-		*/
-
-		public static cpVect PerpendicularClockwise(cpVect v)
-		{
-			return new cpVect(v.y, -v.x);
-		}
-
-		/** Calculates the projection of v1 over v2.
-			@return cpVect
-			@since v0.7.2
-		*/
-
-		public cpVect Project(cpVect v1)
-		{
-			return Project(this, v1);
-		}
-
-		static cpVect Project(cpVect v1, cpVect v2)
-		{
-			float dp1 = v1.x * v2.x + v1.y * v2.y;
-			float dp2 = v2.LengthSQ;
-			float f = dp1 / dp2;
-			return new cpVect(v2.x * f, v2.y * f);
-			// return Multiply(v2, DotProduct(v1, v2) / DotProduct(v2, v2));
-		}
-
-		/** Rotates two points.
-			@return cpVect
-			@since v0.7.2
-		*/
-
-		public cpVect Rotate(cpVect v1)
-		{
-			return Rotate(this, v1);
-		}
-
-		public static cpVect Rotate(cpVect v1, cpVect v2)
-		{
-			return new cpVect(
-				v1.x * v2.x - v1.y * v2.y,
-				v1.x * v2.y + v1.y * v2.x);
-		}
-
-		/** Unrotates two points.
-			@return cpVect
-			@since v0.7.2
-		*/
-
-		public static cpVect Unrotate(cpVect v1, cpVect v2)
-		{
-			return new cpVect(
-				v1.x * v2.x + v1.y * v2.y,
-				v1.y * v2.x - v1.x * v2.y
-				);
-		}
-
-		#endregion
 
 		#region Operator Overloads
 
@@ -628,16 +152,6 @@ namespace ChipmunkSharp
 		}
 
 		#endregion
-
-		public cpVect Neg()
-		{
-			return new cpVect(-x, -y);
-		}
-
-		public cpVect Multiply(float p)
-		{
-			return Multiply(this, p);
-		}
 
 
 		#region POINT OPERATIONS NOT NORMALICED
@@ -729,7 +243,7 @@ namespace ChipmunkSharp
 		/// Returns the unit length vector for the given angle (in radians).
 		public static cpVect cpvforangle(float a)
 		{
-			return cpv(cp.cpfcos(a), cp.cpfsin(a));
+			return new cpVect(cp.cpfcos(a), cp.cpfsin(a));
 		}
 
 
@@ -745,15 +259,9 @@ namespace ChipmunkSharp
 			return cpv(v1.x * v2.x + v1.y * v2.y, v1.y * v2.x - v1.x * v2.y);
 		}
 
-		//static float cpvlength(cpVect v)
-		//{
-		//    return v.Length;
-		//}
-
 		public static float cpvlength(cpVect v)
 		{
-			return cp.cpfsqrt(v.Dot(v));
-			//return v.Length;
+			return cp.cpfsqrt(cpvdot(v, v));
 		}
 
 		/// Returns the squared length of v. Faster than cpvlength() when you only need to compare lengths.
@@ -773,17 +281,10 @@ namespace ChipmunkSharp
 			return cpvmult(v, 1.0f / cpvlength(v));
 		}
 
-		/// Returns a normalized copy of v.
-		//static cpVect cpvnormalize2(cpVect v)
-		//{
-		//    // Neat trick I saw somewhere to avoid div/0.
-		//    return cpvmult(v, 1.0f / (cpvlength(v) + float_MIN));
-		//}
-
 		/// Spherical linearly interpolate between v1 and v2.
 		public static cpVect cpvslerp(cpVect v1, cpVect v2, float t)
 		{
-			float dot = cpVect.Dot(cpVect.Normalize(v1), cpvnormalize(v2));
+			float dot = cpvdot(cpvnormalize(v1), cpvnormalize(v2));
 			float omega = cp.cpfacos(cp.cpfclamp(dot, -1.0f, 1.0f));
 
 			if (omega < 1e-3)
@@ -794,14 +295,14 @@ namespace ChipmunkSharp
 			else
 			{
 				float denom = 1.0f / cp.cpfsin(omega);
-				return cpVect.Add(cpVect.Multiply(v1, cp.cpfsin((1.0f - t) * omega) * denom), cpVect.Multiply(v2, (float)System.Math.Sin(t * omega) * denom));
+				return cpvadd(cpvmult(v1, cp.cpfsin((1.0f - t) * omega) * denom), cpvmult(v2, cp.cpfsin(t * omega) * denom));
 			}
 		}
 
 		/// Spherical linearly interpolate between v1 towards v2 by no more than angle a radians
 		public static cpVect cpvslerpconst(cpVect v1, cpVect v2, float a)
 		{
-			float dot = cpVect.Dot(cpvnormalize(v1), cpvnormalize(v2));
+			float dot = cpvdot(cpvnormalize(v1), cpvnormalize(v2));
 			float omega = cp.cpfacos(cp.cpfclamp(dot, -1.0f, 1.0f));
 
 			return cpvslerp(v1, v2, cp.cpfmin(a, omega) / omega);
@@ -871,25 +372,6 @@ namespace ChipmunkSharp
 			return cp.cpfabs(v1 - v2);
 		}
 
-		public static cpVect closestPointOnSegment(cpVect p, cpVect a, cpVect b)
-		{
-			var delta = cpvsub(a, b);
-			var t = cp.cpfclamp01(cpvdot(delta, cpvsub(p, b)) / cpvlengthsq(delta));
-			return cpvadd(b, cpvmult(delta, t));
-		}
-
-
-		/// Returns a normalized copy of v or vzero if v was already vzero. Protects against divide by zero errors.
-		public static cpVect vnormalize_safe(cpVect v)
-		{
-			return (v.x == 0 && v.y == 0 ? cpVect.Zero : v.Normalize());
-		}
-
-		/// Clamp v to length len.
-		public static cpVect vnormalize_safe(cpVect v, float len)
-		{
-			return (cpvdot(v, v) > len * len) ? cpvmult(cpvnormalize(v), len) : v;
-		}
 
 		/// Returns a normalized copy of v.
 		public static cpVect vnormalize(cpVect v)
@@ -909,63 +391,26 @@ namespace ChipmunkSharp
 			return x * x + y * y;
 		}
 
-		//public static float vlengthsq2(float x, float y)
-		//{
-		//    return x * x + y * y;
-		//}
-
 		/// Linearly interpolate between v1 towards v2 by distance d.
 		public static cpVect vlerpconst(cpVect v1, cpVect v2, float d)
 		{
-			return v1.Add(v2.Sub(v1).Clamp(d));
-			//return cpVect.cpvadd(v1, cpvclamp(cpvsub(v2, v1), d));
+			return cpvadd(v1, cpvclamp(cpvsub(v2, v1), d));
 		}
 
 		/// Returns the squared distance between v1 and v2. Faster than vdist() when you only need to compare distances.
 		public static float vdistsq(cpVect v1, cpVect v2)
 		{
-			return v1.Sub(v2).LengthSQ;
-			//return cpvlengthsq(cpvsub(v1, v2));
+			return cpvlengthsq(cpvsub(v1, v2));
 		}
-
-		/// Returns true if the distance between v1 and v2 is less than dist.
-		public static bool vnear(cpVect v1, cpVect v2, float dist)
-		{
-			return v1.DistanceSQ(v2) < dist * dist;
-		}
-
-		public static cpVect mult_k(cpVect vr, cpVect k1, cpVect k2)
-		{
-			return new cpVect(vr.Dot(k1), vr.Dot(k2));
-		}
+	
 
 		#endregion
-
-		public cpVect NormalizeSafe()
-		{
-			return vnormalize_safe(this);
-			//throw new NotImplementedException();
-		}
-
-		public cpVect getMidpoint(cpVect b)
-		{
-			return Midpoint(this, b);
-		}
 
 		public static float cpvtoangle(cpVect v)
 		{
 			return cp.cpfatan2(v.y, v.x);
 		}
 
-		//public void Draw(cpDebugDraw m_debugDraw, float size = 1)
-		//{
-		//	Draw(m_debugDraw, cpColor.Red, size);
-		//}
-
-		//public void Draw(cpDebugDraw m_debugDraw, cpColor color, float size = 1)
-		//{
-		//	m_debugDraw.DrawPoint(this, size, color);
-		//}
 	}
 
 

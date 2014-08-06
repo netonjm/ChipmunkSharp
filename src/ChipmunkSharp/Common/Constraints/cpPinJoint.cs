@@ -43,8 +43,8 @@ namespace ChipmunkSharp
 			cpBody a = this.a;
 			cpBody b = this.b;
 
-			this.r1 = cpTransform.cpTransformVect(a.transform, cpVect.cpvsub(this.anchorA, a.cog));
-			this.r2 = cpTransform.cpTransformVect(b.transform, cpVect.cpvsub(this.anchorB, b.cog));
+			this.r1 = cpTransform.Vect(a.transform, cpVect.cpvsub(this.anchorA, a.cog));
+			this.r2 = cpTransform.Vect(b.transform, cpVect.cpvsub(this.anchorB, b.cog));
 
 			cpVect delta = cpVect.cpvsub(cpVect.cpvadd(b.p, this.r2), cpVect.cpvadd(a.p, this.r1));
 			float dist = cpVect.cpvlength(delta);
@@ -151,8 +151,8 @@ namespace ChipmunkSharp
 			this.anchorB = anchorB;
 
 			// STATIC_BODY_CHECK
-			cpVect p1 = (a != null ? cpTransform.cpTransformPoint(a.transform, anchorA) : anchorA);
-			cpVect p2 = (b != null ? cpTransform.cpTransformPoint(b.transform, anchorB) : anchorB);
+			cpVect p1 = (a != null ? cpTransform.Point(a.transform, anchorA) : anchorA);
+			cpVect p2 = (b != null ? cpTransform.Point(b.transform, anchorB) : anchorB);
 			this.dist = cpVect.cpvlength(cpVect.cpvsub(p2, p1));
 
 			cp.AssertSoft(this.dist > 0, "You created a 0 length pin joint. A pivot joint will be much more stable.");

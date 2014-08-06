@@ -40,8 +40,8 @@ namespace ChipmunkSharp
 			cpBody a = this.a;
 			cpBody b = this.b;
 
-			this.r1 = cpTransform.cpTransformVect(a.transform, cpVect.cpvsub(this.anchorA, a.cog));
-			this.r2 = cpTransform.cpTransformVect(b.transform, cpVect.cpvsub(this.anchorB, b.cog));
+			this.r1 = cpTransform.Vect(a.transform, cpVect.cpvsub(this.anchorA, a.cog));
+			this.r2 = cpTransform.Vect(b.transform, cpVect.cpvsub(this.anchorB, b.cog));
 
 			// Calculate mass tensor
 			this.k = cp.k_tensor(a, b, this.r1, this.r2);
@@ -102,7 +102,7 @@ namespace ChipmunkSharp
 
 		public override float GetImpulse()
 		{
-			return cpVect.cpvlength(jAcc);//.Length;  //cpvlength(this.jAcc);
+			return cpVect.cpvlength(jAcc);
 		}
 
 		public override void SetAnchorA(cpVect anchr1)

@@ -132,7 +132,7 @@ namespace ChipmunkSharp
 		/// Returns the center of a bounding box.
 		public static cpVect Center(cpBB bb)
 		{
-			return cpVect.cpvlerp(cpVect.cpv(bb.l, bb.b), cpVect.cpv(bb.r, bb.t), 0.5f);
+			return cpVect.cpvlerp(new cpVect(bb.l, bb.b), new cpVect(bb.r, bb.t), 0.5f);
 		}
 		public cpVect Center()
 		{

@@ -73,15 +73,15 @@ namespace ChipmunkSharp
 		//	return new cpSegmentQueryInfo(null, 1.0f, cpVect.Zero);
 		//}
 
-		public cpVect HitPoint(cpVect start, cpVect end)
-		{
-			return cpVect.Lerp(start, end, this.alpha);
-		}
+		//public cpVect HitPoint(cpVect start, cpVect end)
+		//{
+		//	return cpVect.Lerp(start, end, this.alpha);
+		//}
 
-		public float HitDist(cpVect start, cpVect end)
-		{
-			return cpVect.Distance(start, end) * this.alpha;
-		}
+		//public float HitDist(cpVect start, cpVect end)
+		//{
+		//	return cpVect.Distance(start, end) * this.alpha;
+		//}
 
 	}
 

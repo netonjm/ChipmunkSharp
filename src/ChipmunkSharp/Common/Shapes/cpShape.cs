@@ -187,7 +187,7 @@ namespace ChipmunkSharp
 
 		public override cpBB CacheData(cpTransform transform)
 		{
-			cpVect c = this.tc = cpTransform.cpTransformPoint(transform, this.c);
+			cpVect c = this.tc = cpTransform.Point(transform, this.c);
 			return new cpBB(c, this.r);
 		}
 
@@ -261,9 +261,9 @@ namespace ChipmunkSharp
 
 		public override cpBB CacheData(cpTransform transform)
 		{
-			this.ta = cpTransform.cpTransformPoint(transform, this.a);
-			this.tb = cpTransform.cpTransformPoint(transform, this.b);
-			this.tn = cpTransform.cpTransformVect(transform, this.n);
+			this.ta = cpTransform.Point(transform, this.a);
+			this.tb = cpTransform.Point(transform, this.b);
+			this.tn = cpTransform.Vect(transform, this.n);
 
 			float l, r, b, t;
 

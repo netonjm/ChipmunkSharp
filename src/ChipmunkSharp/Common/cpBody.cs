@@ -441,7 +441,7 @@ namespace ChipmunkSharp
 			cpVect rot = cpVect.cpvforangle(a);
 			cpVect c = this.cog;
 
-			this.transform = cpTransform.cpTransformNewTranspose(
+			this.transform = cpTransform.NewTranspose(
 				rot.x, -rot.y, p.x - (c.x * rot.x - c.y * rot.y),
 				rot.y, rot.x, p.y - (c.x * rot.y + c.y * rot.x)
 			);
@@ -451,12 +451,12 @@ namespace ChipmunkSharp
 		{
 			body.a = angle;
 			body.AssertSaneBody();
-			return body.a;
+			return angle;
 		}
 
 		public cpVect GetPosition()
 		{
-			return cpTransform.cpTransformPoint(transform, cpVect.Zero);
+			return cpTransform.Point(transform, cpVect.Zero);
 		}
 
 		/// Set the position of a body.
@@ -465,7 +465,7 @@ namespace ChipmunkSharp
 			this.Activate();
 
 			cpVect p = this.p = cpVect.cpvadd(
-				cpTransform.cpTransformVect(this.transform, this.cog)
+				cpTransform.Vect(this.transform, this.cog)
 				, position);
 
 			AssertSaneBody();
@@ -602,13 +602,13 @@ namespace ChipmunkSharp
 		// Convert body relative/local coordinates to absolute/world coordinates.
 		public cpVect LocalToWorld(cpVect point)
 		{
-			return cpTransform.cpTransformPoint(this.transform, point);
+			return cpTransform.Point(this.transform, point);
 		}
 
 		public cpVect WorldToLocal(cpVect point)
 		{
-			return cpTransform.cpTransformPoint(
-				cpTransform.cpTransformRigidInverse(this.transform),
+			return cpTransform.Point(
+				cpTransform.RigidInverse(this.transform),
 				point);
 		}
 
@@ -618,22 +618,22 @@ namespace ChipmunkSharp
 			Activate();
 			this.f = cpVect.cpvadd(this.f, force);
 
-			cpVect r = cpVect.cpvsub(point, cpTransform.cpTransformPoint(this.transform, this.cog));
+			cpVect r = cpVect.cpvsub(point, cpTransform.Point(this.transform, this.cog));
 			this.t += cpVect.cpvcross(r, force);
 		}
 
 
 		public void ApplyForceAtLocalPoint(cpVect force, cpVect point)
 		{
-			ApplyForceAtWorldPoint(cpTransform.cpTransformVect(this.transform, force),
-			cpTransform.cpTransformPoint(this.transform, point));
+			ApplyForceAtWorldPoint(cpTransform.Vect(this.transform, force),
+			cpTransform.Point(this.transform, point));
 		}
 
 		public void ApplyImpulseAtWorldPoint(cpVect impulse, cpVect point)
 		{
 			Activate();
 			cpVect r = cpVect.cpvsub(point,
-				cpTransform.cpTransformPoint(this.transform, this.cog));
+				cpTransform.Point(this.transform, this.cog));
 
 			cp.apply_impulse(this, impulse, r);
 		}
@@ -641,20 +641,20 @@ namespace ChipmunkSharp
 		public void ApplyImpulseAtLocalPoint(cpVect impulse, cpVect point)
 		{
 			ApplyImpulseAtWorldPoint(
-			 cpTransform.cpTransformVect(this.transform, impulse),
-				cpTransform.cpTransformPoint(this.transform, point));
+			 cpTransform.Vect(this.transform, impulse),
+				cpTransform.Point(this.transform, point));
 		}
 
 		public cpVect GetVelocityAtLocalPoint(cpVect point)
 		{
-			cpVect r = cpTransform.cpTransformVect(
+			cpVect r = cpTransform.Vect(
 				this.transform, cpVect.cpvsub(point, this.cog));
 			return cpVect.cpvadd(this.v, cpVect.cpvmult(cpVect.cpvperp(r), this.w));
 		}
 
 		public cpVect GetVelocityAtWorldPoint(cpVect point)
 		{
-			cpVect r = cpVect.cpvsub(point, cpTransform.cpTransformPoint(this.transform, this.cog));
+			cpVect r = cpVect.cpvsub(point, cpTransform.Point(this.transform, this.cog));
 			return cpVect.cpvadd(this.v, cpVect.cpvmult(cpVect.cpvperp(r), this.w));
 		}
 

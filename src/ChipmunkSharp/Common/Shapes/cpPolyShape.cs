@@ -63,8 +63,8 @@ namespace ChipmunkSharp
 
 			for (int i = 0; i < count; i++)
 			{
-				cpVect v = cpTransform.cpTransformPoint(transform, this.planes[src + i].v0);
-				cpVect n = cpTransform.cpTransformVect(transform, this.planes[src + i].n);
+				cpVect v = cpTransform.Point(transform, this.planes[src + i].v0);
+				cpVect n = cpTransform.Vect(transform, this.planes[src + i].n);
 
 				this.planes[i + dst] = new cpSplittingPlane(n, v);
 
@@ -235,7 +235,7 @@ namespace ChipmunkSharp
 		public void SetVerts(int count, cpVect[] verts, cpTransform transform)
 		{
 			for (int i = 0; i < verts.Length; i++)
-				verts[i] = cpTransform.cpTransformPoint(transform, verts[i]);
+				verts[i] = cpTransform.Point(transform, verts[i]);
 			SetVertsRaw(count, verts);
 		}
 
@@ -261,7 +261,7 @@ namespace ChipmunkSharp
 
 			for (int i = 0; i < count; i++)
 			{
-				hullVerts[i] = cpTransform.cpTransformPoint(transform, verts[i]);
+				hullVerts[i] = cpTransform.Point(transform, verts[i]);
 			}
 			return hullVerts;
 		}
