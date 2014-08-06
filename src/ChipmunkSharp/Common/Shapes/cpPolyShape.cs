@@ -184,19 +184,38 @@ namespace ChipmunkSharp
 			return info;
 		}
 
-		public cpPolyShape(cpBody body, int count, cpVect[] verts, cpTransform transform,
-		float radius)
-			: this(body, count, GetVertices(transform, count, verts), radius)
+		public cpPolyShape(cpBody body, int count, cpVect[] verts,
+			cpTransform transform, float radius)
+			: base(body, new cpShapeMassInfo())
 		{
+
+			cpVect[] hullVerts = new cpVect[count];
+
+			// Transform the verts before building the hull in case of a negative scale.
+			for (int i = 0; i < count; i++)
+				hullVerts[i] = cpTransform.Point(transform, verts[i]);
+
+			int hullCount = cp.ConvexHull(count, hullVerts, ref hullVerts, null, 0.0f);
+
+			InitRaw(hullCount, hullVerts, radius);
+
+
+		}
+
+		public void InitRaw(int count, cpVect[] verts, float radius)
+		{
+			cpShapeMassInfo.cpPolyShapeMassInfo(0.0f, count, verts, radius);
+			this.SetVerts(count, verts);
+			this.shapeType = cpShapeType.Polygon;
+			this.r = radius;
+
 
 		}
 
 		public cpPolyShape(cpBody body, int count, cpVect[] verts, float radius)
 			: base(body, cpShapeMassInfo.cpPolyShapeMassInfo(0.0f, count, verts, radius))
 		{
-			this.SetVerts(count, verts);
-			this.shapeType = cpShapeType.Polygon;
-			this.r = radius;
+			InitRaw(count, verts, radius);
 		}
 
 		public cpVect GetVert(int i)

@@ -598,12 +598,12 @@ namespace ChipmunkSharp
 
 				if (v.x < min.x || (v.x == min.x && v.y < min.y))
 				{
-					min = v;
+					min = verts[i];
 					start = i;
 				}
 				else if (v.x > max.x || (v.x == max.x && v.y > max.y))
 				{
-					max = v;
+					max = verts[i];
 					end = i;
 				}
 			}
@@ -683,7 +683,7 @@ namespace ChipmunkSharp
 
 		// QuickHull seemed like a neat algorithm, and efficient-ish for large input sets.
 		// My implementation performs an in place reduction using the result array as scratch space.
-		public static int ConvexHull(int count, cpVect[] verts, ref cpVect[] result, int? first, int tol)
+		public static int ConvexHull(int count, cpVect[] verts, ref cpVect[] result, int? first, float tol)
 		{
 
 			if (verts != result)
