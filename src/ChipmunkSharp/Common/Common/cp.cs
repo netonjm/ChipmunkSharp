@@ -969,7 +969,7 @@ namespace ChipmunkSharp
 		{
 
 			if (shape.sensor)
-				return new cpColor(255, 255, 255);
+				return new cpColor(128, 128, 128);
 			else
 			{
 
