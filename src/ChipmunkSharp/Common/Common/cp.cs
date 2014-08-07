@@ -975,11 +975,15 @@ namespace ChipmunkSharp
 
 				if (shape.body.IsSleeping())
 				{
-					return new cpColor(50, 50, 50);
+					return new cpColor(125, 125, 125);
 				}
 				else if (shape.body.nodeIdleTime > shape.space.sleepTimeThreshold)
 				{
 					return new cpColor(170, 170, 170);
+				}
+				else if (shape.body.bodyType == cpBodyType.STATIC)
+				{
+					return new cpColor(75, 75, 75);
 				}
 				else
 				{
@@ -1038,8 +1042,15 @@ namespace ChipmunkSharp
 		public static int numShapes { get; set; }
 
 
+		public static void RecenterPoly(int numVerts, cpVect[] verts)
+		{
+			cpVect centroid = cp.CentroidForPoly(numVerts, verts);
 
-
+			for (int i = 0; i < numVerts; i++)
+			{
+				verts[i] = cpVect.cpvsub(verts[i], centroid);
+			}
+		}
 	}
 
 }		//public static float[] convexHull(float[] verts, float[] result, float tolerance)

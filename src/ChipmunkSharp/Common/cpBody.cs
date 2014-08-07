@@ -92,7 +92,7 @@ namespace ChipmunkSharp
 
 
 		/// Position of the rigid body's center of gravity.
-		internal cpVect p;
+		public cpVect p;
 		/// Velocity of the rigid body's center of gravity.
 		public cpVect v;
 		/// Force acting on the rigid body's center of gravity.
@@ -102,7 +102,7 @@ namespace ChipmunkSharp
 		/// Must agree with cpBody.rot! Use cpBodySetAngle() when changing the angle for this reason.
 		internal float a;
 		/// Angular velocity of the body around it's center of gravity in radians/second.
-		internal float w;
+		public float w;
 		/// Torque applied to the body around it's center of gravity.
 		internal float t;
 
