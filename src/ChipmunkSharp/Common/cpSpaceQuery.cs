@@ -39,7 +39,8 @@ namespace ChipmunkSharp
 				cpPointQueryInfo info = null;
 				shape.PointQuery(context.point, ref info);
 
-				if (info.shape != null && info.distance < context.maxDistance) context.func(shape, info.point, info.distance, info.gradient, data);
+				if (info.shape != null && info.distance < context.maxDistance) 
+					context.func(shape, info.point, info.distance, info.gradient, data);
 			}
 			return id;
 		}

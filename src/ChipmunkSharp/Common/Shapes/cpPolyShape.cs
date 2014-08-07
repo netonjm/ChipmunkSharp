@@ -198,8 +198,6 @@ namespace ChipmunkSharp
 			int hullCount = cp.ConvexHull(count, hullVerts, ref hullVerts, null, 0.0f);
 
 			InitRaw(hullCount, hullVerts, radius);
-
-
 		}
 
 		public void InitRaw(int count, cpVect[] verts, float radius)
@@ -208,12 +206,10 @@ namespace ChipmunkSharp
 			this.SetVerts(count, verts);
 			this.shapeType = cpShapeType.Polygon;
 			this.r = radius;
-
-
 		}
 
 		public cpPolyShape(cpBody body, int count, cpVect[] verts, float radius)
-			: base(body, cpShapeMassInfo.cpPolyShapeMassInfo(0.0f, count, verts, radius))
+			: base(body, new cpShapeMassInfo())
 		{
 			InitRaw(count, verts, radius);
 		}
