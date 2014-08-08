@@ -328,7 +328,7 @@ namespace ChipmunkSharp
 			int count = Count;
 			cpVect[] verts = new cpVect[count];
 			for (int i = 0; i < count; i++)
-				verts[i] = new cpVect(this.planes[i].v0);
+				verts[i] = GetVert(i);// new cpVect(this.planes[i].v0);
 			return verts;
 
 

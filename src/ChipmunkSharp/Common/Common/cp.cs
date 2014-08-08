@@ -520,6 +520,17 @@ namespace ChipmunkSharp
 		//	return MomentForPoly(m, verts.Length, verts, offset, r);
 		//}
 
+		public static float AreaForPolyOld(int count, cpVect[] verts)
+		{
+			float area = 0.0f;
+			for (int i = 0; i < count; i++)
+			{
+				area += cpVect.cpvcross(verts[i], verts[(i + 1) % count]);
+			}
+
+			return -area / 2.0f;
+		}
+
 		public static float AreaForPoly(int count, cpVect[] verts, float r)
 		{
 			float area = 0.0f;
