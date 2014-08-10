@@ -184,6 +184,13 @@ namespace ChipmunkSharp
 
 			List<cpContact> contacts = new List<cpContact>();
 
+			cpCollisionHandler handler = LookupHandler(a.GetCollisionType(), b.GetCollisionType(), this.defaultHandler);
+			
+			bool sensor = a.GetSensor() || b.GetSensor();
+			if (sensor && handler == cpCollisionHandlerDefault)
+				return id;
+
+
 			// Narrow-phase collision detection.
 			//int numContacts = cpCollideShapes(a, b, contacts);
 			cpCollisionInfo info = cpCollision.cpCollide(a, b, id, ref contacts);
@@ -204,7 +211,7 @@ namespace ChipmunkSharp
 
 			arb.Update(info, this);
 
-			cpCollisionHandler handler = arb.handler;  //LookupHandler(a.type, b.type, defaultHandler);
+			//cpCollisionHandler handler = arb.handler;  //LookupHandler(a.type, b.type, defaultHandler);
 
 
 			// Call the begin function first if it's the first step
@@ -218,10 +225,11 @@ namespace ChipmunkSharp
 				(arb.state != cpArbiterState.Ignore) &&
 				// Call preSolve
 				handler.preSolveFunc(arb, this, handler.userData) &&
-				arb.state != cpArbiterState.Ignore &&
-				!(a.sensor || b.sensor) &&
+				//arb.state != cpArbiterState.Ignore &&
+				//(a->sensor || b->sensor)
+				!(a.sensor || b.sensor) //&&
 				// Process, but don't add collisions for sensors.
-				!(a.body.m == cp.Infinity && b.body.m == cp.Infinity)
+				//!(a.body.m == cp.Infinity && b.body.m == cp.Infinity)
 			)
 			{
 				this.arbiters.Add(arb);
@@ -234,7 +242,8 @@ namespace ChipmunkSharp
 
 				// Normally arbiters are set as used after calling the post-solve callback.
 				// However, post-solve callbacks are not called for sensors or arbiters rejected from pre-solve.
-				if (arb.state != cpArbiterState.Ignore) arb.state = cpArbiterState.Normal;
+				if (arb.state != cpArbiterState.Ignore) 
+					arb.state = cpArbiterState.Normal;
 			}
 
 			// Time stamp the arbiter so we know it was used recently.

@@ -233,6 +233,7 @@ namespace ChipmunkSharp
 			// Non-static bodies should have their idle timer reset.
 			nodeIdleTime = (type == cpBodyType.STATIC ? cp.Infinity : 0.0f);
 
+
 			if (type == cpBodyType.DYNAMIC)
 			{
 				this.m = this.i = 0.0f;
@@ -1025,83 +1026,7 @@ namespace ChipmunkSharp
 			SanityCheck();
 		}
 
-		//#region OBSOLETE
-
-		//[Obsolete("OBSOLETE JS CODE")]
-		//public cpVect GetVelAtPoint(cpVect r)
-		//{
-		//	return cpVect.cpvadd(v, cpVect.cpvmult(cpVect.cpvperp(r), w));
-		//}
-
-		///// Get the velocity on a body (in world units) at a point on the body in world coordinates.
-		//[Obsolete("OBSOLETE JS CODE")]
-		//public cpVect GetVelAtWorldPoint(cpVect point)
-		//{
-		//	return GetVelAtPoint(cpVect.cpvsub(point, p));
-		//}
-
-		///// Get the velocity on a body (in world units) at a point on the body in local coordinates.
-		//[Obsolete("OBSOLETE JS CODE")]
-		//public cpVect GetVelAtLocalPoint(cpVect point)
-		//{
-		//	return GetVelAtPoint(cpVect.cpvrotate(point, cog));
-		//}
-
-		//// Convert body relative/local coordinates to absolute/world coordinates.
-		//[Obsolete("OBSOLETE JS CODE")]
-		//public cpVect Local2World(cpVect v)
-		//{
-		//	return cpVect.cpvadd(p, cpVect.cpvrotate(v, cog));
-		//}
-
-		//// Convert body absolute/world coordinates to  relative/local coordinates.
-		//[Obsolete("OBSOLETE JS CODE")]
-		//public cpVect World2Local(cpVect v)
-		//{
-		//	return cpVect.cpvunrotate(cpVect.cpvsub(v, p), cog);
-		//}
-
-		//[Obsolete("OBSOLETE JS CODE")]
-		//public void VelocityFunc(cpVect gravity, float damping, float dt)
-		//{
-		//	//this.v = vclamp(vadd(vmult(this.v, damping), vmult(vadd(gravity, vmult(this.f, this.m_inv)), dt)), this.v_limit);
-		//	var vx = this.v.x * damping + (gravity.x + this.f.x * this.m_inv) * dt;
-		//	var vy = this.v.y * damping + (gravity.y + this.f.y * this.m_inv) * dt;
-
-		//	//var v = vclamp(new Vect(vx, vy), this.v_limit);
-		//	//this.vx = v.x; this.vy = v.y;
-		//	var v_limit = this.v_limit;
-		//	var lensq = vx * vx + vy * vy;
-		//	var scale = (lensq > v_limit * v_limit) ? v_limit / cp.cpfsqrt(lensq) : 1;
-		//	this.v.x = vx * scale;
-		//	this.v.y = vy * scale;
-
-		//	var w_limit = this.w_limit;
-		//	this.w = cp.cpfclamp(this.w * damping + this.t * this.i_inv * dt, -w_limit, w_limit);
-
-		//	this.SanityCheck();
-		//}
-
-		//[Obsolete("OBSOLETE JS CODE")]
-		//public void PositionFunc(float dt)
-		//{
-		//	//this.p = vadd(this.p, vmult(vadd(this.v, this.v_bias), dt));
-
-		//	//this.p = this.p + (this.v + this.v_bias) * dt;
-		//	this.p.x += (this.v.x + this.v_bias.x) * dt;
-		//	this.p.y += (this.v.y + this.v_bias.y) * dt;
-
-		//	this.SetAngleInternal(this.a + (this.w + this.w_bias) * dt);
-
-		//	this.v_bias.x = this.v_bias.y = 0;
-		//	this.w_bias = 0;
-
-		//	this.SanityCheck();
-		//}
-
-
-		//	#endregion
-
+	
 	}
 		#endregion
 
