@@ -1,14 +1,14 @@
 ![alt tag](http://files.slembcke.net/chipmunk/logo/logo1_med.png)
 
-h2. NOTE!
+NOTE!
 
 The master branch is the in progress Chipmunk2D 7.0. The documentation on Chipmunk2D's website may not completely match. While the code should be pretty stable (there are some unit tests), the API is still evolving. You can check out the 6.x branch if you want the last released version.
 
-h2. ABOUT:
+ABOUT:
 
 Chipmunk2D is a simple, lightweight, fast and portable 2D rigid body physics library written in C#. It's licensed under the unrestrictive, OSI approved MIT license.
 
-h2. FEATURES:
+FEATURES:
 
 * Designed specifically for 2D video games.
 * Circle, convex polygon, and beveled line segment collision primitives.
