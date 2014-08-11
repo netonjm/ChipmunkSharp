@@ -1,4 +1,4 @@
-!http://files.slembcke.net/chipmunk/logo/logo1_med.png!
+![alt tag](http://files.slembcke.net/chipmunk/logo/logo1_med.png)
 
 h2. NOTE!
 
@@ -31,9 +31,9 @@ h2. FEATURES:
 * Unrestrictive MIT license
 
 
-h2. BUILDING:
+BUILDING:
 
-TODO:
+TODO
 
 
 GET UP TO DATE:
