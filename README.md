@@ -2,11 +2,11 @@
 
 NOTE!
 
-The master branch is the in progress Chipmunk2D 7.0. The documentation on Chipmunk2D's website may not completely match. While the code should be pretty stable (there are some unit tests), the API is still evolving. You can check out the 6.x branch if you want the last released version.
+The master branch is the in progress ChipmunkSharp 7.0 based on Chipmunk2D 7.0. The documentation on ChipmunkSharp website may not completely match. While the code should be pretty stable (there are some unit tests), the API is still evolving. You can check out the 6.x branch if you want the last released version.
 
 ABOUT:
 
-Chipmunk2D is a simple, lightweight, fast and portable 2D rigid body physics library written in C#. It's licensed under the unrestrictive, OSI approved MIT license.
+ChipmunkSharp is a simple, lightweight, fast and portable 2D rigid body physics library written in C# based on Scott Lembcke Chipmunk2D Engine. It's licensed under the unrestrictive MIT license.
 
 FEATURES:
 
@@ -43,11 +43,10 @@ If you got the source from a point release download, you might want to consider 
 
 GETTING STARTED:
 
-First of all, you can find the C API documentation in the doc/ directory.
-
 A good starting point is to take a look at the included Demo application. The demos all just set up a Chipmunk simulation space and the demo app draws the graphics directly out of that. This makes it easy to see how the Chipmunk API works without worrying about the graphics code. You are free to use the demo drawing routines in your own projects, though it is certainly not the recommended way of drawing Chipmunk objects as it pokes around at the undocumented/private APIs of Chipmunk.
 
 
-h2. SUPPORT:
+SUPPORT:
 
 The best way to get support is to visit the "Chipmunk Forums https://chipmunksharp.codeplex.com/discussions
+or visit the original Chipmunk2D forum 
