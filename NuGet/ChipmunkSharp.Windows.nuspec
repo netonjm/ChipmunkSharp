@@ -4,11 +4,11 @@
     <id>ChipmunkSharp.Windows</id>
     <version>7.0.0.0</version>
     <title>ChipmunkSharp v7 for Windows</title>
-    <authors>Kenneth Pouncey and Jose Medrano</authors>
+    <authors>Kenneth Pouncey and Jose Medrano (@netonjm)</authors>
     <owners>Develop Studios</owners>
     <licenseUrl>https://raw.githubusercontent.com/netonjm/ChipmunkSharp/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/netonjm/ChipmunkSharp</projectUrl>
-    <iconUrl>http://chipmunk-physics.net/</iconUrl>
+    <iconUrl>http://imagizer.imageshack.us/v2/150x100q90/539/wUrnnE.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>ChipmunkSharp for Windows. Physics a game engine</description>
     <copyright>netonjm</copyright>
