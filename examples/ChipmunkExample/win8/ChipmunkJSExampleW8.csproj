@@ -1,0 +1,290 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{D86AB7A9-B63C-493D-A911-5AC71BE7C59C}</ProjectGuid>
+    <OutputType>AppContainerExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ChipmunkJSExample</RootNamespace>
+    <AssemblyName>ChipmunkJSExample</AssemblyName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{BC8A1FFA-BEE3-4634-8014-F334798102B3};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <PackageCertificateKeyFile>Spine.Store_TemporaryKey.pfx</PackageCertificateKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Windows8\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Windows8\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Windows8\ARM\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <OutputPath>bin\Windows8\ARM\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Windows8\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\Windows8\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Windows8\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\Windows8\x86\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Common\ChipmunkDemoLayer.cs">
+      <Link>ChipmunkDemoLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\extensions\CCChipmunkDebugDraw.cs">
+      <Link>Extensions\CCChipmunkDebugDraw.cs</Link>
+    </Compile>
+    <Compile Include="..\common\extensions\CCMouse.cs">
+      <Link>Extensions\CCMouse.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Extensions\CCPhysicsSprite.cs">
+      <Link>Extensions\CCPhysicsSprite.cs</Link>
+    </Compile>
+    <Compile Include="..\common\extensions\cpExtension.cs">
+      <Link>Extensions\cpExtension.cs</Link>
+    </Compile>
+    <Compile Include="..\common\extensions\LogoNode.cs">
+      <Link>Extensions\LogoNode.cs</Link>
+    </Compile>
+    <Compile Include="..\common\extensions\PhysicsSprite.cs">
+      <Link>Extensions\PhysicsSprite.cs</Link>
+    </Compile>
+    <Compile Include="..\common\extensions\PlayerIndex.cs">
+      <Link>Extensions\PlayerIndex.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\ballLayer.cs">
+      <Link>Layers\ballLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\benchLayer.cs">
+      <Link>Layers\benchLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\buoyancyLayer.cs">
+      <Link>Layers\buoyancyLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\chainsLayer.cs">
+      <Link>Layers\chainsLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\contactGraphLayer.cs">
+      <Link>Layers\contactGraphLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\contactPointsLayer.cs">
+      <Link>Layers\contactPointsLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\convexLayer.cs">
+      <Link>Layers\convexLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\craneLayer.cs">
+      <Link>Layers\craneLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\gjkLayer.cs">
+      <Link>Layers\gjkLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\grossiniDanceLayer.cs">
+      <Link>Layers\grossiniDanceLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\jointsLayer.cs">
+      <Link>Layers\jointsLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\logoSmashLayer.cs">
+      <Link>Layers\logoSmashLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\oneWayLayer.cs">
+      <Link>Layers\oneWayLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\planetLayer.cs">
+      <Link>Layers\planetLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\playerLayer.cs">
+      <Link>Layers\playerLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\plinkLayer.cs">
+      <Link>Layers\plinkLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\pumpLayer.cs">
+      <Link>Layers\pumpLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\pyramidLayer.cs">
+      <Link>Layers\pyramidLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\pyramidToppleLayer.cs">
+      <Link>Layers\pyramidToppleLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\queryLayer.cs">
+      <Link>Layers\queryLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\shatterLayer.cs">
+      <Link>Layers\shatterLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\sliceLayer.cs">
+      <Link>Layers\sliceLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\smoothLayer.cs">
+      <Link>Layers\smoothLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\springiesLayer.cs">
+      <Link>Layers\springiesLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\stickyLayer.cs">
+      <Link>Layers\stickyLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\tankLayer.cs">
+      <Link>Layers\tankLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\theoJansenLayer.cs">
+      <Link>Layers\theoJansenLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\tumbleLayer.cs">
+      <Link>Layers\tumbleLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\common\layers\unicycleLayer.cs">
+      <Link>Layers\unicycleLayer.cs</Link>
+    </Compile>
+    <Compile Include="AppDelegate.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </AppxManifest>
+    <Content Include="..\Resources\png\arrow-left-press.png">
+      <Link>Content\arrow-left-press.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\arrow-left.png">
+      <Link>Content\arrow-left.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\arrow-right-press.png">
+      <Link>Content\arrow-right-press.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\arrow-right.png">
+      <Link>Content\arrow-right.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\Background-alone.png">
+      <Link>Content\Background-alone.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\Background.png">
+      <Link>Content\Background.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\btn-clear-press.png">
+      <Link>Content\btn-clear-press.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\btn-clear.png">
+      <Link>Content\btn-clear.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\btn-reset-press.png">
+      <Link>Content\btn-reset-press.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\btn-reset.png">
+      <Link>Content\btn-reset.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\fps_images.png">
+      <Link>Content\fps_images.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\grossini_dance_atlas.png">
+      <Link>Content\grossini_dance_atlas.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\xamarin-img-raster.png">
+      <Link>Content\xamarin-img-raster.png</Link>
+    </Content>
+    <Content Include="..\Resources\png\xamarin-logo-no-shadow.png">
+      <Link>Content\xamarin-logo-no-shadow.png</Link>
+    </Content>
+    <Content Include="Content\fonts\MarkerFelt-22.xnb" />
+    <Content Include="..\Resources\fonts\weblysleeku-22.xnb">
+      <Link>Content\fonts\weblysleeku-22.xnb</Link>
+    </Content>
+    <Content Include="..\Resources\fonts\weblysleekuisb-22.xnb">
+      <Link>Content\fonts\weblysleekuisb-22.xnb</Link>
+    </Content>
+    <None Include="Spine.Store_TemporaryKey.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\Logo.png" />
+    <Content Include="Assets\SmallLogo.png" />
+    <Content Include="Assets\SplashScreen.png" />
+    <Content Include="Assets\StoreLogo.png" />
+  </ItemGroup>
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
+    <VisualStudioVersion>11.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
