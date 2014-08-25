@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C976AEE3-940E-4658-BCDD-80A581E4C696}</ProjectGuid>
+    <ProjectTypeGuids>{42C0BBD9-55CE-4FC1-8D90-A7348ABAFB23};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ChipmunkExample</RootNamespace>
+    <MonoMacResourcePrefix>Resources</MonoMacResourcePrefix>
+    <AssemblyName>SneakyJoystickExample</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <StartupObject>ChipmunkExample.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <UseSGen>false</UseSGen>
+    <IncludeMonoRuntime>false</IncludeMonoRuntime>
+    <EnablePackageSigning>false</EnablePackageSigning>
+    <CodeSigningKey>Mac Developer</CodeSigningKey>
+    <EnableCodeSigning>false</EnableCodeSigning>
+    <CreatePackage>false</CreatePackage>
+    <StartupObject>PCLTest.Program</StartupObject>
+    <PackageSigningKey>Developer ID Installer</PackageSigningKey>
+    <I18n>
+    </I18n>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <LinkMode>Full</LinkMode>
+    <UseSGen>false</UseSGen>
+    <IncludeMonoRuntime>true</IncludeMonoRuntime>
+    <EnablePackageSigning>false</EnablePackageSigning>
+    <CodeSigningKey>Developer ID Application</CodeSigningKey>
+    <EnableCodeSigning>true</EnableCodeSigning>
+    <CreatePackage>true</CreatePackage>
+    <StartupObject>PCLTest.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'AppStore|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\AppStore</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <LinkMode>Full</LinkMode>
+    <UseSGen>false</UseSGen>
+    <IncludeMonoRuntime>true</IncludeMonoRuntime>
+    <PackageSigningKey>3rd Party Mac Developer Installer</PackageSigningKey>
+    <CreatePackage>true</CreatePackage>
+    <CodeSigningKey>3rd Party Mac Developer Application</CodeSigningKey>
+    <EnableCodeSigning>true</EnableCodeSigning>
+    <EnablePackageSigning>true</EnablePackageSigning>
+    <StartupObject>PCLTest.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="XamMac" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Info.plist" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="..\win32\AppDelegate.cs">
+      <Link>AppDelegate.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\PlanetLayer.cs">
+      <Link>Layers\PlanetLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\PlayerLayer.cs">
+      <Link>Layers\PlayerLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\TheoJansenLayer.cs">
+      <Link>Layers\TheoJansenLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\TumbleLayer.cs">
+      <Link>Layers\TumbleLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\ballLayer.cs">
+      <Link>Layers\ballLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\benchLayer.cs">
+      <Link>Layers\benchLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\buoyancyLayer.cs">
+      <Link>Layers\buoyancyLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\chainsLayer.cs">
+      <Link>Layers\chainsLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\contactGraphLayer.cs">
+      <Link>Layers\contactGraphLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\contactPointsLayer.cs">
+      <Link>Layers\contactPointsLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\convexLayer.cs">
+      <Link>Layers\convexLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\craneLayer.cs">
+      <Link>Layers\craneLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\gjkLayer.cs">
+      <Link>Layers\gjkLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\grossiniDanceLayer.cs">
+      <Link>Layers\grossiniDanceLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\jointsLayer.cs">
+      <Link>Layers\jointsLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\logoSmashLayer.cs">
+      <Link>Layers\logoSmashLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\oneWayLayer.cs">
+      <Link>Layers\oneWayLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\plinkLayer.cs">
+      <Link>Layers\plinkLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\pumpLayer.cs">
+      <Link>Layers\pumpLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\pyramidLayer.cs">
+      <Link>Layers\pyramidLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\pyramidToppleLayer.cs">
+      <Link>Layers\pyramidToppleLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\queryLayer.cs">
+      <Link>Layers\queryLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\shatterLayer.cs">
+      <Link>Layers\shatterLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\sliceLayer.cs">
+      <Link>Layers\sliceLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\smoothLayer.cs">
+      <Link>Layers\smoothLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\springiesLayer.cs">
+      <Link>Layers\springiesLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\stickyLayer.cs">
+      <Link>Layers\stickyLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\tankLayer.cs">
+      <Link>Layers\tankLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Layers\unicycleLayer.cs">
+      <Link>Layers\unicycleLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\ChipmunkDemoLayer.cs">
+      <Link>ChipmunkDemoLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\CCMouse.cs">
+      <Link>Common\CCMouse.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\PlayerIndex.cs">
+      <Link>Common\PlayerIndex.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\CocosSharp\CCChipmunkDebugDraw.cs">
+      <Link>Common\CocosSharp\CCChipmunkDebugDraw.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\CocosSharp\CCPhysicsSprite.cs">
+      <Link>Common\CocosSharp\CCPhysicsSprite.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\CocosSharp\PhysicsSprite.cs">
+      <Link>Common\CocosSharp\PhysicsSprite.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\CocosSharp\cpExtension.cs">
+      <Link>Common\CocosSharp\cpExtension.cs</Link>
+    </Compile>
+    <Compile Include="..\win32\Entities\LogoNode.cs">
+      <Link>Entities\LogoNode.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Content\" />
+    <Folder Include="Layers\" />
+    <Folder Include="Common\" />
+    <Folder Include="Entities\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\win32\Content\fonts\MarkerFelt-22.xnb">
+      <Link>Content\fonts\MarkerFelt-22.xnb</Link>
+    </Content>
+    <Content Include="..\win32\Content\fonts\weblysleeku-22.xnb">
+      <Link>Content\fonts\weblysleeku-22.xnb</Link>
+    </Content>
+    <Content Include="..\win32\Content\fonts\weblysleekuisb-22.xnb">
+      <Link>Content\fonts\weblysleekuisb-22.xnb</Link>
+    </Content>
+    <Content Include="..\win32\Content\Background-alone.png">
+      <Link>Content\Background-alone.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\Background.png">
+      <Link>Content\Background.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\Default.png">
+      <Link>Content\Default.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\arrow-left-press.png">
+      <Link>Content\arrow-left-press.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\arrow-left.png">
+      <Link>Content\arrow-left.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\arrow-right-press.png">
+      <Link>Content\arrow-right-press.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\arrow-right.png">
+      <Link>Content\arrow-right.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\btn-clear-press.png">
+      <Link>Content\btn-clear-press.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\btn-clear.png">
+      <Link>Content\btn-clear.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\btn-reset-press.png">
+      <Link>Content\btn-reset-press.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\btn-reset.png">
+      <Link>Content\btn-reset.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\fps_images.png">
+      <Link>Content\fps_images.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\xamarin-img-raster.png">
+      <Link>Content\xamarin-img-raster.png</Link>
+    </Content>
+    <Content Include="..\win32\Content\xamarin-logo-no-shadow.png">
+      <Link>Content\xamarin-logo-no-shadow.png</Link>
+    </Content>
+    <Content Include="..\Resources\grossini_dance_atlas.png">
+      <Link>Content\grossini_dance_atlas.png</Link>
+    </Content>
+  </ItemGroup>
+</Project>

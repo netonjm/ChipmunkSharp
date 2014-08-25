@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipmunkExampleMac", "macosx\ChipmunkExampleMac.csproj", "{C976AEE3-940E-4658-BCDD-80A581E4C696}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+		AppStore|Any CPU = AppStore|Any CPU
+		Distribution|Any CPU = Distribution|Any CPU
+		Debug|iPhoneSimulator = Debug|iPhoneSimulator
+		Release|iPhoneSimulator = Release|iPhoneSimulator
+		Debug|iPhone = Debug|iPhone
+		Release|iPhone = Release|iPhone
+		Ad-Hoc|iPhone = Ad-Hoc|iPhone
+		AppStore|iPhone = AppStore|iPhone
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Ad-Hoc|iPhone.ActiveCfg = Debug|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Ad-Hoc|iPhone.Build.0 = Debug|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.AppStore|Any CPU.ActiveCfg = AppStore|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.AppStore|Any CPU.Build.0 = AppStore|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.AppStore|iPhone.ActiveCfg = AppStore|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.AppStore|iPhone.Build.0 = AppStore|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Debug|iPhone.ActiveCfg = Debug|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Debug|iPhone.Build.0 = Debug|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Debug|x86.Build.0 = Debug|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Distribution|Any CPU.ActiveCfg = Debug|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Distribution|Any CPU.Build.0 = Debug|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Release|iPhone.ActiveCfg = Release|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Release|iPhone.Build.0 = Release|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Release|x86.ActiveCfg = Release|Any CPU
+		{C976AEE3-940E-4658-BCDD-80A581E4C696}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = macosx\ChipmunkExampleMac.csproj
+	EndGlobalSection
+EndGlobal
