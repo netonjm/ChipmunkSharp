@@ -24,10 +24,9 @@ namespace ChipmunkExample
 
 		public override void FinishedLaunching (NSObject notification)
 		{
-			CCApplication sharedApp = CCApplication.SharedApplication;
-			sharedApp.ApplicationDelegate = new AppDelegate();
-
-			CCApplication.SharedApplication.StartGame();
+			var application = new CCApplication();
+			application.ApplicationDelegate = new AppDelegate();
+			application.StartGame();
 		}
 
 		public override bool ApplicationShouldTerminateAfterLastWindowClosed (NSApplication sender)

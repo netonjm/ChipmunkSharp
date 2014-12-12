@@ -33,6 +33,7 @@
     <PackageSigningKey>Developer ID Installer</PackageSigningKey>
     <I18n>
     </I18n>
+    <UseRefCounting>false</UseRefCounting>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -49,6 +50,7 @@
     <EnableCodeSigning>true</EnableCodeSigning>
     <CreatePackage>true</CreatePackage>
     <StartupObject>PCLTest.Program</StartupObject>
+    <UseRefCounting>false</UseRefCounting>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'AppStore|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -66,6 +68,7 @@
     <EnableCodeSigning>true</EnableCodeSigning>
     <EnablePackageSigning>true</EnablePackageSigning>
     <StartupObject>PCLTest.Program</StartupObject>
+    <UseRefCounting>false</UseRefCounting>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -73,7 +76,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Drawing" />
-    <Reference Include="XamMac" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
@@ -84,116 +86,119 @@
     <Compile Include="..\win32\AppDelegate.cs">
       <Link>AppDelegate.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\PlanetLayer.cs">
-      <Link>Layers\PlanetLayer.cs</Link>
+    <Compile Include="..\Common\Extensions\CCMouse.cs">
+      <Link>Extensions\CCMouse.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\PlayerLayer.cs">
-      <Link>Layers\PlayerLayer.cs</Link>
+    <Compile Include="..\Common\Extensions\CCPhysicsDebugNode .cs">
+      <Link>Extensions\CCPhysicsDebugNode .cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\TheoJansenLayer.cs">
-      <Link>Layers\TheoJansenLayer.cs</Link>
+    <Compile Include="..\Common\Extensions\CCPhysicsSprite.cs">
+      <Link>Extensions\CCPhysicsSprite.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\TumbleLayer.cs">
-      <Link>Layers\TumbleLayer.cs</Link>
+    <Compile Include="..\Common\Extensions\LogoNode.cs">
+      <Link>Extensions\LogoNode.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\ballLayer.cs">
+    <Compile Include="..\Common\Extensions\PhysicsSprite.cs">
+      <Link>Extensions\PhysicsSprite.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Extensions\PlayerIndex.cs">
+      <Link>Extensions\PlayerIndex.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Extensions\cpExtension.cs">
+      <Link>Extensions\cpExtension.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Layers\ballLayer.cs">
       <Link>Layers\ballLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\benchLayer.cs">
+    <Compile Include="..\Common\Layers\benchLayer.cs">
       <Link>Layers\benchLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\buoyancyLayer.cs">
+    <Compile Include="..\Common\Layers\buoyancyLayer.cs">
       <Link>Layers\buoyancyLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\chainsLayer.cs">
+    <Compile Include="..\Common\Layers\chainsLayer.cs">
       <Link>Layers\chainsLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\contactGraphLayer.cs">
+    <Compile Include="..\Common\Layers\contactGraphLayer.cs">
       <Link>Layers\contactGraphLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\contactPointsLayer.cs">
+    <Compile Include="..\Common\Layers\contactPointsLayer.cs">
       <Link>Layers\contactPointsLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\convexLayer.cs">
+    <Compile Include="..\Common\Layers\convexLayer.cs">
       <Link>Layers\convexLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\craneLayer.cs">
+    <Compile Include="..\Common\Layers\craneLayer.cs">
       <Link>Layers\craneLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\gjkLayer.cs">
+    <Compile Include="..\Common\Layers\gjkLayer.cs">
       <Link>Layers\gjkLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\grossiniDanceLayer.cs">
+    <Compile Include="..\Common\Layers\grossiniDanceLayer.cs">
       <Link>Layers\grossiniDanceLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\jointsLayer.cs">
+    <Compile Include="..\Common\Layers\jointsLayer.cs">
       <Link>Layers\jointsLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\logoSmashLayer.cs">
+    <Compile Include="..\Common\Layers\logoSmashLayer.cs">
       <Link>Layers\logoSmashLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\oneWayLayer.cs">
+    <Compile Include="..\Common\Layers\oneWayLayer.cs">
       <Link>Layers\oneWayLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\plinkLayer.cs">
+    <Compile Include="..\Common\Layers\planetLayer.cs">
+      <Link>Layers\planetLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Layers\playerLayer.cs">
+      <Link>Layers\playerLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Layers\plinkLayer.cs">
       <Link>Layers\plinkLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\pumpLayer.cs">
+    <Compile Include="..\Common\Layers\pumpLayer.cs">
       <Link>Layers\pumpLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\pyramidLayer.cs">
+    <Compile Include="..\Common\Layers\pyramidLayer.cs">
       <Link>Layers\pyramidLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\pyramidToppleLayer.cs">
+    <Compile Include="..\Common\Layers\pyramidToppleLayer.cs">
       <Link>Layers\pyramidToppleLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\queryLayer.cs">
+    <Compile Include="..\Common\Layers\queryLayer.cs">
       <Link>Layers\queryLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\shatterLayer.cs">
+    <Compile Include="..\Common\Layers\shatterLayer.cs">
       <Link>Layers\shatterLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\sliceLayer.cs">
+    <Compile Include="..\Common\Layers\sliceLayer.cs">
       <Link>Layers\sliceLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\smoothLayer.cs">
+    <Compile Include="..\Common\Layers\smoothLayer.cs">
       <Link>Layers\smoothLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\springiesLayer.cs">
+    <Compile Include="..\Common\Layers\springiesLayer.cs">
       <Link>Layers\springiesLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\stickyLayer.cs">
+    <Compile Include="..\Common\Layers\stickyLayer.cs">
       <Link>Layers\stickyLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\tankLayer.cs">
+    <Compile Include="..\Common\Layers\tankLayer.cs">
       <Link>Layers\tankLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\Layers\unicycleLayer.cs">
+    <Compile Include="..\Common\Layers\theoJansenLayer.cs">
+      <Link>Layers\theoJansenLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Layers\tumbleLayer.cs">
+      <Link>Layers\tumbleLayer.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\Layers\unicycleLayer.cs">
       <Link>Layers\unicycleLayer.cs</Link>
     </Compile>
-    <Compile Include="..\win32\ChipmunkDemoLayer.cs">
+    <Compile Include="..\Common\Helpers\Extensions.cs">
+      <Link>Helpers\Extensions.cs</Link>
+    </Compile>
+    <Compile Include="..\Common\ChipmunkDemoLayer.cs">
       <Link>ChipmunkDemoLayer.cs</Link>
-    </Compile>
-    <Compile Include="..\Common\CCMouse.cs">
-      <Link>Common\CCMouse.cs</Link>
-    </Compile>
-    <Compile Include="..\Common\PlayerIndex.cs">
-      <Link>Common\PlayerIndex.cs</Link>
-    </Compile>
-    <Compile Include="..\Common\CocosSharp\CCChipmunkDebugDraw.cs">
-      <Link>Common\CocosSharp\CCChipmunkDebugDraw.cs</Link>
-    </Compile>
-    <Compile Include="..\Common\CocosSharp\CCPhysicsSprite.cs">
-      <Link>Common\CocosSharp\CCPhysicsSprite.cs</Link>
-    </Compile>
-    <Compile Include="..\Common\CocosSharp\PhysicsSprite.cs">
-      <Link>Common\CocosSharp\PhysicsSprite.cs</Link>
-    </Compile>
-    <Compile Include="..\Common\CocosSharp\cpExtension.cs">
-      <Link>Common\CocosSharp\cpExtension.cs</Link>
-    </Compile>
-    <Compile Include="..\win32\Entities\LogoNode.cs">
-      <Link>Entities\LogoNode.cs</Link>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -201,61 +206,62 @@
     <Folder Include="Layers\" />
     <Folder Include="Common\" />
     <Folder Include="Entities\" />
+    <Folder Include="Common\CocosSharp\" />
+    <Folder Include="Content\fonts\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Helpers\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\win32\Content\fonts\MarkerFelt-22.xnb">
-      <Link>Content\fonts\MarkerFelt-22.xnb</Link>
-    </Content>
-    <Content Include="..\win32\Content\fonts\weblysleeku-22.xnb">
-      <Link>Content\fonts\weblysleeku-22.xnb</Link>
-    </Content>
-    <Content Include="..\win32\Content\fonts\weblysleekuisb-22.xnb">
-      <Link>Content\fonts\weblysleekuisb-22.xnb</Link>
-    </Content>
-    <Content Include="..\win32\Content\Background-alone.png">
-      <Link>Content\Background-alone.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\Background.png">
-      <Link>Content\Background.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\Default.png">
-      <Link>Content\Default.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\arrow-left-press.png">
+    <BundleResource Include="..\Resources\png\arrow-left-press.png">
       <Link>Content\arrow-left-press.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\arrow-left.png">
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\arrow-left.png">
       <Link>Content\arrow-left.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\arrow-right-press.png">
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\arrow-right-press.png">
       <Link>Content\arrow-right-press.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\arrow-right.png">
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\arrow-right.png">
       <Link>Content\arrow-right.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\btn-clear-press.png">
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\Background-alone.png">
+      <Link>Content\Background-alone.png</Link>
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\Background.png">
+      <Link>Content\Background.png</Link>
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\btn-clear-press.png">
       <Link>Content\btn-clear-press.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\btn-clear.png">
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\btn-clear.png">
       <Link>Content\btn-clear.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\btn-reset-press.png">
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\btn-reset-press.png">
       <Link>Content\btn-reset-press.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\btn-reset.png">
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\btn-reset.png">
       <Link>Content\btn-reset.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\fps_images.png">
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\fps_images.png">
       <Link>Content\fps_images.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\xamarin-img-raster.png">
-      <Link>Content\xamarin-img-raster.png</Link>
-    </Content>
-    <Content Include="..\win32\Content\xamarin-logo-no-shadow.png">
-      <Link>Content\xamarin-logo-no-shadow.png</Link>
-    </Content>
-    <Content Include="..\Resources\grossini_dance_atlas.png">
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\grossini_dance_atlas.png">
       <Link>Content\grossini_dance_atlas.png</Link>
-    </Content>
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\xamarin-img-raster.png">
+      <Link>Content\xamarin-img-raster.png</Link>
+    </BundleResource>
+    <BundleResource Include="..\Resources\png\xamarin-logo-no-shadow.png">
+      <Link>Content\xamarin-logo-no-shadow.png</Link>
+    </BundleResource>
+    <BundleResource Include="..\Resources\fonts\weblysleekuisb-22.xnb">
+      <Link>Content\fonts\weblysleekuisb-22.xnb</Link>
+    </BundleResource>
+    <BundleResource Include="..\Resources\fonts\weblysleeku-22.xnb">
+      <Link>Content\fonts\weblysleeku-22.xnb</Link>
+    </BundleResource>
+    <BundleResource Include="..\Resources\fonts\MarkerFelt-22.xnb">
+      <Link>Content\fonts\MarkerFelt-22.xnb</Link>
+    </BundleResource>
   </ItemGroup>
 </Project>

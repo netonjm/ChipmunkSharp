@@ -7,13 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-#if USE_PHYSICS
-#else
-using Box2D.Common;
-using Box2D.Dynamics.Joints;
-using Box2D.Dynamics;
-#endif
-
 namespace CocosSharp
 {
 
