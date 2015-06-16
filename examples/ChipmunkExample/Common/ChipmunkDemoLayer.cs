@@ -304,7 +304,6 @@ namespace ChipmunkExample
             ChangeActualSubScene(SubScenePlayer.Index);
         }
 
-
         /// <summary>
         /// Loads next example scene
         /// </summary>
@@ -552,7 +551,6 @@ namespace ChipmunkExample
         protected virtual void Draw()
         {
             m_debugDraw.DebugDraw();
-
             if (CCMouse.Instance.HasPosition)
                 m_debugDraw.DrawCircle(CCMouse.Instance.Position, 2.0f, CCMouse.Instance.mouseJoint != null ? cpColor.WhiteGreen : cpColor.WhiteRed);
         }
