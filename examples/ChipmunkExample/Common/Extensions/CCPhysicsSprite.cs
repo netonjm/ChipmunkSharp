@@ -129,11 +129,11 @@ namespace CocosSharp
             IgnoreAnchorPointForPosition = true;
 		}
 
-        public override void Visit()
-        {
-            base.AdditionalTransform = NodeToBodyTransform();
-            base.Visit();
-        }
+        //public override void Visit()
+        //{
+        //    base.AdditionalTransform = NodeToBodyTransform();
+        //    base.Visit();
+        //}
 
         // returns the transform matrix according the Chipmunk Body values
         public CCAffineTransform NodeToBodyTransform()
