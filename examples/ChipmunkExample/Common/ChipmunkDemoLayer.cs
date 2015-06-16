@@ -380,11 +380,9 @@ namespace ChipmunkExample
             CCMenuItemImage itm = new CCMenuItemImage("arrow-left.png", "arrow-left-press.png", o => PrevScene());
             //itm.Position = new CCPoint(0, 0);
             itm.AnchorPoint = new CCPoint(0, 0);
-
             CCMenuItemImage itm2 = new CCMenuItemImage("arrow-right.png", "arrow-right-press.png", o => NextScene());
             //itm2.Position = new CCPoint(itm.PositionX + itm.ContentSize.Width + separation, itm.PositionY);
             itm2.AnchorPoint = new CCPoint(0, 0);
-
             CCMenuItemImage itm3 = new CCMenuItemImage("btn-reset.png", "btn-reset-press.png", o => LoadActualIndexScene());
             //itm2.Position = new CCPoint(itm2.PositionX + separation, itm.PositionY);
             itm3.AnchorPoint = new CCPoint(0, 0);
@@ -402,10 +400,8 @@ namespace ChipmunkExample
         {
             CCMenuItemImage itm = new CCMenuItemImage("arrow-left.png", "arrow-left-press.png", o => PrevSubScene());
             itm.AnchorPoint = new CCPoint(0, 0);
-
             CCMenuItemImage itm2 = new CCMenuItemImage("arrow-right.png", "arrow-right-press.png", o => NextSubScene());
             itm2.AnchorPoint = new CCPoint(0, 0);
-
             CCMenuItemImage itm3 = new CCMenuItemImage("btn-clear.png", "btn-clear-press.png", o => ClearSpace());
             itm3.AnchorPoint = new CCPoint(0, 0);
 
