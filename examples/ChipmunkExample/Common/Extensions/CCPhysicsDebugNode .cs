@@ -6,14 +6,11 @@ using System.Text;
 
 namespace ChipmunkSharp
 {
-
 	[Flags]
 	public enum PhysicsDrawFlags
 	{
 
 		None = 1 << 0,
-
-
 		/// <summary>
 		/// Draw shapes.
 		/// </summary>
@@ -38,12 +35,10 @@ namespace ChipmunkSharp
 		/// Draw All connections.
 		/// </summary>
 		All = 1 << 10,
-
 	}
 
 	public class PhysicsDebugDraw : CCDrawNode
 	{
-
 		public static cpColor CONSTRAINT_COLOR = cpColor.Grey; //new cpColor(0, 1, 0, 0.5f);
 		public static cpColor TRANSPARENT_COLOR = new cpColor(0, 0, 0, 0.0f);
 
@@ -65,16 +60,12 @@ namespace ChipmunkSharp
 	new cpVect(1.00f, 0.0f)
 		};
 
-
 		public PhysicsDrawFlags Flags = PhysicsDrawFlags.None;
-
-
 
 		static CCPoint cpVert2Point(cpVect vert)
 		{
 			return new CCPoint(vert.x, vert.y);
 		}
-
 
 		static CCPoint[] cpVertArray2ccpArrayN(cpVect[] cpVertArray, int count)
 		{
@@ -99,8 +90,6 @@ namespace ChipmunkSharp
 
 		//bool ignoreBodyRotation = false;
 
-
-
 #if PHYSICS
 
 		public PhysicsDebugDraw(CCPhysicsWorld world)
@@ -117,47 +106,25 @@ namespace ChipmunkSharp
 			public PhysicsDebugDraw(cpSpace space)
 		{
 
-	_space = space;
+	
+                _space = space;
 
 			SelectFont("weblysleeku", 22);
-
 		}
 
 #endif
 
-
-
-
 		public cpBody Body
 		{
-			get
-			{
-
-				return _body;
-
-			}
-			set
-			{
-
-				_body = value;
-
-			}
+			get { return _body; }
+			set { _body = value; }
 		}
 
 		public override CCPoint Position
 		{
-			get
-			{
-				return cpVert2Point(_body.GetPosition());
-			}
-
-			set
-			{
-				_body.SetPosition(new cpVect(value.X, value.Y));//();
-			}
+			get { return cpVert2Point(_body.GetPosition()); }
+			set { _body.SetPosition(new cpVect(value.X, value.Y)); }
 		}
-
-
 
 		/// <summary>
 		/// Append flags to the current flags.
@@ -165,10 +132,7 @@ namespace ChipmunkSharp
 		public void AppendFlags(params PhysicsDrawFlags[] flags)
 		{
 			foreach (var item in flags)
-			{
 				Flags |= item;
-			}
-
 		}
 
 		/// <summary>
@@ -177,35 +141,23 @@ namespace ChipmunkSharp
 		public void ClearFlags(params PhysicsDrawFlags[] flags)
 		{
 			foreach (var item in flags)
-			{
 				Flags &= ~item;
-
-			}
 		}
-
-
 
 		public void DebugDraw()
 		{
-
 			if (_space == null)
-			{
 				return;
-			}
 
 			DrawString(15, 15, string.Format("Step: {0}", _space.stamp));
 			DrawString(15, 50, string.Format("Bodies : {0}/{1}", _space.dynamicBodies.Count + _space.staticBodies.Count, _space.dynamicBodies.Capacity));
 			DrawString(15, 80, string.Format("Arbiters: {0}/{1}", _space.arbiters.Count, _space.arbiters.Capacity));
 
 			if (Flags.HasFlag(PhysicsDrawFlags.All) || Flags.HasFlag(PhysicsDrawFlags.BB) || Flags.HasFlag(PhysicsDrawFlags.Shapes))
-			{
 				_space.EachShape(DrawShape);
-			}
 
 			if (Flags.HasFlag(PhysicsDrawFlags.Joints) || Flags.HasFlag(PhysicsDrawFlags.All))
-			{
 				_space.EachConstraint(DrawConstraint);
-			}
 
 			var contacts = 0;
 
@@ -214,18 +166,13 @@ namespace ChipmunkSharp
 				for (var i = 0; i < _space.arbiters.Count; i++)
 				{
 					for (int j = 0; j < _space.arbiters[i].contacts.Count; j++)
-					{
 						Draw(_space.arbiters[i].contacts[j]);
-					}
 					contacts += _space.arbiters[i].contacts.Count;
 				}
-
 			}
 
 			DrawString(15, 110, "Contact points: " + contacts);
 			DrawString(15, 140, string.Format("Nodes:{1} Leaf:{0} Pairs:{2}", cp.numLeaves, cp.numNodes, cp.numPairs));
-
-			base.Draw();
 			base.Clear();
 		}
 
@@ -234,37 +181,27 @@ namespace ChipmunkSharp
 			cpBody body = shape.body;
 			cpColor color = cp.GetShapeColor(shape); ;// ColorForBody(body);
 
-
 			switch (shape.shapeType)
 			{
 				case cpShapeType.Circle:
 					{
-
 						cpCircleShape circle = (cpCircleShape)shape;
-
-						if (Flags.HasFlag(PhysicsDrawFlags.BB) || Flags.HasFlag(PhysicsDrawFlags.All))
+						
+                        if (Flags.HasFlag(PhysicsDrawFlags.BB) || Flags.HasFlag(PhysicsDrawFlags.All))
 							Draw(circle.bb);
 
 						if (Flags.HasFlag(PhysicsDrawFlags.Shapes) || Flags.HasFlag(PhysicsDrawFlags.All))
 							Draw(circle, color);
-
 					}
 					break;
 				case cpShapeType.Segment:
 					{
-
 						cpSegmentShape seg = (cpSegmentShape)shape;
-
 						if (Flags.HasFlag(PhysicsDrawFlags.BB) || Flags.HasFlag(PhysicsDrawFlags.All))
 							Draw(seg.bb);
 
 						if (Flags.HasFlag(PhysicsDrawFlags.Shapes) || Flags.HasFlag(PhysicsDrawFlags.All))
-						{
 							Draw(seg, color);
-						}
-
-
-
 					}
 					break;
 				case cpShapeType.Polygon:
@@ -279,8 +216,6 @@ namespace ChipmunkSharp
 						{
 							Draw(poly, color);
 						}
-
-
 					}
 					break;
 				default:
@@ -292,49 +227,25 @@ namespace ChipmunkSharp
 		public void DrawConstraint(cpConstraint constraint)
 		{
 			Type klass = constraint.GetType();
-
 			if (klass == typeof(cpPinJoint))
-			{
 				Draw((cpPinJoint)constraint);
-			}
 			else if (klass == typeof(cpSlideJoint))
-			{
 				Draw((cpSlideJoint)constraint);
-
-			}
 			else if (klass == typeof(cpPivotJoint))
-			{
 				Draw((cpPivotJoint)constraint);
-			}
 			else if (klass == typeof(cpGrooveJoint))
-			{
 				Draw((cpGrooveJoint)constraint);
-			}
 			else if (klass == typeof(cpDampedSpring))
-			{
-
 				Draw((cpDampedSpring)constraint);
-				// TODO
-			}
 			else if (klass == typeof(cpDampedRotarySpring))
-			{
-
 				Draw((cpDampedRotarySpring)constraint);
-
-			}
 			else if (klass == typeof(cpSimpleMotor))
-			{
-
 				Draw((cpSimpleMotor)constraint);
-
-			}
 			else
 			{
-				//		printf("Cannot draw constraint\n");
+				//printf("Cannot draw constraint\n");
 			}
 		}
-
-
 
 		public void DrawSpring(cpVect a, cpVect b, cpColor cpColor)
 		{
@@ -361,7 +272,6 @@ namespace ChipmunkSharp
 			{
 				DrawSegment(verts[i], verts[i + 1], 1, cpColor.Grey);
 			}
-
 		}
 
 		#region DRAW SHAPES
@@ -382,21 +292,25 @@ namespace ChipmunkSharp
 
 		public void DrawCircle(cpVect center, float radius, float angle, int segments, cpColor color)
 		{
-			base.DrawCircle(center.ToCCPoint(), radius, angle, segments, color.ToCCColor4B());
+			base.DrawCircle(center.ToCCPoint(), radius, segments, color.ToCCColor4B());
 		}
+
 		public void DrawDot(cpVect pos, float radius, cpColor color)
 		{
 			//base.DrawDot(pos.ToCCPoint(), radius, color.ToCCColor4F());
 			base.DrawSolidCircle(pos.ToCCPoint(), radius, color.ToCCColor4B());
 		}
+
 		public void DrawPolygon(cpVect[] verts, int count, cpColor fillColor, float borderWidth, cpColor borderColor)
 		{
 			base.DrawPolygon(cpVertArray2ccpArrayN(verts, verts.Length), count, fillColor.ToCCColor4F(), borderWidth, borderColor.ToCCColor4F());
 		}
+
 		public void DrawRect(CCRect rect, cpColor color)
 		{
 			base.DrawRect(rect, color.ToCCColor4B());
 		}
+
 		public void DrawSegment(cpVect from, cpVect to, float radius, cpColor color)
 		{
 			base.DrawSegment(from.ToCCPoint(), to.ToCCPoint(), radius, color.ToCCColor4F());
@@ -424,7 +338,6 @@ namespace ChipmunkSharp
 					new cpVect(bb.l, bb.b)
 				
 				}, 4, TRANSPARENT_COLOR, 1, color);
-
 		}
 
 		public void Draw(cpContact contact)
@@ -475,7 +388,6 @@ namespace ChipmunkSharp
 			DrawDot(point, radius, color);
 		}
 
-
 		#endregion
 
 		#region DRAW CONSTRAINT
@@ -487,23 +399,19 @@ namespace ChipmunkSharp
 
 		private void Draw(cpDampedSpring constraint)
 		{
-
 			var a = constraint.a.LocalToWorld(constraint.GetAnchorA());
 			var b = constraint.b.LocalToWorld(constraint.GetAnchorB());
 
 			DrawSpring(a, b, CONSTRAINT_COLOR);
-
 		}
 
 		public void Draw(cpSimpleMotor cpSimpleMotor)
 		{
 			//Not used
-
 		}
 
 		private void Draw(cpGrooveJoint constraint)
 		{
-
 			var a = constraint.a.LocalToWorld(constraint.grv_a);
 			var b = constraint.a.LocalToWorld(constraint.grv_b);
 			var c = constraint.b.LocalToWorld(constraint.anchorB);
@@ -514,39 +422,32 @@ namespace ChipmunkSharp
 
 		private void Draw(cpPivotJoint constraint)
 		{
-
 			cpVect a = cpTransform.Point(constraint.a.transform, constraint.GetAnchorA());
 			cpVect b = cpTransform.Point(constraint.b.transform, constraint.GetAnchorB());
 
 			//DrawSegment(a, b, 1, cpColor.Grey);
 			DrawDot(a, 3, CONSTRAINT_COLOR);
 			DrawDot(b, 3, CONSTRAINT_COLOR);
-
 		}
 
 		public void Draw(cpSlideJoint constraint)
 		{
-
 			cpVect a = cpTransform.Point(constraint.a.transform, constraint.GetAnchorA());
 			cpVect b = cpTransform.Point(constraint.b.transform, constraint.GetAnchorB());
 
 			DrawSegment(a, b, 1, cpColor.Grey);
 			DrawDot(a, 5, CONSTRAINT_COLOR);
 			DrawDot(b, 5, CONSTRAINT_COLOR);
-
 		}
 
 		public void Draw(cpPinJoint constraint)
 		{
-
 			cpVect a = cpTransform.Point(constraint.a.transform, constraint.GetAnchorA());
 			cpVect b = cpTransform.Point(constraint.b.transform, constraint.GetAnchorB());
 
 			DrawSegment(a, b, 1, cpColor.Grey);
 			DrawDot(a, 5, CONSTRAINT_COLOR);
 			DrawDot(b, 5, CONSTRAINT_COLOR);
-
-
 		}
 
 		#endregion
@@ -580,8 +481,6 @@ namespace ChipmunkSharp
 		{
 
 		}
-
-
 	}
 }
 

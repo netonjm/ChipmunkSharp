@@ -19,15 +19,12 @@ namespace ChipmunkExample
 		public override void OnEnter()
 		{
 			base.OnEnter();
-
-
 			space.SetIterations(5);
 			space.SetDamping(0.1f);
 
 			//space.defaultHandler.
 			cpCollisionHandler handler = space.AddWildcardHandler(COLLISION_TYPE_ONE_WAY);
 			handler.preSolveFunc = NeverCollide;
-
 			//space.def SetDefaultCollisionHandler(space, NeverCollide, NULL, NULL, NULL, NULL);
 
 			{
@@ -40,23 +37,17 @@ namespace ChipmunkExample
 
 				space.AddShape(new cpSegmentShape(body, a, b, 30.0f));
 			}
-
 			{
 				float mass = 1.0f;
 				float length = 100.0f;
 				cpVect a = new cpVect(-length / 2.0f, 0.0f), b = new cpVect(length / 2.0f, 0.0f);
-
 				cpBody body = space.AddBody(new cpBody(mass, cp.MomentForSegment(mass, a, b, 0.0f)));
 				body.SetPosition(new cpVect(-160.0f, 80.0f));
-
 				space.AddShape(new cpSegmentShape(body, a, b, 20.0f));
 			}
-
 			{
 				float mass = 1.0f;
-
 				int NUM_VERTS = 5;
-
 				cpVect[] verts = new cpVect[NUM_VERTS];
 				for (int i = 0; i < NUM_VERTS; i++)
 				{
@@ -66,7 +57,6 @@ namespace ChipmunkExample
 
 				cpBody body = space.AddBody(new cpBody(mass, cp.MomentForPoly(mass, NUM_VERTS, verts, cpVect.Zero, 0.0f)));
 				body.SetPosition(new cpVect(-0.0f, -80.0f));
-
 				space.AddShape(new cpPolyShape(body, NUM_VERTS, verts, 0.0f));
 			}
 
@@ -83,7 +73,6 @@ namespace ChipmunkExample
 
 				cpBody body = space.AddBody(new cpBody(mass, cp.MomentForPoly(mass, NUM_VERTS, verts, cpVect.Zero, 0.0f)));
 				body.SetPosition(new cpVect(-0.0f, 80.0f));
-
 				space.AddShape(new cpPolyShape(body, NUM_VERTS, verts, 0));
 			}
 
@@ -93,8 +82,6 @@ namespace ChipmunkExample
 
 				cpBody body = space.AddBody(new cpBody(mass, cp.Infinity));
 				body.SetPosition(new cpVect(160, -80));
-
-
 				space.AddShape(new cpCircleShape(body, r, cpVect.Zero));
 			}
 
@@ -104,22 +91,16 @@ namespace ChipmunkExample
 
 				cpBody body = space.AddBody(new cpBody(mass, cp.Infinity));
 				body.SetPosition(new cpVect(160, 80));
-
 				space.AddShape(new cpCircleShape(body, r, cpVect.Zero));
 			}
 
 			Schedule();
-
-
 		}
 
 		public override void Update(float dt)
 		{
 			base.Update(dt);
-
 			space.Step(dt);
 		}
-
-
 	}
 }

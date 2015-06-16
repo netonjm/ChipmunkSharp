@@ -7,21 +7,18 @@ using System.Text;
 
 namespace ChipmunkExample
 {
-	class benchLayer : ChipmunkDemoLayer
-	{
+    class benchLayer : ChipmunkDemoLayer
+    {
+        public static float bevel = 1.0f;
 
-
-		public static float bevel = 1.0f;
-
-		static Func<cpSpace, cpSpace>[] bench_list = new Func<cpSpace, cpSpace>[] {
-		
+        static Func<cpSpace, cpSpace>[] bench_list = new Func<cpSpace, cpSpace>[] {
 			SimpleTerrainCircles_100,
 			SimpleTerrainCircles_500,
 			SimpleTerrainCircles_1000,
-				SimpleTerrainBoxes_100,
-				SimpleTerrainBoxes_500,
+		    SimpleTerrainBoxes_100,
+			SimpleTerrainBoxes_500,
 			SimpleTerrainBoxes_1000,
-				SimpleTerrainVCircles_200,
+			SimpleTerrainVCircles_200,
 			SimpleTerrainHexagons_100,
 			SimpleTerrainHexagons_500,
 			SimpleTerrainHexagons_1000,
@@ -34,25 +31,20 @@ namespace ChipmunkExample
 			NoCollide,
 		};
 
-		public override void OnEnter()
-		{
-			base.OnEnter();
+        public override void OnEnter()
+        {
+            base.OnEnter();
+            CreateSubScenePlayer(bench_list.Length); //Create a subscene player with the array length
+            Schedule();
+            RefreshSubScene();
+        }
 
-			CreateSubScenePlayer(bench_list.Length); //Create a subscene player with the array length
+        public override void ChangeActualSubScene(int index)
+        {
+            bench_list[index](space);
+        }
 
-			Schedule();
-
-			RefreshSubScene();
-		}
-
-
-
-		public override void ChangeActualSubScene(int index)
-		{
-			bench_list[index](space);
-		}
-
-		static cpVect[] simple_terrain_verts = new cpVect[] {
+        static cpVect[] simple_terrain_verts = new cpVect[] {
 	new cpVect(350.00f, 425.07f), new cpVect(336.00f, 436.55f),new cpVect(272.00f, 435.39f), new cpVect(258.00f, 427.63f), new cpVect(225.28f, 420.00f), new cpVect(202.82f, 396.00f),
 	new cpVect(191.81f, 388.00f), new cpVect(189.00f, 381.89f),new cpVect(173.00f, 380.39f), new cpVect(162.59f, 368.00f), new cpVect(150.47f, 319.00f), new cpVect(128.00f, 311.55f),
 	new cpVect(119.14f, 286.00f), new cpVect(126.84f, 263.00f),new cpVect(120.56f, 227.00f), new cpVect(141.14f, 178.00f), new cpVect(137.52f, 162.00f), new cpVect(146.51f, 142.00f),
@@ -61,197 +53,187 @@ namespace ChipmunkExample
 	new cpVect(468.09f,  99.00f), new cpVect(467.09f, 123.00f),new cpVect(464.92f, 135.00f), new cpVect(469.00f, 141.03f), new cpVect(497.00f, 148.67f), new cpVect(513.85f, 180.00f),
 	new cpVect(509.56f, 223.00f), new cpVect(523.51f, 247.00f),new cpVect(523.00f, 277.00f), new cpVect(497.79f, 311.00f), new cpVect(478.67f, 348.00f), new cpVect(467.90f, 360.00f),
 	new cpVect(456.76f, 382.00f), new cpVect(432.95f, 389.00f),new cpVect(417.00f, 411.32f), new cpVect(373.00f, 433.19f), new cpVect(361.00f, 430.02f), new cpVect(350.00f, 425.07f),
-};
+    };
 
+        static public void add_circle(cpSpace space, int index, float radius)
+        {
+            float mass = radius * radius / 25.0f;
+            cpBody body = space.AddBody(new cpBody(mass, cp.MomentForCircle(mass, 0.0f, radius, cpVect.Zero)));
+            //	cpBody body = cpSpaceAddBody(space, cpBodyInit(&bodies[i], mass, cpMomentForCircle(mass, 0.0f, radius, cpVect.Zero)));
+            body.SetPosition(cpVect.cpvmult(cp.frand_unit_circle(), 180.0f));
 
-		static public void add_circle(cpSpace space, int index, float radius)
-		{
-			float mass = radius * radius / 25.0f;
-			cpBody body = space.AddBody(new cpBody(mass, cp.MomentForCircle(mass, 0.0f, radius, cpVect.Zero)));
-			//	cpBody body = cpSpaceAddBody(space, cpBodyInit(&bodies[i], mass, cpMomentForCircle(mass, 0.0f, radius, cpVect.Zero)));
-			body.SetPosition(cpVect.cpvmult(cp.frand_unit_circle(), 180.0f));
+            cpShape shape = space.AddShape(new cpCircleShape(body, radius, cpVect.Zero));
+            //	cpShape shape = cpSpaceAddShape(space, cpCircleShapeInit(&circles[i], body, radius, cpVect.Zero));
+            shape.SetElasticity(0.0f); shape.SetFriction(0.9f);
+        }
 
-			cpShape shape = space.AddShape(new cpCircleShape(body, radius, cpVect.Zero));
-			//	cpShape shape = cpSpaceAddShape(space, cpCircleShapeInit(&circles[i], body, radius, cpVect.Zero));
-			shape.SetElasticity(0.0f); shape.SetFriction(0.9f);
-		}
+        static public void add_box(cpSpace space, int index, float size)
+        {
+            float mass = size * size / 100.0f;
 
-		static public void add_box(cpSpace space, int index, float size)
-		{
-			float mass = size * size / 100.0f;
-			cpBody body = space.AddBody(new cpBody(mass, cp.MomentForBox(mass, size, size)));
-			//	cpBody body = cpSpaceAddBody(space, cpBodyInit(&bodies[i], mass, cpMomentForBox(mass, size, size)));
-			body.SetPosition(cpVect.cpvmult(cp.frand_unit_circle(), 180.0f));
+            cpBody body = space.AddBody(new cpBody(mass, cp.MomentForBox(mass, size, size)));
+            //	cpBody body = cpSpaceAddBody(space, cpBodyInit(&bodies[i], mass, cpMomentForBox(mass, size, size)));
+            body.SetPosition(cpVect.cpvmult(cp.frand_unit_circle(), 180.0f));
+            cpPolyShape shape = space.AddShape(cpPolyShape.BoxShape(body, size - bevel * 2f, size - bevel * 2f, 0f)) as cpPolyShape;
+            shape.SetRadius(bevel);
+            shape.SetElasticity(0.0f);
+            shape.SetFriction(0.9f);
+        }
 
-			cpPolyShape shape = space.AddShape(cpPolyShape.BoxShape(body, size - bevel * 2f, size - bevel * 2f, 0f)) as cpPolyShape;
-			shape.SetRadius(bevel);
-			shape.SetElasticity(0.0f);
-			shape.SetFriction(0.9f);
-		}
+        static public void add_hexagon(cpSpace space, int index, float radius)
+        {
 
-		static public void add_hexagon(cpSpace space, int index, float radius)
-		{
+            cpVect[] hexagon = new cpVect[6];
+            for (int i = 0; i < 6; i++)
+            {
+                float angle = -(float)Math.PI * 2.0f * i / 6.0f;
+                hexagon[i] = cpVect.cpvmult(cpVect.cpv(cp.cpfcos(angle), cp.cpfsin(angle)), radius - bevel);
+            }
 
-			cpVect[] hexagon = new cpVect[6];
-			for (int i = 0; i < 6; i++)
-			{
-				float angle = -(float)Math.PI * 2.0f * i / 6.0f;
-				hexagon[i] = cpVect.cpvmult(cpVect.cpv(cp.cpfcos(angle), cp.cpfsin(angle)), radius - bevel);
-			}
+            float mass = radius * radius;
 
+            cpBody body = space.AddBody(new cpBody(mass, cp.MomentForPoly(mass, 6, hexagon, cpVect.Zero, 0.0f)));
+            body.SetPosition(cpVect.cpvmult(cp.frand_unit_circle(), 180.0f));
 
-			float mass = radius * radius;
+            cpPolyShape shape = space.AddShape(new cpPolyShape(body, 6, hexagon, cpTransform.Identity, bevel)) as cpPolyShape;
+            shape.SetElasticity(0.0f);
+            shape.SetFriction(0.9f);
+        }
 
-			cpBody body = space.AddBody(new cpBody(mass, cp.MomentForPoly(mass, 6, hexagon, cpVect.Zero, 0.0f)));
-			body.SetPosition(cpVect.cpvmult(cp.frand_unit_circle(), 180.0f));
+        static public cpSpace SetupSpace_simpleTerrain(cpSpace space)
+        {
+            SetSubTitle("SetupSpace_simpleTerrain");
+            space.SetIterations(10);
+            space.SetGravity(new cpVect(0, -100));
+            space.SetCollisionSlop(0.5f);
 
+            cpVect offset = new cpVect(-320, -240);
+            for (int i = 0; i < (simple_terrain_verts.Length - 1); i++)
+            {
+                cpVect a = simple_terrain_verts[i], b = simple_terrain_verts[i + 1];
+                space.AddShape(new cpSegmentShape(space.GetStaticBody(), cpVect.cpvadd(a, offset), cpVect.cpvadd(b, offset), 0.0f));
+            }
+            return space;
+        }
 
-			cpPolyShape shape = space.AddShape(new cpPolyShape(body, 6, hexagon, cpTransform.Identity, bevel)) as cpPolyShape;
-			shape.SetElasticity(0.0f);
-			shape.SetFriction(0.9f);
-		}
+        // SimpleTerrain constant sized objects
+        static public cpSpace SimpleTerrainCircles_1000(cpSpace space)
+        {
+            SetSubTitle("SimpleTerrainCircles_1000");
+            space = SetupSpace_simpleTerrain(space);
+            for (int i = 0; i < 1000; i++)
+                add_circle(space, i, 5.0f);
+            return space;
+        }
 
-		static public cpSpace SetupSpace_simpleTerrain(cpSpace space)
-		{
+        static public cpSpace SimpleTerrainCircles_500(cpSpace space)
+        {
+            SetSubTitle("SimpleTerrainCircles_500");
+            space = SetupSpace_simpleTerrain(space);
+            for (int i = 0; i < 500; i++)
+                add_circle(space, i, 5.0f);
+            return space;
+        }
 
-			SetSubTitle("SetupSpace_simpleTerrain");
+        static public cpSpace SimpleTerrainCircles_100(cpSpace space)
+        {
+            SetSubTitle("SimpleTerrainCircles_100");
+            space = SetupSpace_simpleTerrain(space);
+            for (int i = 0; i < 100; i++)
+                add_circle(space, i, 5.0f);
+            return space;
+        }
 
-			space.SetIterations(10);
-			space.SetGravity(new cpVect(0, -100));
-			space.SetCollisionSlop(0.5f);
+        static public cpSpace SimpleTerrainBoxes_1000(cpSpace space)
+        {
+            SetSubTitle("SimpleTerrainBoxes_1000");
+            space = SetupSpace_simpleTerrain(space);
+            for (int i = 0; i < 1000; i++)
+                add_box(space, i, 10.0f);
+            return space;
+        }
 
-			cpVect offset = new cpVect(-320, -240);
-			for (int i = 0; i < (simple_terrain_verts.Length - 1); i++)
-			{
-				cpVect a = simple_terrain_verts[i], b = simple_terrain_verts[i + 1];
-				space.AddShape(new cpSegmentShape(space.GetStaticBody(), cpVect.cpvadd(a, offset), cpVect.cpvadd(b, offset), 0.0f));
-			}
+        static public cpSpace SimpleTerrainBoxes_500(cpSpace space)
+        {
+            SetSubTitle("SimpleTerrainBoxes_500");
+            space = SetupSpace_simpleTerrain(space);
+            for (int i = 0; i < 500; i++)
+                add_box(space, i, 10.0f);
+            return space;
+        }
 
-			return space;
-		}
+        static public cpSpace SimpleTerrainBoxes_100(cpSpace space)
+        {
+            SetSubTitle("SimpleTerrainBoxes_100");
+            space = SetupSpace_simpleTerrain(space);
+            for (int i = 0; i < 100; i++)
+                add_box(space, i, 10.0f);
+            return space;
+        }
 
+        static public cpSpace SimpleTerrainHexagons_1000(cpSpace space)
+        {
+            SetSubTitle("SimpleTerrainHexagons_1000");
+            space = SetupSpace_simpleTerrain(space);
+            for (int i = 0; i < 1000; i++)
+                add_hexagon(space, i, 5.0f);
+            return space;
+        }
 
+        static public cpSpace SimpleTerrainHexagons_500(cpSpace space)
+        {
+            SetSubTitle("SimpleTerrainHexagons_500");
+            space = SetupSpace_simpleTerrain(space);
+            for (int i = 0; i < 500; i++)
+                add_hexagon(space, i, 5.0f);
+            return space;
+        }
 
-		// SimpleTerrain constant sized objects
-		static public cpSpace SimpleTerrainCircles_1000(cpSpace space)
-		{
-			SetSubTitle("SimpleTerrainCircles_1000");
-			space = SetupSpace_simpleTerrain(space);
-			for (int i = 0; i < 1000; i++) add_circle(space, i, 5.0f);
+        static public cpSpace SimpleTerrainHexagons_100(cpSpace space)
+        {
+            SetSubTitle("SimpleTerrainHexagons_100");
+            space = SetupSpace_simpleTerrain(space);
+            for (int i = 0; i < 100; i++)
+                add_hexagon(space, i, 5.0f);
+            return space;
+        }
 
-			return space;
-		}
+        // SimpleTerrain variable sized objects
+        static public float rand_size()
+        {
 
-		static public cpSpace SimpleTerrainCircles_500(cpSpace space)
-		{
-			SetSubTitle("SimpleTerrainCircles_500");
-			space = SetupSpace_simpleTerrain(space);
-			for (int i = 0; i < 500; i++) add_circle(space, i, 5.0f);
+            return cp.cpfpow(1.5f, cp.cpflerp(-1.5f, 3.5f, cp.frand()));
+        }
 
-			return space;
-		}
+        static public cpSpace SimpleTerrainVCircles_200(cpSpace space)
+        {
+            SetSubTitle("SimpleTerrainVCircles_200");
+            space = SetupSpace_simpleTerrain(space);
+            for (int i = 0; i < 200; i++)
+                add_circle(space, i, 5.0f * rand_size());
+            return space;
+        }
 
-		static public cpSpace SimpleTerrainCircles_100(cpSpace space)
-		{
-			SetSubTitle("SimpleTerrainCircles_100");
-			space = SetupSpace_simpleTerrain(space);
-			for (int i = 0; i < 100; i++) add_circle(space, i, 5.0f);
+        static public cpSpace SimpleTerrainVBoxes_200(cpSpace space)
+        {
+            SetSubTitle("SimpleTerrainVBoxes_200");
+            space = SetupSpace_simpleTerrain(space);
+            for (int i = 0; i < 200; i++)
+                add_box(space, i, 8.0f * rand_size());
+            return space;
+        }
 
-			return space;
-		}
+        static public cpSpace SimpleTerrainVHexagons_200(cpSpace space)
+        {
+            SetSubTitle("SimpleTerrainVHexagons_200");
+            space = SetupSpace_simpleTerrain(space);
+            for (int i = 0; i < 200; i++)
+                add_hexagon(space, i, 5.0f * rand_size());
+            return space;
+        }
 
-		static public cpSpace SimpleTerrainBoxes_1000(cpSpace space)
-		{
-			SetSubTitle("SimpleTerrainBoxes_1000");
-			space = SetupSpace_simpleTerrain(space);
-			for (int i = 0; i < 1000; i++) add_box(space, i, 10.0f);
-
-			return space;
-		}
-
-		static public cpSpace SimpleTerrainBoxes_500(cpSpace space)
-		{
-			SetSubTitle("SimpleTerrainBoxes_500");
-			space = SetupSpace_simpleTerrain(space);
-			for (int i = 0; i < 500; i++) add_box(space, i, 10.0f);
-
-			return space;
-		}
-
-		static public cpSpace SimpleTerrainBoxes_100(cpSpace space)
-		{
-			SetSubTitle("SimpleTerrainBoxes_100");
-			space = SetupSpace_simpleTerrain(space);
-			for (int i = 0; i < 100; i++) add_box(space, i, 10.0f);
-
-			return space;
-		}
-
-		static public cpSpace SimpleTerrainHexagons_1000(cpSpace space)
-		{
-			SetSubTitle("SimpleTerrainHexagons_1000");
-			space = SetupSpace_simpleTerrain(space);
-			for (int i = 0; i < 1000; i++) add_hexagon(space, i, 5.0f);
-
-			return space;
-		}
-
-		static public cpSpace SimpleTerrainHexagons_500(cpSpace space)
-		{
-			SetSubTitle("SimpleTerrainHexagons_500");
-			space = SetupSpace_simpleTerrain(space);
-			for (int i = 0; i < 500; i++) add_hexagon(space, i, 5.0f);
-
-			return space;
-		}
-
-		static public cpSpace SimpleTerrainHexagons_100(cpSpace space)
-		{
-			SetSubTitle("SimpleTerrainHexagons_100");
-			space = SetupSpace_simpleTerrain(space);
-			for (int i = 0; i < 100; i++) add_hexagon(space, i, 5.0f);
-
-			return space;
-		}
-
-
-		// SimpleTerrain variable sized objects
-		static public float rand_size()
-		{
-
-			return cp.cpfpow(1.5f, cp.cpflerp(-1.5f, 3.5f, cp.frand()));
-		}
-
-		static public cpSpace SimpleTerrainVCircles_200(cpSpace space)
-		{
-			SetSubTitle("SimpleTerrainVCircles_200");
-			space = SetupSpace_simpleTerrain(space);
-			for (int i = 0; i < 200; i++) add_circle(space, i, 5.0f * rand_size());
-
-			return space;
-		}
-
-		static public cpSpace SimpleTerrainVBoxes_200(cpSpace space)
-		{
-			SetSubTitle("SimpleTerrainVBoxes_200");
-			space = SetupSpace_simpleTerrain(space);
-			for (int i = 0; i < 200; i++) add_box(space, i, 8.0f * rand_size());
-
-			return space;
-		}
-
-		static public cpSpace SimpleTerrainVHexagons_200(cpSpace space)
-		{
-			SetSubTitle("SimpleTerrainVHexagons_200");
-			space = SetupSpace_simpleTerrain(space);
-			for (int i = 0; i < 200; i++) add_hexagon(space, i, 5.0f * rand_size());
-
-			return space;
-		}
-
-
-		// ComplexTerrain
-		static cpVect[] complex_terrain_verts = new cpVect[] {
+        // ComplexTerrain
+        static cpVect[] complex_terrain_verts = new cpVect[] {
 	new cpVect( 46.78f, 479.00f), new cpVect( 35.00f, 475.63f), new cpVect( 27.52f, 469.00f), new cpVect( 23.52f, 455.00f), new cpVect( 23.78f, 441.00f), new cpVect( 28.41f, 428.00f), new cpVect( 49.61f, 394.00f), new cpVect( 59.00f, 381.56f), new cpVect( 80.00f, 366.03f), new cpVect( 81.46f, 358.00f), new cpVect( 86.31f, 350.00f), new cpVect( 77.74f, 320.00f),
 	new cpVect( 70.26f, 278.00f), new cpVect( 67.51f, 270.00f), new cpVect( 58.86f, 260.00f), new cpVect( 57.19f, 247.00f), new cpVect( 38.00f, 235.60f), new cpVect( 25.76f, 221.00f), new cpVect( 24.58f, 209.00f), new cpVect( 27.63f, 202.00f), new cpVect( 31.28f, 198.00f), new cpVect( 40.00f, 193.72f), new cpVect( 48.00f, 193.73f), new cpVect( 55.00f, 196.70f),
 	new cpVect( 62.10f, 204.00f), new cpVect( 71.00f, 209.04f), new cpVect( 79.00f, 206.55f), new cpVect( 88.00f, 206.81f), new cpVect( 95.88f, 211.00f), new cpVect(103.00f, 220.49f), new cpVect(131.00f, 220.51f), new cpVect(137.00f, 222.66f), new cpVect(143.08f, 228.00f), new cpVect(146.22f, 234.00f), new cpVect(147.08f, 241.00f), new cpVect(145.45f, 248.00f),
@@ -275,72 +257,70 @@ namespace ChipmunkExample
 	new cpVect(588.75f, 324.00f), new cpVect(583.25f, 350.00f), new cpVect(572.12f, 370.00f), new cpVect(575.45f, 378.00f), new cpVect(575.20f, 388.00f), new cpVect(589.00f, 393.81f), new cpVect(599.20f, 404.00f), new cpVect(607.14f, 416.00f), new cpVect(609.96f, 430.00f), new cpVect(615.45f, 441.00f), new cpVect(613.44f, 462.00f), new cpVect(610.48f, 469.00f),
 	new cpVect(603.00f, 475.63f), new cpVect(590.96f, 479.00f), 
 };
-		static public cpSpace ComplexTerrainCircles_1000(cpSpace space)
-		{
-			space.SetIterations(10);
-			space.SetGravity(new cpVect(0, -100));
-			space.SetCollisionSlop(0.5f);
+        static public cpSpace ComplexTerrainCircles_1000(cpSpace space)
+        {
+            space.SetIterations(10);
+            space.SetGravity(new cpVect(0, -100));
+            space.SetCollisionSlop(0.5f);
 
-			cpVect offset = new cpVect(-320, -240);
-			for (int i = 0; i < (complex_terrain_verts.Length - 1); i++)
-			{
-				cpVect a = complex_terrain_verts[i], b = complex_terrain_verts[i + 1];
-				space.AddShape(new cpSegmentShape(space.GetStaticBody(), cpVect.cpvadd(a, offset), cpVect.cpvadd(b, offset), 0.0f));
-			}
+            cpVect offset = new cpVect(-320, -240);
+            for (int i = 0; i < (complex_terrain_verts.Length - 1); i++)
+            {
+                cpVect a = complex_terrain_verts[i], b = complex_terrain_verts[i + 1];
+                space.AddShape(new cpSegmentShape(space.GetStaticBody(), cpVect.cpvadd(a, offset), cpVect.cpvadd(b, offset), 0.0f));
+            }
 
-			for (int i = 0; i < 1000; i++)
-			{
-				float radius = 5.0f;
-				float mass = radius * radius;
-				cpBody body = space.AddBody(new cpBody(mass, cp.MomentForCircle(mass, 0.0f, radius, cpVect.Zero)));
-				body.SetPosition(cpVect.cpvadd(cpVect.cpvmult(cp.frand_unit_circle(), 180.0f), new cpVect(0.0f, 300.0f)));
+            for (int i = 0; i < 1000; i++)
+            {
+                float radius = 5.0f;
+                float mass = radius * radius;
+                cpBody body = space.AddBody(new cpBody(mass, cp.MomentForCircle(mass, 0.0f, radius, cpVect.Zero)));
+                body.SetPosition(cpVect.cpvadd(cpVect.cpvmult(cp.frand_unit_circle(), 180.0f), new cpVect(0.0f, 300.0f)));
+                cpShape shape = space.AddShape(new cpCircleShape(body, radius, cpVect.Zero));
+                shape.SetElasticity(0.0f); shape.SetFriction(0.0f);
+            }
 
-				cpShape shape = space.AddShape(new cpCircleShape(body, radius, cpVect.Zero));
-				shape.SetElasticity(0.0f); shape.SetFriction(0.0f);
-			}
+            return space;
+        }
 
-			return space;
-		}
+        static public cpSpace ComplexTerrainHexagons_1000(cpSpace space)
+        {
+            SetSubTitle("ComplexTerrainHexagons_1000");
+            space.SetIterations(10);
+            space.SetGravity(new cpVect(0, -100));
+            space.SetCollisionSlop(0.5f);
 
-		static public cpSpace ComplexTerrainHexagons_1000(cpSpace space)
-		{
-			SetSubTitle("ComplexTerrainHexagons_1000");
-			space.SetIterations(10);
-			space.SetGravity(new cpVect(0, -100));
-			space.SetCollisionSlop(0.5f);
+            cpVect offset = new cpVect(-320, -240);
+            for (int i = 0; i < (complex_terrain_verts.Length - 1); i++)
+            {
+                cpVect a = complex_terrain_verts[i], b = complex_terrain_verts[i + 1];
+                space.AddShape(new cpSegmentShape(space.GetStaticBody(), cpVect.cpvadd(a, offset), cpVect.cpvadd(b, offset), 0.0f));
+            }
 
-			cpVect offset = new cpVect(-320, -240);
-			for (int i = 0; i < (complex_terrain_verts.Length - 1); i++)
-			{
-				cpVect a = complex_terrain_verts[i], b = complex_terrain_verts[i + 1];
-				space.AddShape(new cpSegmentShape(space.GetStaticBody(), cpVect.cpvadd(a, offset), cpVect.cpvadd(b, offset), 0.0f));
-			}
+            float radius = 5.0f;
 
-			float radius = 5.0f;
+            cpVect[] hexagon = new cpVect[6];
+            for (int i = 0; i < 6; i++)
+            {
+                float angle = -(float)Math.PI * 2.0f * i / 6.0f;
+                hexagon[i] = cpVect.cpvmult(cpVect.cpv(cp.cpfcos(angle), cp.cpfsin(angle)), radius - bevel);
+            }
 
-			cpVect[] hexagon = new cpVect[6];
-			for (int i = 0; i < 6; i++)
-			{
-				float angle = -(float)Math.PI * 2.0f * i / 6.0f;
-				hexagon[i] = cpVect.cpvmult(cpVect.cpv(cp.cpfcos(angle), cp.cpfsin(angle)), radius - bevel);
-			}
+            for (int i = 0; i < 1000; i++)
+            {
+                float mass = radius * radius;
+                cpBody body = space.AddBody(new cpBody(mass, cp.MomentForPoly(mass, 6, hexagon, cpVect.Zero, 0.0f)));
+                body.SetPosition(cpVect.cpvadd(cpVect.cpvmult(cp.frand_unit_circle(), 180.0f), new cpVect(0.0f, 300.0f)));
 
-			for (int i = 0; i < 1000; i++)
-			{
-				float mass = radius * radius;
-				cpBody body = space.AddBody(new cpBody(mass, cp.MomentForPoly(mass, 6, hexagon, cpVect.Zero, 0.0f)));
-				body.SetPosition(cpVect.cpvadd(cpVect.cpvmult(cp.frand_unit_circle(), 180.0f), new cpVect(0.0f, 300.0f)));
+                cpShape shape = space.AddShape(new cpPolyShape(body, 6, hexagon, cpTransform.Identity, bevel));
+                shape.SetElasticity(0.0f); shape.SetFriction(0.0f);
+            }
 
-				cpShape shape = space.AddShape(new cpPolyShape(body, 6, hexagon, cpTransform.Identity, bevel));
-				shape.SetElasticity(0.0f); shape.SetFriction(0.0f);
-			}
+            return space;
+        }
 
-			return space;
-		}
-
-
-		// BouncyTerrain
-		static cpVect[] bouncy_terrain_verts = new cpVect[] {
+        // BouncyTerrain
+        static cpVect[] bouncy_terrain_verts = new cpVect[] {
 	new cpVect(537.18f,  23.00f), new cpVect(520.50f,  36.00f), new cpVect(501.53f,  63.00f), new cpVect(496.14f,  76.00f), new cpVect(498.86f,  86.00f), new cpVect(504.00f,  90.51f), new cpVect(508.00f,  91.36f), new cpVect(508.77f,  84.00f), new cpVect(513.00f,  77.73f), new cpVect(519.00f,  74.48f), new cpVect(530.00f,  74.67f), new cpVect(545.00f,  54.65f),
 	new cpVect(554.00f,  48.77f), new cpVect(562.00f,  46.39f), new cpVect(568.00f,  45.94f), new cpVect(568.61f,  47.00f), new cpVect(567.94f,  55.00f), new cpVect(571.27f,  64.00f), new cpVect(572.92f,  80.00f), new cpVect(572.00f,  81.39f), new cpVect(563.00f,  79.93f), new cpVect(556.00f,  82.69f), new cpVect(551.49f,  88.00f), new cpVect(549.00f,  95.76f),
 	new cpVect(538.00f,  93.40f), new cpVect(530.00f, 102.38f), new cpVect(523.00f, 104.00f), new cpVect(517.00f, 103.02f), new cpVect(516.22f, 109.00f), new cpVect(518.96f, 116.00f), new cpVect(526.00f, 121.15f), new cpVect(534.00f, 116.48f), new cpVect(543.00f, 116.77f), new cpVect(549.28f, 121.00f), new cpVect(554.00f, 130.17f), new cpVect(564.00f, 125.67f),
@@ -385,153 +365,133 @@ namespace ChipmunkExample
 	new cpVect(456.00f,  98.73f), new cpVect(462.00f,  95.48f), new cpVect(472.00f,  95.79f), new cpVect(471.28f,  92.00f), new cpVect(464.00f,  84.62f), new cpVect(445.00f,  80.39f), new cpVect(436.00f,  75.33f), new cpVect(428.00f,  68.46f), new cpVect(419.00f,  68.52f), new cpVect(413.00f,  65.27f), new cpVect(408.48f,  58.00f), new cpVect(409.87f,  46.00f),
 	new cpVect(404.42f,  39.00f), new cpVect(408.00f,  33.88f), new cpVect(415.00f,  29.31f), new cpVect(429.00f,  26.45f), new cpVect(455.00f,  28.77f), new cpVect(470.00f,  33.81f), new cpVect(482.00f,  42.16f), new cpVect(494.00f,  46.85f), new cpVect(499.65f,  36.00f), new cpVect(513.00f,  25.95f), new cpVect(529.00f,  22.42f), new cpVect(537.18f,  23.00f), 
 };
-		//static int bouncy_terrain_count = sizeof(bouncy_terrain_verts) / sizeof(cpVect);
 
-		static public cpSpace BouncyTerrainCircles_500(cpSpace space)
-		{
-			//cpSpace space = BENCH_SPACE_NEW();
-			SetSubTitle("BouncyTerrainCircles 500");
-			space.SetIterations(10);
+        static public cpSpace BouncyTerrainCircles_500(cpSpace space)
+        {
+            //cpSpace space = BENCH_SPACE_NEW();
+            SetSubTitle("BouncyTerrainCircles 500");
+            space.SetIterations(10);
 
-			cpVect offset = new cpVect(-320, -240);
-			for (int i = 0; i < (bouncy_terrain_verts.Length - 1); i++)
-			{
-				cpVect a = bouncy_terrain_verts[i], b = bouncy_terrain_verts[i + 1];
-				cpShape shape = space.AddShape(new cpSegmentShape(space.GetStaticBody(), cpVect.cpvadd(a, offset), cpVect.cpvadd(b, offset), 0.0f));
-				shape.SetElasticity(1.0f);
-			}
+            cpVect offset = new cpVect(-320, -240);
+            for (int i = 0; i < (bouncy_terrain_verts.Length - 1); i++)
+            {
+                cpVect a = bouncy_terrain_verts[i], b = bouncy_terrain_verts[i + 1];
+                cpShape shape = space.AddShape(new cpSegmentShape(space.GetStaticBody(), cpVect.cpvadd(a, offset), cpVect.cpvadd(b, offset), 0.0f));
+                shape.SetElasticity(1.0f);
+            }
 
-			for (int i = 0; i < 500; i++)
-			{
-				float radius = 5.0f;
-				float mass = radius * radius;
-				cpBody body = space.AddBody(new cpBody(mass, cp.MomentForCircle(mass, 0.0f, radius, cpVect.Zero)));
-				body.SetPosition(cpVect.cpvadd(cpVect.cpvmult(cp.frand_unit_circle(), 130.0f), cpVect.Zero));
-				body.SetVelocity(cpVect.cpvmult(cp.frand_unit_circle(), 50.0f));
+            for (int i = 0; i < 500; i++)
+            {
+                float radius = 5.0f;
+                float mass = radius * radius;
+                cpBody body = space.AddBody(new cpBody(mass, cp.MomentForCircle(mass, 0.0f, radius, cpVect.Zero)));
+                body.SetPosition(cpVect.cpvadd(cpVect.cpvmult(cp.frand_unit_circle(), 130.0f), cpVect.Zero));
+                body.SetVelocity(cpVect.cpvmult(cp.frand_unit_circle(), 50.0f));
 
-				cpShape shape = space.AddShape(new cpCircleShape(body, radius, cpVect.Zero));
-				shape.SetElasticity(1.0f);
-			}
+                cpShape shape = space.AddShape(new cpCircleShape(body, radius, cpVect.Zero));
+                shape.SetElasticity(1.0f);
+            }
 
-			return space;
-		}
+            return space;
+        }
 
-		static public cpSpace BouncyTerrainHexagons_500(cpSpace space)
-		{
+        static public cpSpace BouncyTerrainHexagons_500(cpSpace space)
+        {
+            SetSubTitle("BouncyTerrainHexagons 500");
+            //cpSpace space = BENCH_SPACE_NEW();
+            space.SetIterations(10);
 
+            cpVect offset = new cpVect(-320, -240);
+            for (int i = 0; i < (bouncy_terrain_verts.Length - 1); i++)
+            {
+                cpVect a = bouncy_terrain_verts[i], b = bouncy_terrain_verts[i + 1];
+                cpShape shape = space.AddShape(new cpSegmentShape(space.GetStaticBody(), cpVect.cpvadd(a, offset), cpVect.cpvadd(b, offset), 0.0f));
+                shape.SetElasticity(1.0f);
+            }
 
-			SetSubTitle("BouncyTerrainHexagons 500");
-			//cpSpace space = BENCH_SPACE_NEW();
-			space.SetIterations(10);
+            float radius = 5.0f;
+            cpVect[] hexagon = new cpVect[6];
+            for (int i = 0; i < 6; i++)
+            {
+                float angle = -(float)Math.PI * 2.0f * i / 6.0f;
+                hexagon[i] = cpVect.cpvmult(cpVect.cpv(cp.cpfcos(angle), cp.cpfsin(angle)), radius - bevel);
+            }
 
-			cpVect offset = new cpVect(-320, -240);
-			for (int i = 0; i < (bouncy_terrain_verts.Length - 1); i++)
-			{
-				cpVect a = bouncy_terrain_verts[i], b = bouncy_terrain_verts[i + 1];
-				cpShape shape = space.AddShape(new cpSegmentShape(space.GetStaticBody(), cpVect.cpvadd(a, offset), cpVect.cpvadd(b, offset), 0.0f));
-				shape.SetElasticity(1.0f);
-			}
+            for (int i = 0; i < 500; i++)
+            {
+                float mass = radius * radius;
+                cpBody body = space.AddBody(new cpBody(mass, cp.MomentForPoly(mass, 6, hexagon, cpVect.Zero, 0.0f)));
+                body.SetPosition(cpVect.cpvadd(cpVect.cpvmult(cp.frand_unit_circle(), 130.0f), cpVect.Zero));
+                body.SetVelocity(cpVect.cpvmult(cp.frand_unit_circle(), 50.0f));
 
-			float radius = 5.0f;
-			cpVect[] hexagon = new cpVect[6];
-			for (int i = 0; i < 6; i++)
-			{
-				float angle = -(float)Math.PI * 2.0f * i / 6.0f;
-				hexagon[i] = cpVect.cpvmult(cpVect.cpv(cp.cpfcos(angle), cp.cpfsin(angle)), radius - bevel);
-			}
+                cpShape shape = space.AddShape(new cpPolyShape(body, 6, hexagon, cpTransform.Identity, bevel));
+                shape.SetElasticity(1.0f);
+            }
 
-			for (int i = 0; i < 500; i++)
-			{
-				float mass = radius * radius;
-				cpBody body = space.AddBody(new cpBody(mass, cp.MomentForPoly(mass, 6, hexagon, cpVect.Zero, 0.0f)));
+            return space;
+        }
 
-				body.SetPosition(cpVect.cpvadd(cpVect.cpvmult(cp.frand_unit_circle(), 130.0f), cpVect.Zero));
+        // No collisions
 
-				body.SetVelocity(cpVect.cpvmult(cp.frand_unit_circle(), 50.0f));
+        static bool NoCollide_begin(cpArbiter arb, cpSpace space, object data)
+        {
+            //abort();
+            return true;
+        }
 
-				cpShape shape = space.AddShape(new cpPolyShape(body, 6, hexagon, cpTransform.Identity, bevel));
-				shape.SetElasticity(1.0f);
-			}
+        static cpSpace NoCollide(cpSpace space)
+        {
+            space.SetIterations(10);
 
-			return space;
-		}
+            var handler = space.AddCollisionHandler(2, 2);
+            //, (a, s, o) => NoCollide_begin(a, s, o), null, null, null);
+            handler.beginFunc = NoCollide_begin;
+            float radius = 4.5f;
+            var staticBody = space.GetStaticBody();
 
-		// No collisions
+            space.AddShape(new cpSegmentShape(staticBody, new cpVect(-330 - radius, -250 - radius), new cpVect(330 + radius, -250 - radius), 0.0f)).SetElasticity(1.0f);
+            space.AddShape(new cpSegmentShape(staticBody, new cpVect(330 + radius, 250 + radius), new cpVect(330 + radius, -250 - radius), 0.0f)).SetElasticity(1.0f);
+            space.AddShape(new cpSegmentShape(staticBody, new cpVect(330 + radius, 250 + radius), new cpVect(-330 - radius, 250 + radius), 0.0f)).SetElasticity(1.0f);
+            space.AddShape(new cpSegmentShape(staticBody, new cpVect(-330 - radius, -250 - radius), new cpVect(-330 - radius, 250 + radius), 0.0f)).SetElasticity(1.0f);
 
-		static bool NoCollide_begin(cpArbiter arb, cpSpace space, object data)
-		{
-			//abort();
-			return true;
-		}
+            for (int x = -320; x <= 320; x += 20)
+            {
+                for (int y = -240; y <= 240; y += 20)
+                    space.AddShape(new cpCircleShape(staticBody, radius, new cpVect(x, y)));
+            }
 
-		static cpSpace NoCollide(cpSpace space)
-		{
-			space.SetIterations(10);
+            for (int y = 10 - 240; y <= 240; y += 40)
+            {
+                float mass = 7.0f;
+                cpBody body = space.AddBody(new cpBody(mass, cp.MomentForCircle(mass, 0.0f, radius, cpVect.Zero)));
+                body.SetPosition(new cpVect(-320.0f, y));
+                body.SetVelocity(new cpVect(100.0f, 0.0f));
 
-			var handler = space.AddCollisionHandler(2, 2);
-			//, (a, s, o) => NoCollide_begin(a, s, o), null, null, null);
-			handler.beginFunc = NoCollide_begin;
+                cpShape shape = space.AddShape(new cpCircleShape(body, radius, cpVect.Zero));
+                shape.SetElasticity(1.0f);
+                shape.SetCollisionType(2);
 
-			float radius = 4.5f;
+            }
 
-			var staticBody = space.GetStaticBody();
+            for (int x = 30 - 320; x <= 320; x += 40)
+            {
+                float mass = 7.0f;
+                cpBody body = space.AddBody(new cpBody(mass, cp.MomentForCircle(mass, 0.0f, radius, cpVect.Zero)));
 
-			space.AddShape(new cpSegmentShape(staticBody, new cpVect(-330 - radius, -250 - radius), new cpVect(330 + radius, -250 - radius), 0.0f)).SetElasticity(1.0f);
-			space.AddShape(new cpSegmentShape(staticBody, new cpVect(330 + radius, 250 + radius), new cpVect(330 + radius, -250 - radius), 0.0f)).SetElasticity(1.0f);
-			space.AddShape(new cpSegmentShape(staticBody, new cpVect(330 + radius, 250 + radius), new cpVect(-330 - radius, 250 + radius), 0.0f)).SetElasticity(1.0f);
-			space.AddShape(new cpSegmentShape(staticBody, new cpVect(-330 - radius, -250 - radius), new cpVect(-330 - radius, 250 + radius), 0.0f)).SetElasticity(1.0f);
+                body.SetPosition(new cpVect(x, -240.0f));
+                body.SetVelocity(new cpVect(0.0f, 100.0f));
 
-			for (int x = -320; x <= 320; x += 20)
-			{
-				for (int y = -240; y <= 240; y += 20)
-				{
-					space.AddShape(new cpCircleShape(staticBody, radius, new cpVect(x, y)));
-				}
-			}
+                cpShape shape = space.AddShape(new cpCircleShape(body, radius, cpVect.Zero));
+                shape.SetElasticity(1.0f);
+                shape.SetCollisionType(2);
+            }
+            return space;
+        }
 
-			for (int y = 10 - 240; y <= 240; y += 40)
-			{
-				float mass = 7.0f;
-				cpBody body = space.AddBody(new cpBody(mass, cp.MomentForCircle(mass, 0.0f, radius, cpVect.Zero)));
-				body.SetPosition(new cpVect(-320.0f, y));
-				body.SetVelocity(new cpVect(100.0f, 0.0f));
-
-
-				cpShape shape = space.AddShape(new cpCircleShape(body, radius, cpVect.Zero));
-				shape.SetElasticity(1.0f);
-				shape.SetCollisionType(2);
-
-			}
-
-			for (int x = 30 - 320; x <= 320; x += 40)
-			{
-				float mass = 7.0f;
-				cpBody body = space.AddBody(new cpBody(mass, cp.MomentForCircle(mass, 0.0f, radius, cpVect.Zero)));
-
-				body.SetPosition(new cpVect(x, -240.0f));
-				body.SetVelocity(new cpVect(0.0f, 100.0f));
-
-
-				cpShape shape = space.AddShape(new cpCircleShape(body, radius, cpVect.Zero));
-				shape.SetElasticity(1.0f);
-				shape.SetCollisionType(2);
-
-			}
-
-			return space;
-		}
-
-
-
-		public override void Update(float dt)
-		{
-			base.Update(dt);
-
-			space.Step(dt);
-		}
-
-
-
-
-	}
+        public override void Update(float dt)
+        {
+            base.Update(dt);
+            space.Step(dt);
+        }
+    }
 }
