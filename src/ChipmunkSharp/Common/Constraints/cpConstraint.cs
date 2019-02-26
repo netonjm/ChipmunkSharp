@@ -1,40 +1,40 @@
-/* Copyright (c) 2007 Scott Lembcke ported by Jose Medrano (@netonjm)
-  
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-  
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-  
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
- */
+//
+// cpConstraint.cs
+//
+// Author:
+//       Jose Medrano <josmed@microsoft.com>
+//
+// Copyright (c) 2015
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
-// TODO: Comment me!
 using System;
 namespace ChipmunkSharp
 {
 	public class cpConstraint
 	{
-
 		internal cpSpace space;
-
 
 		/// The first body connected to this constraint.
 		public cpBody a, b;
 
 		internal cpConstraint next_a, next_b;
-
-
 
 		/// The maximum force that this constraint is allowed to use.
 		/// Defaults to infinity.
@@ -48,7 +48,6 @@ namespace ChipmunkSharp
 		internal float maxBias;
 
 		internal bool collideBodies;
-
 
 		/// Function called before the solver runs.
 		/// Animate your joint anchors, update your motor torque, etc.
@@ -202,10 +201,6 @@ namespace ChipmunkSharp
 				this.b.Activate();
 		}
 
-		/// /////////////////////////////////////////////////////////////
-
-
-
 		/// These methods are overridden by the constraint itself.
 		#region overriden methods
 
@@ -237,13 +232,6 @@ namespace ChipmunkSharp
 		{
 			return (this.a == body ? this.next_a : this.next_b);
 		}
-
-
-		//public virtual void Draw(cpDebugDraw m_debugDraw)
-		//{
-
-		//}
-
 
 		#region OverRideMethods
 
@@ -408,10 +396,5 @@ namespace ChipmunkSharp
 		}
 
 		#endregion
-
-
 	}
-
-
-
 }

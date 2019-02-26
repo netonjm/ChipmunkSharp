@@ -1,40 +1,42 @@
-/* Copyright (c) 2007 Scott Lembcke ported by Jose Medrano (@netonjm)
-  
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-  
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-  
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
- */
+//
+// cpRatchetJoin.cs
+//
+// Author:
+//       Jose Medrano <josmed@microsoft.com>
+//
+// Copyright (c) 2015
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 using System;
 
 namespace ChipmunkSharp
 {
 	public class cpRatchetJoint : cpConstraint
 	{
-
 		internal float angle, phase, ratchet;
-
 		internal float iSum;
-
 		internal float bias;
 		internal float jAcc;
 
 		public override void PreStep(float dt)
 		{
-
 			cpBody a = this.a;
 			cpBody b = this.b;
 
@@ -68,7 +70,6 @@ namespace ChipmunkSharp
 
 		public override void ApplyCachedImpulse(float dt_coef)
 		{
-
 			cpBody a = this.a;
 			cpBody b = this.b;
 
@@ -109,18 +110,13 @@ namespace ChipmunkSharp
 		public cpRatchetJoint(cpBody a, cpBody b, float phase, float ratchet)
 			: base(a, b)
 		{
-
-
-
 			this.angle = 0.0f;
 			this.phase = phase;
 			this.ratchet = ratchet;
 
 			// STATIC_BODY_CHECK
 			this.angle = (b != null ? b.a : 0.0f) - (a != null ? a.a : 0.0f);
-
 		}
-
 
 		public override float GetAngle()
 		{
@@ -138,27 +134,21 @@ namespace ChipmunkSharp
 			return this.phase;
 		}
 
-
 		public override void SetPhase(float phase)
 		{
 			ActivateBodies();
 			this.phase = phase;
 		}
 
-
 		public override float GetRatchet()
 		{
 			return this.ratchet;
 		}
-
 
 		public override void SetRatchet(float ratchet)
 		{
 			ActivateBodies();
 			this.ratchet = ratchet;
 		}
-
 	}
-
-
 }

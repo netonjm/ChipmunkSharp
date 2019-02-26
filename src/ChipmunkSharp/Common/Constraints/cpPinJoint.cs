@@ -1,31 +1,34 @@
-/* Copyright (c) 2007 Scott Lembcke ported by Jose Medrano (@netonjm)
-  
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-  
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-  
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
- */
+//
+// cpPinJoint.cs
+//
+// Author:
+//       Jose Medrano <josmed@microsoft.com>
+//
+// Copyright (c) 2015
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 using System;
 namespace ChipmunkSharp
 {
-
 	public class cpPinJoint : cpConstraint
 	{
-
-
 		internal cpVect anchorA, anchorB;
 		internal float dist;
 
@@ -35,8 +38,6 @@ namespace ChipmunkSharp
 
 		internal float jnAcc;
 		internal float bias;
-
-
 
 		public override void PreStep(float dt)
 		{
@@ -69,7 +70,6 @@ namespace ChipmunkSharp
 
 		public override void ApplyImpulse(float dt)
 		{
-
 			cpBody a = this.a;
 			cpBody b = this.b;
 			cpVect n = this.n;
@@ -105,8 +105,6 @@ namespace ChipmunkSharp
 		//	m_debugDraw.DrawPoint(b, 5, cpColor.DarkGrey);
 		
 		//}
-
-
 
 		public override cpVect GetAnchorA()
 		{
@@ -161,12 +159,6 @@ namespace ChipmunkSharp
 
 			this.jnAcc = 0.0f;
 		}
-
-
-
-
-
 	}
-
 }
 
