@@ -85,15 +85,15 @@
     <Compile Include="Games\Game1.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\netstandard\ChipmunkSharp.Core.csproj">
-      <Project>{2DF7726D-64F5-4C6C-968B-133CE4B43124}</Project>
-      <Name>ChipmunkSharp.Core</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <BundleResource Include="Resources\basketball.png" />
     <BundleResource Include="Resources\beachball.png" />
     <BundleResource Include="Resources\football.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ChipmunkSharp.Core\ChipmunkSharp.Core.csproj">
+      <Project>{847FB8B4-1BB0-4C53-80BF-7976C0421808}</Project>
+      <Name>ChipmunkSharp.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
 </Project>

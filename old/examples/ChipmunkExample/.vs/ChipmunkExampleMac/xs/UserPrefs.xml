@@ -1,0 +1,46 @@
+﻿<Properties StartupConfiguration="{C976AEE3-940E-4658-BCDD-80A581E4C696}|Default">
+  <MonoDevelop.Ide.ItemProperties.ChipmunkExampleMac PreferredExecutionTarget="Test1" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Common/Extensions/CCPhysicsDebugNode .cs">
+    <Files>
+      <File FileName="macosx/Program.cs" Line="9" Column="26" />
+      <File FileName="Common/Helpers/Extensions.cs" Line="1" Column="1" />
+      <File FileName="win32/AppDelegate.cs" Line="1" Column="1" />
+      <File FileName="Common/Extensions/PhysicsSprite.cs" Line="1" Column="1" />
+      <File FileName="Common/Extensions/PlayerIndex.cs" Line="1" Column="1" />
+      <File FileName="Common/ChipmunkDemoLayer.cs" Line="138" Column="33" />
+      <File FileName="Common/Extensions/CCPhysicsDebugNode .cs" Line="63" Column="63" />
+      <File FileName="Common/Layers/ballLayer.cs" Line="23" Column="20" />
+      <File FileName="Common/Extensions/CCPhysicsSprite.cs" Line="1" Column="1" />
+      <File FileName="Common/Extensions/cpExtension.cs" Line="1" Column="1" />
+      <File FileName="Common/Layers/playerLayer.cs" Line="10" Column="8" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="ChipmunkExampleMac" expanded="True">
+            <Node name="ChipmunkExampleMac" expanded="True">
+              <Node name="Common" expanded="True" />
+              <Node name="Content" expanded="True">
+                <Node name="fonts" expanded="True" />
+              </Node>
+              <Node name="Extensions" expanded="True">
+                <Node name="CCPhysicsDebugNode .cs" selected="True" />
+              </Node>
+              <Node name="Helpers" expanded="True" />
+              <Node name="Layers" expanded="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>

@@ -196,12 +196,11 @@ namespace ChipmunkExample
 
             //Space initialization
             space = new cpSpace();
-            //space.SetDebugDraw(m_debugDraw);
+			//space.SetDebugDraw(m_debugDraw);
 
-            space.CollisionEnabled = CollisionEnabled;
+			space.CollisionEnabled = CollisionEnabled;
             m_debugDraw = new PhysicsDebugDraw(space);
-            m_debugDraw.Flags = PhysicsDrawFlags.All;
-
+         CollisionEnabled
             AddChild(m_debugDraw);
             RefreshDebug();
 
