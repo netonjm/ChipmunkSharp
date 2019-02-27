@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipmunkSharp.Mac", "win32\ChipmunkSharp.Mac.csproj", "{FD50437F-B756-4BD8-99BE-B723F6E1EB45}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipmunkSharp.Core", "ChipmunkSharp.Core\ChipmunkSharp.Core.csproj", "{26312FC8-09AB-4F4D-A519-024CDE210F41}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{FD50437F-B756-4BD8-99BE-B723F6E1EB45}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD50437F-B756-4BD8-99BE-B723F6E1EB45}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD50437F-B756-4BD8-99BE-B723F6E1EB45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26312FC8-09AB-4F4D-A519-024CDE210F41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26312FC8-09AB-4F4D-A519-024CDE210F41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26312FC8-09AB-4F4D-A519-024CDE210F41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26312FC8-09AB-4F4D-A519-024CDE210F41}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = win32\ChipmunkSharp.Mac.csproj
