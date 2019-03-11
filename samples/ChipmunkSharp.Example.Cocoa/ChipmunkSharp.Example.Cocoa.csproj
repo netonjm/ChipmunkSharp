@@ -90,9 +90,9 @@
     <BundleResource Include="Resources\football.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\ChipmunkSharp.Core\ChipmunkSharp.Core.csproj">
-      <Project>{847FB8B4-1BB0-4C53-80BF-7976C0421808}</Project>
-      <Name>ChipmunkSharp.Core</Name>
+    <ProjectReference Include="..\..\ChipmunkSharp\ChipmunkSharp.csproj">
+      <Project>{0828DCEE-8853-4524-ABB0-A76539B4C904}</Project>
+      <Name>ChipmunkSharp</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />

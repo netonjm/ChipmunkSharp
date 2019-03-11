@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{977934CE-61D9-4ED6-AF25-47C7CC08E4EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipmunkSharp.Core", "src\ChipmunkSharp.Core\ChipmunkSharp.Core.csproj", "{847FB8B4-1BB0-4C53-80BF-7976C0421808}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipmunkSharp.Example.Cocoa", "samples\ChipmunkSharp.Example.Cocoa\ChipmunkSharp.Example.Cocoa.csproj", "{A3FE13A8-0B90-4D6E-AE4D-1EA3802DF95D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipmunkSharp.Example.iOS", "samples\ChipmunkSharp.Example.iOS\ChipmunkSharp.Example.iOS.csproj", "{30288CF7-C449-4797-B89B-983E3AE3C161}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipmunkSharp.Example.MonoGame", "samples\ChipmunkSharp.Example.MonoGame\ChipmunkSharp.Example.MonoGame.csproj", "{905B6B3B-33B1-49FB-B691-AE30F88CB4F5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChipmunkSharp", "ChipmunkSharp\ChipmunkSharp.csproj", "{0828DCEE-8853-4524-ABB0-A76539B4C904}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,18 +21,6 @@ Global
 		Release|iPhone = Release|iPhone
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{847FB8B4-1BB0-4C53-80BF-7976C0421808}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{847FB8B4-1BB0-4C53-80BF-7976C0421808}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{847FB8B4-1BB0-4C53-80BF-7976C0421808}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{847FB8B4-1BB0-4C53-80BF-7976C0421808}.Release|Any CPU.Build.0 = Release|Any CPU
-		{847FB8B4-1BB0-4C53-80BF-7976C0421808}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
-		{847FB8B4-1BB0-4C53-80BF-7976C0421808}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
-		{847FB8B4-1BB0-4C53-80BF-7976C0421808}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
-		{847FB8B4-1BB0-4C53-80BF-7976C0421808}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
-		{847FB8B4-1BB0-4C53-80BF-7976C0421808}.Debug|iPhone.ActiveCfg = Debug|Any CPU
-		{847FB8B4-1BB0-4C53-80BF-7976C0421808}.Debug|iPhone.Build.0 = Debug|Any CPU
-		{847FB8B4-1BB0-4C53-80BF-7976C0421808}.Release|iPhone.ActiveCfg = Release|Any CPU
-		{847FB8B4-1BB0-4C53-80BF-7976C0421808}.Release|iPhone.Build.0 = Release|Any CPU
 		{A3FE13A8-0B90-4D6E-AE4D-1EA3802DF95D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A3FE13A8-0B90-4D6E-AE4D-1EA3802DF95D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3FE13A8-0B90-4D6E-AE4D-1EA3802DF95D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -69,6 +57,18 @@ Global
 		{905B6B3B-33B1-49FB-B691-AE30F88CB4F5}.Debug|iPhone.Build.0 = Debug|Any CPU
 		{905B6B3B-33B1-49FB-B691-AE30F88CB4F5}.Release|iPhone.ActiveCfg = Release|Any CPU
 		{905B6B3B-33B1-49FB-B691-AE30F88CB4F5}.Release|iPhone.Build.0 = Release|Any CPU
+		{0828DCEE-8853-4524-ABB0-A76539B4C904}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0828DCEE-8853-4524-ABB0-A76539B4C904}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0828DCEE-8853-4524-ABB0-A76539B4C904}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0828DCEE-8853-4524-ABB0-A76539B4C904}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0828DCEE-8853-4524-ABB0-A76539B4C904}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
+		{0828DCEE-8853-4524-ABB0-A76539B4C904}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
+		{0828DCEE-8853-4524-ABB0-A76539B4C904}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{0828DCEE-8853-4524-ABB0-A76539B4C904}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
+		{0828DCEE-8853-4524-ABB0-A76539B4C904}.Debug|iPhone.ActiveCfg = Debug|Any CPU
+		{0828DCEE-8853-4524-ABB0-A76539B4C904}.Debug|iPhone.Build.0 = Debug|Any CPU
+		{0828DCEE-8853-4524-ABB0-A76539B4C904}.Release|iPhone.ActiveCfg = Release|Any CPU
+		{0828DCEE-8853-4524-ABB0-A76539B4C904}.Release|iPhone.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A3FE13A8-0B90-4D6E-AE4D-1EA3802DF95D} = {977934CE-61D9-4ED6-AF25-47C7CC08E4EC}
