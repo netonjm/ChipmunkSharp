@@ -83,6 +83,15 @@
     <Compile Include="Games\GameObject.cs" />
     <Compile Include="Games\PhysicObject.cs" />
     <Compile Include="Games\Game1.cs" />
+    <Compile Include="PhysicsDrawView.cs" />
+    <Compile Include="CocoaHelpers.cs" />
+    <Compile Include="CocoaDrawDelegate.cs" />
+    <Compile Include="Games\Game2.cs" />
+    <Compile Include="Games\ChipmunkDemoLayer.cs" />
+    <Compile Include="IPhysicsDrawView.cs" />
+    <Compile Include="DrawExtensions.cs" />
+    <Compile Include="CALayerHelper.cs" />
+    <Compile Include="Games\BallLayer.cs" />
   </ItemGroup>
   <ItemGroup>
     <BundleResource Include="Resources\basketball.png" />

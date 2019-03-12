@@ -1,10 +1,13 @@
 ﻿using System;
-using CoreGraphics;
+using AppKit;
+using CoreAnimation;
 
 namespace ChipmunkSharp
 {
-	class DrawDelegate : IDrawDelegate
+	public class CocoaDrawDelegate
 	{
+		public CALayer ContentLayer { get; set; }
+
 		public static cpColor CONSTRAINT_COLOR = cpColor.Grey; //new cpColor(0, 1, 0, 0.5f);
 		public static cpColor TRANSPARENT_COLOR = new cpColor (0, 0, 0, 0.0f);
 
@@ -50,7 +53,6 @@ namespace ChipmunkSharp
 
 		public void DrawSpring (cpVect a, cpVect b, cpColor cpColor)
 		{
-
 			DrawDot (a, 5, CONSTRAINT_COLOR);
 			DrawDot (b, 5, CONSTRAINT_COLOR);
 
@@ -77,49 +79,52 @@ namespace ChipmunkSharp
 
 		public void DrawCircle (cpVect center, float radius, cpColor color)
 		{
-			//var centerPoint = center.ToCCPoint ();
-			//var colorOutline = color.ToCCColor4B ();
-			//var colorFill = colorOutline * 0.5f;
-			//base.DrawCircle (centerPoint, radius, colorOutline);
-			//base.DrawSolidCircle (centerPoint, radius, colorFill);
+			ContentLayer.AddSublayer (CALayerHelper.GetCircleLayer (center.ToCGPoint (), radius, color.ToCGColor ()));
 		}
 
-		public void DrawSolidCircle (cpVect center, float radius, cpColor color)
+		public void DrawSolidCircle (cpVect center, float radius, cpColor color, cpColor borderColor, int borderWidth)
 		{
-			//base.DrawCircle (center.ToCCPoint (), radius, color.ToCCColor4B ());
+			ContentLayer.AddSublayer (CALayerHelper.GetSolidCircleLayer (center.ToCGPoint (), radius, color.ToCGColor (), borderColor.ToCGColor ()));
 		}
 
 		public void DrawCircle (cpVect center, float radius, float angle, int segments, cpColor color)
 		{
-			//base.DrawCircle (center.ToCCPoint (), radius, segments, color.ToCCColor4B ());
+			
 		}
 
 		public void DrawDot (cpVect pos, float radius, cpColor color)
 		{
-			//base.DrawDot(pos.ToCCPoint(), radius, color.ToCCColor4F());
-			//base.DrawSolidCircle (pos.ToCCPoint (), radius, color.ToCCColor4B ());
+			var backgroundColor = color.ToCGColor ();
+			var background = CALayerHelper.GetSolidCircleLayer (pos.ToCGPoint (), radius, backgroundColor, backgroundColor);
+			ContentLayer.AddSublayer (background);
+
+			var pointColor = (color * 0.5f).ToCGColor ();
+			var pointLayer = CALayerHelper.GetSolidCircleLayer (pos.ToCGPoint (), 2, pointColor, pointColor);
+			ContentLayer.AddSublayer (pointLayer);
+			pointLayer.CenterIn (background);
 		}
 
-		public void DrawPolygon (cpVect[] verts, int count, cpColor fillColor, float borderWidth, cpColor borderColor)
+		public void DrawPolygon (cpVect[] verts, cpColor fillColor, cpColor borderColor, float borderWidth = 0)
 		{
-			//base.DrawPolygon (cpVertArray2ccpArrayN (verts, verts.Length), count, fillColor.ToCCColor4F (), borderWidth, borderColor.ToCCColor4F ());
+			ContentLayer.AddSublayer (CALayerHelper.GetPolygon (verts.ToCGPoints (), fillColor.ToCGColor (), borderColor.ToCGColor (), borderWidth));
 		}
 
 		public void DrawRect (Rectangle rect, cpColor color)
 		{
-			//base.DrawRect (rect, color.ToCCColor4B ());
+			DrawPolygon (rect.ToCpVect (), color, color + 2, 2);
 		}
 
 		public void DrawSegment (cpVect from, cpVect to, float radius, cpColor color)
 		{
-			//base.DrawSegment (from.ToCCPoint (), to.ToCCPoint (), radius, color.ToCCColor4F ());
+			var backgroundColor = color.ToCGColor ();
+			ContentLayer.AddSublayer (CALayerHelper.DrawSegment (from.ToCGPoint (), to.ToCGPoint (), radius, backgroundColor, backgroundColor));
 		}
 
 		public void Draw (cpPolyShape poly, cpColor color)
 		{
 			cpColor fill = new cpColor (color);
 			fill.a = cp.cpflerp (color.a, 1.0f, 0.5f);
-			DrawPolygon (poly.GetVertices (), poly.Count, fill, poly.GetRadius (), color);
+			DrawPolygon (poly.GetVertices (), fill, color, poly.GetRadius ());
 		}
 
 		public void Draw (cpBB bb)
@@ -136,7 +141,7 @@ namespace ChipmunkSharp
 					new cpVect(bb.l, bb.t),
 					new cpVect(bb.l, bb.b)
 
-				}, 4, TRANSPARENT_COLOR, 1, color);
+				}, TRANSPARENT_COLOR, color, 1);
 		}
 
 		public void Draw (cpContact contact)

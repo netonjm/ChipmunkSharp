@@ -25,10 +25,18 @@ namespace ChipmunkSharp.Example.Cocoa
 				CollisionEnabled = true
 			};
 
+			var drawDelegate = new CocoaDrawDelegate ();
+			var drawView = new PhysicsDrawView (drawDelegate, space);
+			drawView.AppendFlags (PhysicsDrawFlags.All);
+
+			var demoLayer = new BallLayer (drawView, space);
+
+			mainWindow.ContentView = demoLayer;
+
 			#region	Scene
 
-			var example = new Game1 (space);
-			example.Initialize (mainWindow.ContentView);
+			var example = new Game2 (demoLayer);
+			//example.Initialize (mainWindow.ContentView);
 			example.StartAsync (loop: true);
 
 			#endregion
