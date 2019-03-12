@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>ChipmunkSharp</id>
+    <version>7.0.1</version>
+    <title>ChipmunkSharp v7</title>
+    <authors>Jose Medrano</authors>
+    <owners>Jose Medrano</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/netonjm/ChipmunkSharp</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/netonjm/ChipmunkSharp/v7.0.0.Leaf/logo/logo.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>ChipmunkSharp is a lightweight physic engine completely written in C# targeting .NET Standart v1.0</description>
+    <copyright>netonjm</copyright>
+    <tags>chipmunk netcore visualization enginedirectx desktop windows</tags>
+  </metadata>
+
+  <files>
+   
+    <file src="ChipmunkSharp/bin/Release/netstandard1.0/ChipmunkSharp.dll" target="lib/net40" />
+   
+
+  </files>
+
+</package>

@@ -24,9 +24,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+using System;
+
 namespace ChipmunkSharp
 {
-	public struct cpColor
+	public struct cpColor : IEquatable<cpColor>
 	{
 
 		public cpColor(float xr, float xg, float xb) { r = xr; g = xg; b = xb; a = 255; }
@@ -42,8 +44,56 @@ namespace ChipmunkSharp
 			Set(color.r, color.g, color.b, color.a);
 		}
 
+		public static cpColor operator - (cpColor p1, float p2)
+		{
+			var returnVal = new cpColor {
+				a = p1.a - p2,
+				r = p1.r - p2,
+				g = p1.g - p2,
+				b = p1.b - p2
+			};
+			return returnVal;
+		}
+
+		public static cpColor operator + (cpColor p1, float p2)
+		{
+			var returnVal = new cpColor {
+				a = p1.a + p2,
+				r = p1.r + p2,
+				g = p1.g + p2,
+				b = p1.b + p2
+			};
+			return returnVal;
+		}
+
+		public static cpColor operator * (cpColor p1, float p2)
+		{
+			var returnVal = new cpColor {
+				a = p1.a * p2,
+				r = p1.r * p2,
+				g = p1.g * p2,
+				b = p1.b * p2
+			};
+			return returnVal;
+		}
+
+		public static cpColor operator / (cpColor p1, float p2)
+		{
+			var returnVal = new cpColor {
+				a = p1.a / p2,
+				r = p1.r / p2,
+				g = p1.g / p2,
+				b = p1.b / p2
+			};
+			return returnVal;
+		}
 
 		public void Set(float ri, float gi, float bi, float ba) { r = ri; g = gi; b = bi; a = ba; }
+
+		public bool Equals (cpColor other)
+		{
+			return (r == other.r && g == other.g && b == other.b);
+		}
 
 		public float r, g, b, a;
 
@@ -63,5 +113,6 @@ namespace ChipmunkSharp
 
 		public static cpColor WhiteRed { get { return new cpColor(255, 127, 127); } }
 
+		public static cpColor Transparent { get { return new cpColor (-1, -1, -1); } }
 	}
 }

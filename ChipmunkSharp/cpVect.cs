@@ -31,7 +31,6 @@ namespace ChipmunkSharp
 
 	public class cpVect
 	{
-
 		public static cpVect Zero
 		{
 			get
@@ -101,8 +100,6 @@ namespace ChipmunkSharp
 		{
 			return string.Format("cpVect : ({0:N3} {1:N3})", x, y);
 		}
-
-
 
 		#region Operator Overloads
 
